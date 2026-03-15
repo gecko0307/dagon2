@@ -30,8 +30,10 @@ import std.conv;
 import std.string;
 
 import dlib.core.ownership;
+
 import dagon.core.application;
 import dagon.core.sdl3;
+import dagon.core.logger;
 
 enum GPUBackend
 {
@@ -49,6 +51,8 @@ class GPU: Owner
     SDL_GPUTextureFormat swapchainTextureFormat;
     SDL_GPUTexture* defaultTexture;
     SDL_GPUSampler* defaultSampler;
+    bool hdrExtendedLinearSwapchainSupported = false;
+    bool hdrSwapchain = false;
     
     this(Application application, Owner owner = null)
     {
@@ -72,6 +76,16 @@ class GPU: Owner
             deviceName = SDL_GetStringProperty(gpuProps, SDL_PROP_GPU_DEVICE_NAME_STRING, "Unknown").to!string;
             deviceDriver = SDL_GetStringProperty(gpuProps, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown").to!string;
             deviceDriverVersion = SDL_GetStringProperty(gpuProps, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown").to!string;
+            
+            if (application.hdrOutputSupport && application.hdrOutput)
+            {
+                hdrExtendedLinearSwapchainSupported = SDL_WindowSupportsGPUSwapchainComposition(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR);
+                if (hdrExtendedLinearSwapchainSupported)
+                {
+                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR, SDL_GPU_PRESENTMODE_VSYNC);
+                    hdrSwapchain = application.hdrOutputSupport && application.hdrOutput;
+                }
+            }
             
             swapchainTextureFormat = SDL_GetGPUSwapchainTextureFormat(device, application.window);
             

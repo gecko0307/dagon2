@@ -18,6 +18,13 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+enum Tonemapper: uint
+{
+    None = 0,
+    AgX_Base = 1,
+    AgX_Punchy = 2
+}
+
 struct PresentShaderVertexUniformBuffer
 {
     // TODO
@@ -25,7 +32,8 @@ struct PresentShaderVertexUniformBuffer
 
 struct PresentShaderFragmentUniformBuffer
 {
-    // TODO
+    uint[4] flags;
+    Vector4f hdrClampingParams;
 }
 
 class PresentShader: Shader
@@ -51,12 +59,32 @@ class PresentShader: Shader
         {
             exitWithError("Failed to create PresentShader");
         }
+        
+        if (gpu.hdrSwapchain)
+        {
+            fsUBO.flags[0] = Tonemapper.None;
+            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
+        }
+        else
+        {
+            fsUBO.flags[0] = Tonemapper.AgX_Punchy;
+            fsUBO.hdrClampingParams = Vector4f(0.0f, 1.0f, 0.0f, 0.0f);
+        }
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
+        
+        if (gpu.hdrSwapchain)
+        {
+            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
+        }
+        
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        
+        //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 

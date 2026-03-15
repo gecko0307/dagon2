@@ -5,7 +5,6 @@ vec3 toGamma(vec3 v)
     return pow(v, vec3(1.0 / 2.2));
 }
 
-
 // Matrices for Rec. 2020 <> Rec. 709 color space conversion.
 // Matrix provided in row-major order so it has been transposed.
 // https://www.itu.int/pub/R-REP-BT.2407-2017
@@ -122,7 +121,17 @@ vec3 tonemapAgX(vec3 color, int look)
     return color;
 }
 
+#define TONEMAPPER_NONE 0
+#define TONEMAPPER_AGX_BASE 1
+#define TONEMAPPER_AGX_PUNCHY 2
+
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
+
+layout(set = 3, binding = 0) uniform UniformBuffer
+{
+    uint flags[4];
+    vec4 hdrClampingParams;
+} ubo;
 
 layout(location = 0) in vec2 texCoords;
 
@@ -131,7 +140,12 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     vec4 inputColor = texture(colorBuffer, texCoords);
-    // TODO: move this to a separate tonemapping pass
-    vec3 outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_PUNCHY);
-    outColor = vec4(toGamma(outputColor), 1.0);
+    vec3 outputColor;
+    if (ubo.flags[0] == TONEMAPPER_NONE)
+        outputColor = clamp(inputColor.rgb, ubo.hdrClampingParams.x, ubo.hdrClampingParams.y);
+    else if (ubo.flags[0] == TONEMAPPER_AGX_BASE)
+        outputColor = toGamma(tonemapAgX(inputColor.rgb, AGX_LOOK_BASE));
+    else if (ubo.flags[0] == TONEMAPPER_AGX_PUNCHY)
+        outputColor = toGamma(tonemapAgX(inputColor.rgb, AGX_LOOK_PUNCHY));
+    outColor = vec4(outputColor, 1.0);
 }

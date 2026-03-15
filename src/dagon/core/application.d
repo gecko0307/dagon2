@@ -419,6 +419,9 @@ class Application: EventListener, Updateable
     /// Is the window borderless.
     bool windowBorderless = false;
     
+    /// Is the window HiDPI-aware.
+    bool windowHiDPI = false;
+    
     /// Application window title.
     string windowTitle;
     
@@ -467,11 +470,29 @@ class Application: EventListener, Updateable
     /// Pointer to the main SDL window created by the Application.
     SDL_Window* window = null;
     
+    /// Main SDL window properties.
+    SDL_PropertiesID windowProperties;
+    
+    version(Windows)
+    {
+        /// Windows-only: HWND of the main window.
+        HWND hwnd;
+    }
+    
     /// Main loop runner. Calls `Application.update` with a given fixed frequency (60 Hz by default).
     Cadencer cadencer;
     
     ///
     bool hdrOutput = false;
+    
+    ///
+    bool hdrOutputSupport = false;
+    
+    ///
+    float hdrHeadroom = 1.0f;
+    
+    ///
+    float whileLevel = 1.0f;
     
     /// Color space used for back buffer output.
     ColorProfile outputColorProfile = ColorProfile.Gamma22;
@@ -939,7 +960,9 @@ class Application: EventListener, Updateable
                 windowHeight = desktopHeight;
         }
         
-        // Create SDL window
+        if ("window.hiDPI" in config.props)
+            windowHiDPI = cast(bool)config.props["window.hiDPI"].toUInt;
+        
         SDL_PropertiesID winProps = SDL_CreateProperties();
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
         SDL_SetStringProperty(winProps, SDL_PROP_WINDOW_CREATE_TITLE_STRING, toStringz(windowTitle));
@@ -951,7 +974,7 @@ class Application: EventListener, Updateable
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, windowMaximized);
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, windowMinimized);
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_BORDERLESS_BOOLEAN, windowBorderless);
-        //SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_ALWAYS_ON_TOP_BOOLEAN, windowAlwaysOnTop);
+        SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, windowHiDPI);
         window = SDL_CreateWindowWithProperties(winProps);
         SDL_DestroyProperties(winProps);
         if (window is null)
@@ -962,6 +985,25 @@ class Application: EventListener, Updateable
         windowWidth = createdWindowWidth;
         windowHeight = createdWindowHeight;
         logInfo("Window size: ", windowWidth, "x", windowHeight);
+        
+        windowProperties = SDL_GetWindowProperties(window);
+        version(Windows)
+        {
+            hwnd = SDL_GetPointerProperty(windowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, null);
+            //TODO: SDL_PROP_WINDOW_WIN32_HDC_POINTER
+            //TODO: SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER
+        }
+        if ("window.HDROutput" in config.props)
+            hdrOutput = cast(bool)(config.props["window.HDROutput"].toUInt);
+        whileLevel = SDL_GetFloatProperty(windowProperties, SDL_PROP_WINDOW_SDR_WHITE_LEVEL_FLOAT, 1.0f);
+        hdrOutputSupport = SDL_GetBooleanProperty(windowProperties, SDL_PROP_WINDOW_HDR_ENABLED_BOOLEAN, false);
+        logInfo("White level: ", whileLevel);
+        logInfo("HDR output support: ", hdrOutputSupport);
+        if (hdrOutputSupport)
+        {
+            hdrHeadroom = SDL_GetFloatProperty(windowProperties, SDL_PROP_WINDOW_HDR_HEADROOM_FLOAT, 1.0f);
+            logInfo("HDR headroom: ", hdrHeadroom);
+        }
         
         if ("stereoRendering" in config.props)
             stereoRendering = cast(bool)config.props["stereoRendering"].toUInt;
@@ -1122,7 +1164,7 @@ class Application: EventListener, Updateable
             globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "2");
         else if (outputColorProfile == ColorProfile.Gamma24)
             globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "3");
-        if (hdrOutput)
+        if (gpu.hdrExtendedLinearSwapchainSupported)
             globalShaderDefine("DAGON_HDR_OUTPUT", "1");
         */
         
@@ -1188,11 +1230,6 @@ class Application: EventListener, Updateable
         }
         */
         
-        /*
-        if (freetypePresent && ftLibrary)
-            FT_Done_FreeType(ftLibrary);
-        */
-        
         Delete(gpu);
         gpu = null;
         _gpu = null;
@@ -1213,6 +1250,9 @@ class Application: EventListener, Updateable
         glslang_finalize_process();
         
         SDL_Quit();
+        
+        if (ftLibrary)
+            FT_Done_FreeType(ftLibrary);
         
         Delete(resourceCache);
         _resourceCache = null;
@@ -1519,19 +1559,6 @@ class Application: EventListener, Updateable
             else
                 ShowWindow(GetConsoleWindow(), SW_HIDE);
         }
-    }
-    
-    version(Windows)
-    {
-        /**
-         * Windows-only: returns HWND of the application window.
-         */
-        /*
-        HWND hwnd()
-        {
-            return eventManager.wmInfo.info.win.window;
-        }
-        */
     }
     
     /*

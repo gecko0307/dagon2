@@ -130,6 +130,8 @@ enum EventType
     GamepadRemove,
     PenMotion,
     Resize,
+    Minimize,
+    Restore,
     FocusLoss,
     FocusGain,
     Quit,
@@ -1105,6 +1107,16 @@ class EventManager: Owner
                     addEvent(e);
                     break;
                 
+                case SDL_EVENT_WINDOW_MINIMIZED:
+                    e = Event(EventType.Minimize);
+                    addEvent(e);
+                    break;
+                
+                case SDL_EVENT_WINDOW_RESTORED:
+                    e = Event(EventType.Restore);
+                    addEvent(e);
+                    break;
+                
                 case SDL_EVENT_WINDOW_FOCUS_GAINED:
                     e = Event(EventType.FocusGain);
                     addEvent(e);
@@ -1361,6 +1373,12 @@ abstract class EventDispatcher: Owner
             case EventType.Resize:
                 onResize(e.width, e.height);
                 break;
+            case EventType.Minimize:
+                onMinimize();
+                break;
+            case EventType.Restore:
+                onRestore();
+                break;
             case EventType.FocusLoss:
                 onFocusLoss();
                 break;
@@ -1453,6 +1471,12 @@ abstract class EventDispatcher: Owner
 
     /// Called when the window is resized.
     void onResize(int width, int height) {}
+
+    ///
+    void onMinimize() {}
+    
+    ///
+    void onRestore() {}
 
     /// Called when the window loses focus.
     void onFocusLoss() {}

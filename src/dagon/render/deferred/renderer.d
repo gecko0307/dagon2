@@ -5,6 +5,7 @@ import dlib.core.ownership;
 import dlib.image.color;
 
 import dagon.core.gpu;
+import dagon.core.logger;
 import dagon.core.event;
 import dagon.render.renderer;
 import dagon.render.deferred.gbuffer;

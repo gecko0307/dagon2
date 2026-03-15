@@ -25,6 +25,7 @@ abstract class Renderer: EventListener, Updateable
     GraphicsState state;
     View view;
     Material defaultMaterial;
+    bool active = true;
     
     this(GPU gpu, EventManager eventManager)
     {
@@ -52,6 +53,9 @@ abstract class Renderer: EventListener, Updateable
     
     void render()
     {
+        if (!active)
+            return;
+        
         state.reset();
         
         commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
@@ -90,6 +94,16 @@ abstract class Renderer: EventListener, Updateable
         {
             pass.resize(drawableWidth, drawableHeight);
         }
+    }
+    
+    override void onMinimize()
+    {
+        active = false;
+    }
+    
+    override void onRestore()
+    {
+        active = true;
     }
     
     void setScene(Scene scene)
