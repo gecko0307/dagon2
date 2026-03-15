@@ -24,6 +24,20 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Generic applicaton class and corresponding utility functions
+ *
+ * Description:
+ * The `dagon.core.application` module provides the base `Application` class
+ * and related functionality for creating and managing a Dagon-based application.
+ * This includes SDL window and GPU management, event handling,
+ * functions for error handling, taking screenshots and others.
+ *
+ * Copyright: Timur Gafarov 2017-2026.
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core.application;
 
 import std.stdio;
@@ -51,6 +65,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.glslang;
 import dagon.core.spvc;
+import dagon.core.freetype;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.logger;
@@ -322,11 +337,9 @@ class Application: EventListener, Updateable
     
     /**
      * Loaded FreeType API support version. This is not an actual FreeType library version!
-     * Dagon assumes FTSupport.v2_8, but this is not a strict requirement,
-     * the engine will continue running even if 2.8 fails to load.
      * To check actually loaded library version, use `ftVersion`.
      */
-    //FTSupport loadedFTSupport;
+    FTSupport loadedFTSupport;
     
     /// SDL_Image available or not.
     bool sdlImagePresent = false;
@@ -497,7 +510,7 @@ class Application: EventListener, Updateable
     Translation translation;
     
     /// Handle to a FreeType library instance.
-    //FT_Library ftLibrary;
+    FT_Library ftLibrary;
     
     /// Object that loads and registers fonts.
     //FontManager fontManager;
@@ -750,7 +763,43 @@ class Application: EventListener, Updateable
         if (spvc_context_create(&spvcContext) != SPVC_SUCCESS)
             exitWithError("spvc_context_create failed");
         
-        // TODO: load FreeType
+        // Load FreeType
+        if (freetypeLibraryPath.length)
+            loadedFTSupport = loadFreeType(freetypeLibraryPath.toStringz);
+        else
+            loadedFTSupport = loadFreeType();
+        if (loadedFTSupport != ftSupport)
+        {
+            if (loadedFTSupport == FTSupport.badLibrary)
+            {
+                logWarning("Failed to load some Freetype functions. It seems that you have an old version of Freetype. Dagon will try to use it, but it is recommended to install Freetype 2.8.1 or higher");
+                freetypePresent = true;
+            }
+            else
+            {
+                logError("Freetype library is not found. Please, install Freetype 2.8.1");
+                freetypePresent = false;
+            }
+        }
+        else
+            freetypePresent = true;
+        if (freetypePresent)
+        {
+            if (FT_Init_FreeType(&ftLibrary))
+            {
+                logError("FT_Init_FreeType failed");
+                freetypePresent = false;
+            }
+            else
+            {
+                int ftVersionMajor, ftVersionMinor, ftVersionPatch;
+                FT_Library_Version(ftLibrary, &ftVersionMajor, &ftVersionMinor, &ftVersionPatch);
+                ftVersion.major = ftVersionMajor;
+                ftVersion.minor = ftVersionMinor;
+                ftVersion.patch = ftVersionPatch;
+                logInfo("FreeType version: ", ftVersion.major, ".", ftVersion.minor, ".", ftVersion.patch);
+            }
+        }
         
         // Init SDL
         sdlSubsystems =
@@ -1018,7 +1067,31 @@ class Application: EventListener, Updateable
         else
             defaultTextureAnisotropy = 1.0f;
         
-        // TODO: init FreeType and create a font manager
+        // Create a font manager
+        // TODO
+        /*
+        if ("font.sans" in config.props)
+            defaultFontSans = config.props["font.sans"].toString;
+        if ("font.monospace" in config.props)
+            defaultFontMonospace = config.props["font.monospace"].toString;
+        version(Windows)
+        {
+            if ("font.sans.windows" in config.props)
+                defaultFontSans = config.props["font.sans.windows"].toString;
+            if ("font.sans.monospace" in config.props)
+                defaultFontMonospace = config.props["font.sans.monospace"].toString;
+        }
+        else version(linux)
+        {
+            if ("font.sans.linux" in config.props)
+                defaultFontSans = config.props["font.sans.linux"].toString;
+            if ("font.sans.linux" in config.props)
+                defaultFontMonospace = config.props["font.sans.linux"].toString;
+        }
+        if ("font.size" in config.props)
+            defaultFontSize = config.props["font.size"].toUInt;
+        fontManager = New!FontManager(this);
+        */
         
         // Init output color profile
         if ("gl.outputColorProfile" in config.props)

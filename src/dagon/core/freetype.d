@@ -24,31 +24,17 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.core;
+
+/**
+ * Helper module that publicly imports Freetype binding.
+ *
+ * Copyright: Timur Gafarov 2019-2026.
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
+module dagon.core.freetype;
 
 public
 {
-    import dagon.core.application;
-    import dagon.core.config;
-    import dagon.core.crashhandler;
-    import dagon.core.dialogs;
-    import dagon.core.dxgiformat;
-    import dagon.core.dxt;
-    import dagon.core.event;
-    import dagon.core.freetype;
-    import dagon.core.glslang;
-    import dagon.core.gpu;
-    import dagon.core.i18n;
-    import dagon.core.scancodes;
-    import dagon.core.locale;
-    import dagon.core.logger;
-    import dagon.core.messaging;
-    import dagon.core.persistent;
-    import dagon.core.props;
-    import dagon.core.sdl3;
-    import dagon.core.spvc;
-    import dagon.core.time;
-    import dagon.core.updateable;
-    import dagon.core.vfs;
-    import dagon.core.vkformat;
+    import bindbc.freetype;
 }
