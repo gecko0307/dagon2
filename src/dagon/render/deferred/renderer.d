@@ -7,6 +7,7 @@ import dlib.image.color;
 import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.core.event;
+import dagon.core.time;
 import dagon.graphics.texture;
 import dagon.resource.texture;
 import dagon.render.renderer;
@@ -68,6 +69,12 @@ class DeferredRenderer: Renderer
     void clearColor(Color4f color) @property
     {
         gbuffer.clearColor = color;
+    }
+    
+    override void onUpdate(Time t)
+    {
+        // Temporary: currently we only need gamma-correction in tonemapper for FXAA
+        tonemappingPass.tonemappingShader.enableGammaCorrection = fxaaPass.active;
     }
     
     override void onResize(int width, int height)

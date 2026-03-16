@@ -45,6 +45,8 @@ class TonemappingShader: Shader
     TonemappingShaderFragmentUniformBuffer fsUBO;
     
    public:
+    bool enableGammaCorrection = true;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -83,6 +85,8 @@ class TonemappingShader: Shader
         {
             fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
         }
+        
+        fsUBO.flags[1] = enableGammaCorrection;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         

@@ -50,8 +50,7 @@ class TestWorld: World
         aOBJSuzanne = loadAsset!OBJAsset("data/suzanne.obj");
         
         scene = New!Scene(this);
-        auto sunTRS = New!TRSController(eventManager, scene.sun);
-        sunTRS.pitch(-45.0f);
+        scene.sun.pitch(-45.0f);
         scene.sun.energy = 10.0f;
         
         auto camera = scene.addCamera();
@@ -70,7 +69,6 @@ class TestWorld: World
         eSuzanne.drawable = aOBJSuzanne.mesh;
         eSuzanne.material = matSuzanne;
         eSuzanne.position = Vector3f(0.0f, 1.0f, 0.0f);
-        eSuzanne.updateTransformation();
         
         //auto ePlane = addEntity();
         //ePlane.drawable = New!ShapePlane(10, 10, 1, assetManager);

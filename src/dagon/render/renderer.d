@@ -82,6 +82,13 @@ abstract class Renderer: EventListener, Updateable
             view.camera = state.scene.activeCamera;
             view.update();
         }
+        
+        onUpdate(t);
+    }
+    
+    void onUpdate(Time t)
+    {
+        //
     }
     
     override void onResize(int width, int height)
