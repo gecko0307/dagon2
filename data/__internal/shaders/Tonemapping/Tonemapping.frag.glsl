@@ -142,5 +142,7 @@ void main()
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_BASE);
     else if (ubo.flags[0] == TONEMAPPER_AGX_PUNCHY)
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_PUNCHY);
+    // Gamma-correction (next filters work in gamma space)
+    outputColor = pow(outputColor, vec3(1.0 / 2.2));
     outColor = vec4(outputColor, 1.0);
 }

@@ -1,4 +1,4 @@
-module dagon.render.postprocessing.passes.present;
+module dagon.render.postprocessing.passes.fxaa;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -9,6 +9,7 @@ import dlib.image.color;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.crashhandler;
+import dagon.core.logger;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
@@ -19,21 +20,21 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
-struct PresentShaderVertexUniformBuffer
+struct FXAAShaderVertexUniformBuffer
 {
     // TODO
 }
 
-struct PresentShaderFragmentUniformBuffer
+struct FXAAShaderFragmentUniformBuffer
 {
-    // TODO
+    Vector4f viewSize;
 }
 
-class PresentShader: Shader
+class FXAAShader: Shader
 {
    protected:
-    PresentShaderVertexUniformBuffer vsUBO;
-    PresentShaderFragmentUniformBuffer fsUBO;
+    FXAAShaderVertexUniformBuffer vsUBO;
+    FXAAShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -41,36 +42,45 @@ class PresentShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Present.vert.glsl", "data/__internal/shaders/Present/Present.vert.glsl",
+        vertexModule.create("FXAA.vert.glsl", "data/__internal/shaders/FXAA/FXAA.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Present.frag.glsl", "data/__internal/shaders/Present/Present.frag.glsl",
+        fragmentModule.create("FXAA.frag.glsl", "data/__internal/shaders/FXAA/FXAA.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create PresentShader");
+            exitWithError("Failed to create FXAAShader");
         }
+        
+        fsUBO.viewSize = Vector4f(
+            gpu.application.drawableWidth,
+            gpu.application.drawableHeight,
+            0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         
+        fsUBO.viewSize.x = gpu.application.drawableWidth;
+        fsUBO.viewSize.y = gpu.application.drawableHeight;
+        
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
-        //pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class PresentPass: RenderPass
+class FXAAPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
-    PresentShader presentShader;
+    FXAAShader fxaaShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     
     this(Renderer renderer, PostProcessingContext ppContext)
@@ -80,11 +90,11 @@ class PresentPass: RenderPass
         this.gbuffer = ppContext.gbuffer;
         this.ppContext = ppContext;
         
-        presentShader = New!PresentShader(gpu, this);
+        fxaaShader = New!FXAAShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = presentShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = presentShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = fxaaShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = fxaaShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -120,7 +130,7 @@ class PresentPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetDescription colorTargetDescription;
-        colorTargetDescription.format = gpu.swapchainTextureFormat;
+        colorTargetDescription.format = ppContext.bufferFormat;
         colorTargetDescription.blend_state.enable_blend = false;
         colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
         colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
@@ -150,8 +160,10 @@ class PresentPass: RenderPass
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo.texture = ppContext.writeBuffer;
+        
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
         depthStencilTargetInfo = null;
@@ -163,24 +175,24 @@ class PresentPass: RenderPass
         if (state.scene is null)
             return;
         
-        SDL_GPUTexture* swapchainTexture;
-        uint width, height;
-        SDL_WaitAndAcquireGPUSwapchainTexture(
-            renderer.commandBuffer,
-            renderer.gpu.application.window,
-            &swapchainTexture,
-            &width,
-            &height);
-        colorTargetInfo.texture = swapchainTexture;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         beginPass();
         
+        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
+        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
+        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
+        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
         state.entity = null;
-        presentShader.bindParameters(state);
+        fxaaShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         
         endPass();
+        
+        ppContext.swapTargets();
     }
 }

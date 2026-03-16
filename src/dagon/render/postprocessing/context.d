@@ -7,15 +7,23 @@ import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.render.deferred.gbuffer;
 
+enum PingPongBufferState
+{
+    Ping = 0,
+    Pong = 1
+}
+
 class PostProcessingContext: Owner
 {
     GPU gpu;
     GBuffer gbuffer;
-    SDL_GPUTextureFormat targetFormat;
-    SDL_GPUTexture* target1;
-    SDL_GPUTexture* target2;
-    SDL_GPUTexture* currentTarget;
-    SDL_GPUSampler* targetSampler;
+    SDL_GPUTextureFormat bufferFormat;
+    SDL_GPUTexture* buffer1;
+    SDL_GPUTexture* buffer2;
+    SDL_GPUTexture* writeBuffer;
+    SDL_GPUTexture* readBuffer;
+    SDL_GPUSampler* bufferSampler;
+    PingPongBufferState bufferState = PingPongBufferState.Ping;
     
     this(GPU gpu, GBuffer gbuffer, Owner owner)
     {
@@ -23,7 +31,7 @@ class PostProcessingContext: Owner
         this.gpu = gpu;
         this.gbuffer = gbuffer;
         
-        targetFormat = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        bufferFormat = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
@@ -46,23 +54,23 @@ class PostProcessingContext: Owner
             compare_op: SDL_GPU_COMPAREOP_ALWAYS
         };
         
-        targetSampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
+        bufferSampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
     }
     
     ~this()
     {
         releaseBuffers();
         
-        if (targetSampler)
-            SDL_ReleaseGPUSampler(gpu.device, targetSampler);
+        if (bufferSampler)
+            SDL_ReleaseGPUSampler(gpu.device, bufferSampler);
     }
     
     void releaseBuffers()
     {
-        if (target1)
-            SDL_ReleaseGPUTexture(gpu.device, target1);
-        if (target2)
-            SDL_ReleaseGPUTexture(gpu.device, target2);
+        if (buffer1)
+            SDL_ReleaseGPUTexture(gpu.device, buffer1);
+        if (buffer2)
+            SDL_ReleaseGPUTexture(gpu.device, buffer2);
     }
     
     void createBuffers(uint width, uint height)
@@ -71,7 +79,7 @@ class PostProcessingContext: Owner
         
         SDL_GPUTextureCreateInfo textureCreateInfo = {
             type: SDL_GPU_TEXTURETYPE_2D,
-            format: targetFormat,
+            format: bufferFormat,
             usage: SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,
             width: width,
             height: height,
@@ -80,9 +88,11 @@ class PostProcessingContext: Owner
             sample_count: SDL_GPU_SAMPLECOUNT_1
         };
         
-        target1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
-        target2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
-        currentTarget = target1;
+        buffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        buffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        writeBuffer = buffer1;
+        readBuffer = buffer2;
+        bufferState = PingPongBufferState.Ping;
     }
     
     void resize(uint width, uint height)
@@ -90,5 +100,21 @@ class PostProcessingContext: Owner
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
         createBuffers(drawableWidth, drawableHeight);
+    }
+    
+    void swapTargets()
+    {
+        if (bufferState == PingPongBufferState.Ping)
+        {
+            writeBuffer = buffer2;
+            readBuffer = buffer1;
+            bufferState = PingPongBufferState.Pong;
+        }
+        else
+        {
+            writeBuffer = buffer1;
+            readBuffer = buffer2;
+            bufferState = PingPongBufferState.Ping;
+        }
     }
 }

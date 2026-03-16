@@ -145,7 +145,7 @@ class TonemappingPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetDescription colorTargetDescription;
-        colorTargetDescription.format = ppContext.targetFormat;
+        colorTargetDescription.format = ppContext.bufferFormat;
         colorTargetDescription.blend_state.enable_blend = false;
         colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
         colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
@@ -177,7 +177,7 @@ class TonemappingPass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = ppContext.currentTarget;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -190,7 +190,7 @@ class TonemappingPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = ppContext.currentTarget;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         beginPass();
         
@@ -207,5 +207,7 @@ class TonemappingPass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+        
+        ppContext.swapTargets();
     }
 }

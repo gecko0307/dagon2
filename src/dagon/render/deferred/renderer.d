@@ -17,6 +17,7 @@ import dagon.render.deferred.passes.selfillumination;
 import dagon.render.deferred.passes.sunlight;
 import dagon.render.postprocessing.context;
 import dagon.render.postprocessing.passes.tonemapping;
+import dagon.render.postprocessing.passes.fxaa;
 import dagon.render.postprocessing.passes.present;
 
 class DeferredRenderer: Renderer
@@ -29,6 +30,7 @@ class DeferredRenderer: Renderer
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
     TonemappingPass tonemappingPass;
+    FXAAPass fxaaPass;
     PresentPass presentPass;
     
     this(GPU gpu, EventManager eventManager)
@@ -42,6 +44,7 @@ class DeferredRenderer: Renderer
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
         tonemappingPass = New!TonemappingPass(this, ppContext);
+        fxaaPass = New!FXAAPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
         
         string brdfLUTFilename = "data/__internal/textures/brdf.dds";
