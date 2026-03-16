@@ -500,7 +500,7 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
     if (isVolume)
         size.depth = hdr.depth;
     else
-        size.depth = 0;
+        size.depth = 1;
     
     if (isCubemap)
     {

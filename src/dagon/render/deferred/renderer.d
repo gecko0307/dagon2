@@ -7,6 +7,8 @@ import dlib.image.color;
 import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.core.event;
+import dagon.graphics.texture;
+import dagon.resource.texture;
 import dagon.render.renderer;
 import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.geometry;
@@ -17,6 +19,7 @@ import dagon.render.deferred.passes.present;
 
 class DeferredRenderer: Renderer
 {
+    Texture brdfLUT;
     GBuffer gbuffer;
     GeometryPass geometryPass;
     AmbientPass ambientPass;
@@ -33,6 +36,18 @@ class DeferredRenderer: Renderer
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
         presentPass = New!PresentPass(this, gbuffer);
+        
+        string brdfLUTFilename = "data/__internal/textures/brdf.dds";
+        TextureAsset brdfAsset = New!TextureAsset(gpu, this);
+        brdfAsset.generateMipmaps = false;
+        brdfAsset.repeatUV = false;
+        auto istrm = gpu.application.vfs.openForInput(brdfLUTFilename);
+        brdfAsset.load(brdfLUTFilename, istrm, gpu.application.vfs);
+        Delete(istrm);
+        
+        brdfLUT = brdfAsset.texture;
+        state.brdfLUT = brdfLUT;
+        state.brdfLUTEnabled = true;
     }
     
     void clearColor(Color4f color) @property

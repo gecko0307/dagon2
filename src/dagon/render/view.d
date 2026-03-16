@@ -45,11 +45,9 @@ class View: Owner
     this(uint width, uint height, Owner owner)
     {
         super(owner);
-        resize(width, height);
         viewMatrix = Matrix4x4f.identity;
         invViewMatrix = Matrix4x4f.identity;
-        projectionMatrix = perspectiveMatrix(fov, aspectRatio, zNear, zFar);
-        invProjectionMatrix = projectionMatrix.inverse;
+        resize(width, height);
     }
     
     void resize(uint width, uint height)
@@ -73,6 +71,7 @@ class View: Owner
         }
         else
         {
+            projectionMatrix = perspectiveMatrix(fov, aspectRatio, zNear, zFar);
             invViewMatrix = viewMatrix.inverse;
         }
         

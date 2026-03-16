@@ -22,17 +22,23 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
     return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+#define FLAGS_TEXTURE 0
+
+#define TEXFLAG_HAS_BRDF_LUT 1 << 0
+
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 4) uniform samplerCube ambientTexture;
+layout(set = 2, binding = 5) uniform sampler2D brdfLUT;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;
+    uint flags[4];
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -81,9 +87,11 @@ void main()
     vec3 reflection = ambient(wR, sqrt(roughness)) * reflectivity;
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     vec3 kD = (1.0 - F) * (1.0 - metallic);
-    vec2 brdf = vec2(1.0, 0.0); //haveAmbientBRDF? texture(ambientBRDF, vec2(NE, roughness)).rg : vec2(1.0, 0.0);
+    vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
+        texture(brdfLUT, vec2(NE, roughness)).rg :
+        vec2(1.0, 0.0);
     vec3 diffuse = kD * irradiance * baseColor;
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0) * (1.0 - roughness);
     const float occlusion = 1.0;
     radiance += (diffuse + specular) * occlusion * ambientEnergy;
     

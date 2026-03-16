@@ -4,6 +4,7 @@ import dagon.core.sdl3;
 import dagon.render.pass;
 import dagon.graphics.entity;
 import dagon.graphics.material;
+import dagon.graphics.texture;
 import dagon.graphics.scene;
 
 struct InputBuffer
@@ -25,6 +26,8 @@ struct GraphicsState
     Scene scene;
     Entity entity;
     Material material;
+    Texture brdfLUT;
+    bool brdfLUTEnabled = false;
     
     // TODO: other data
     

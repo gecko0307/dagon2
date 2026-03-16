@@ -16,6 +16,7 @@ import dagon.graphics.texturebuffer;
 struct TextureCreationOptions
 {
     bool generateMipmaps;
+    bool repeatUV;
 }
 
 class Texture: Owner
@@ -166,9 +167,18 @@ class Texture: Owner
         samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
         samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
         samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-        samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-        samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-        samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+        if (options.repeatUV)
+        {
+            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+        }
+        else
+        {
+            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        }
         samplerCreateInfo.mip_lod_bias = 0.0f;
         samplerCreateInfo.max_anisotropy = 16.0f;
         samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;

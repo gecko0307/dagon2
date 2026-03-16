@@ -34,6 +34,9 @@ class TextureAsset: Owner
     bool generateMipmaps = true;
     
     ///
+    bool repeatUV = true;
+    
+    ///
     bool compress = false;
     
     ///
@@ -67,6 +70,8 @@ class TextureAsset: Owner
     
     bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
+        debug logInfo("Loading ", filename, "...");
+        
         string extension = filename.extension.toLower;
         
         if (extension == ".dds")
@@ -79,7 +84,7 @@ class TextureAsset: Owner
         }
         // TODO: custom loaders
         
-        logInfo("Decoded ", filename);
+        //logInfo("Decoded ", filename);
         
         if (!loaded)
         {
@@ -95,11 +100,12 @@ class TextureAsset: Owner
         
         texture = New!Texture(gpu, this);
         TextureCreationOptions options = {
-            generateMipmaps: generateMipmaps
+            generateMipmaps: generateMipmaps,
+            repeatUV: repeatUV
         };
         loaded = texture.create(&buffer, &options);
         
-        logInfo("Uploaded ", filename);
+        //logInfo("Uploaded ", filename);
         
         if (!persistent)
             releaseBuffer();

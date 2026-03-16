@@ -85,7 +85,6 @@ abstract class Renderer: EventListener, Updateable
     
     override void onResize(int width, int height)
     {
-        // TODO: apply active camera to view
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
         view.resize(drawableWidth, drawableHeight);

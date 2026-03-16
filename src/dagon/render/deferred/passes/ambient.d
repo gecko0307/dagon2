@@ -18,6 +18,11 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+enum AmbientTextureFlags: uint
+{
+    HasBRDFLUT = 1 << 0
+}
+
 struct AmbientShaderVertexUniformBuffer
 {
     // TODO
@@ -29,6 +34,7 @@ struct AmbientShaderFragmentUniformBuffer
     Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
     // TODO: ambientColor
+    uint[4] flags;
 }
 
 class AmbientShader: Shader
@@ -75,10 +81,19 @@ class AmbientShader: Shader
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
+        
         if (ambientTexture)
             pass.bindTexture(PipelineStage.Fragment, 4, ambientTexture);
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
+        
+        if (state.brdfLUT && state.brdfLUTEnabled)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 5, state.brdfLUT);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasBRDFLUT;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 5);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
