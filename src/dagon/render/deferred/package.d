@@ -34,5 +34,5 @@ public
     import dagon.render.deferred.passes.ambient;
     import dagon.render.deferred.passes.selfillumination;
     import dagon.render.deferred.passes.sunlight;
-    import dagon.render.deferred.passes.present;
+    //import dagon.render.deferred.passes.present;
 }

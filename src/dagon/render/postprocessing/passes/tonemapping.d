@@ -1,4 +1,4 @@
-module dagon.render.deferred.passes.sunlight;
+module dagon.render.postprocessing.passes.tonemapping;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -9,6 +9,7 @@ import dlib.image.color;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.crashhandler;
+import dagon.core.logger;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
@@ -17,24 +18,31 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
+import dagon.render.postprocessing.context;
 
-struct SunLightShaderVertexUniformBuffer
+enum Tonemapper: uint
+{
+    None = 0,
+    AgX_Base = 1,
+    AgX_Punchy = 2
+}
+
+struct TonemappingShaderVertexUniformBuffer
 {
     // TODO
 }
 
-struct SunLightShaderFragmentUniformBuffer
+struct TonemappingShaderFragmentUniformBuffer
 {
-    Matrix4x4f invProjectionMatrix;
-    Vector4f lighVector;
-    Color4f lightColor;
+    uint[4] flags;
+    Vector4f hdrClampingParams;
 }
 
-class SunLightShader: Shader
+class TonemappingShader: Shader
 {
    protected:
-    SunLightShaderVertexUniformBuffer vsUBO;
-    SunLightShaderFragmentUniformBuffer fsUBO;
+    TonemappingShaderVertexUniformBuffer vsUBO;
+    TonemappingShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -42,66 +50,66 @@ class SunLightShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("SunLight.vert.glsl", "data/__internal/shaders/SunLight/SunLight.vert.glsl",
+        vertexModule.create("Tonemapping.vert.glsl", "data/__internal/shaders/Tonemapping/Tonemapping.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("SunLight.frag.glsl", "data/__internal/shaders/SunLight/SunLight.frag.glsl",
+        fragmentModule.create("Tonemapping.frag.glsl", "data/__internal/shaders/Tonemapping/Tonemapping.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create SunLightShader");
+            exitWithError("Failed to create TonemappingShader");
         }
         
-        fsUBO.invProjectionMatrix = Matrix4x4f.identity;
-        fsUBO.lighVector = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
-        fsUBO.lightColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        if (gpu.hdrSwapchain)
+        {
+            fsUBO.flags[0] = Tonemapper.None;
+            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
+        }
+        else
+        {
+            fsUBO.flags[0] = Tonemapper.AgX_Punchy;
+            fsUBO.hdrClampingParams = Vector4f(0.0f, 1.0f, 0.0f, 0.0f);
+        }
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
-        auto view = pass.view;
-        auto scene = state.scene;
-        auto sun = scene.sun;
         
-        fsUBO.invProjectionMatrix = view.invProjectionMatrix;
-        fsUBO.lighVector = Vector4f(sun.directionAbsolute);
-        fsUBO.lighVector.w = 0.0;
-        fsUBO.lighVector = fsUBO.lighVector * view.viewMatrix;
-        fsUBO.lightColor = sun.color;
-        fsUBO.lightColor.a = sun.energy;
+        if (gpu.hdrSwapchain)
+        {
+            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
+        }
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class SunLightPass: RenderPass
+class TonemappingPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    SunLightShader sunLightShader;
-    
-    SDL_GPUColorTargetDescription colorTargetDescription;
+    PostProcessingContext ppContext;
+    TonemappingShader tonemappingShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     
-    this(Renderer renderer, GBuffer gbuffer)
+    this(Renderer renderer, PostProcessingContext ppContext)
     {
         super(renderer);
         this.gpu = renderer.gpu;
-        this.gbuffer = gbuffer;
-        sunLightShader = New!SunLightShader(gpu, this);
+        this.gbuffer = ppContext.gbuffer;
+        this.ppContext = ppContext;
+        
+        tonemappingShader = New!TonemappingShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = sunLightShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = sunLightShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = tonemappingShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = tonemappingShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -136,19 +144,15 @@ class SunLightPass: RenderPass
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
-        SDL_GPUColorTargetBlendState blendState = {
-            src_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            alpha_blend_op: SDL_GPU_BLENDOP_ADD,
-            color_write_mask: 0,
-            enable_blend: true,
-            enable_color_write_mask: false
-        };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-        colorTargetDescription.blend_state = blendState;
+        SDL_GPUColorTargetDescription colorTargetDescription;
+        colorTargetDescription.format = ppContext.targetFormat;
+        colorTargetDescription.blend_state.enable_blend = false;
+        colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        colorTargetDescription.blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        colorTargetDescription.blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        colorTargetDescription.blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        colorTargetDescription.blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
         pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
@@ -173,7 +177,7 @@ class SunLightPass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo.texture = ppContext.currentTarget;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -186,7 +190,7 @@ class SunLightPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo.texture = ppContext.currentTarget;
         
         beginPass();
         
@@ -196,9 +200,9 @@ class SunLightPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(null, null);
+        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
-        sunLightShader.bindParameters(state);
+        tonemappingShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         

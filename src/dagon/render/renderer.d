@@ -6,6 +6,7 @@ import dlib.container.array;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;
+import dagon.core.logger;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.updateable;

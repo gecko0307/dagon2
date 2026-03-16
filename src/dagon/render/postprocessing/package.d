@@ -24,13 +24,10 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render;
+module dagon.render.postprocessing;
 
 public
 {
-    import dagon.render.deferred;
-    import dagon.render.pass;
-    import dagon.render.postprocessing;
-    import dagon.render.renderer;
-    import dagon.render.view;
+    import dagon.render.postprocessing.context;
+    import dagon.render.postprocessing.passes.tonemapping;
 }

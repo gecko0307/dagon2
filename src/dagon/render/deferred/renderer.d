@@ -15,27 +15,34 @@ import dagon.render.deferred.passes.geometry;
 import dagon.render.deferred.passes.ambient;
 import dagon.render.deferred.passes.selfillumination;
 import dagon.render.deferred.passes.sunlight;
-import dagon.render.deferred.passes.present;
+import dagon.render.postprocessing.context;
+import dagon.render.postprocessing.passes.tonemapping;
+import dagon.render.postprocessing.passes.present;
 
 class DeferredRenderer: Renderer
 {
     Texture brdfLUT;
     GBuffer gbuffer;
+    PostProcessingContext ppContext;
     GeometryPass geometryPass;
     AmbientPass ambientPass;
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
+    TonemappingPass tonemappingPass;
     PresentPass presentPass;
     
     this(GPU gpu, EventManager eventManager)
     {
         super(gpu, eventManager);
         gbuffer = New!GBuffer(gpu, this);
+        ppContext = New!PostProcessingContext(gpu, gbuffer, this);
+        
         geometryPass = New!GeometryPass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
-        presentPass = New!PresentPass(this, gbuffer);
+        tonemappingPass = New!TonemappingPass(this, ppContext);
+        presentPass = New!PresentPass(this, ppContext);
         
         string brdfLUTFilename = "data/__internal/textures/brdf.dds";
         TextureAsset brdfAsset = New!TextureAsset(gpu, this);
@@ -60,6 +67,7 @@ class DeferredRenderer: Renderer
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
         gbuffer.resize(drawableWidth, drawableWidth);
+        ppContext.resize(drawableWidth, drawableWidth);
         super.onResize(width, height);
     }
 }
