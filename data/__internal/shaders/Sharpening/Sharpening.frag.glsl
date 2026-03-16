@@ -63,5 +63,5 @@ void main()
     float norm = 1.0 + 4.0 * weight;
     sharpened /= norm;
 
-    outColor = vec4(clamp(sharpened, 0.0, 1.0), 1.0);
+    outColor = vec4(max(vec3(0.0), sharpened), 1.0);
 }
