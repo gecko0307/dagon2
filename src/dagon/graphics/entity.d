@@ -109,7 +109,7 @@ abstract class EntityController: EventListener, Updateable
     }
 }
 
-class MovementController: EntityController
+class TRSController: EntityController
 {
     this(EventManager eventManager, Entity entity)
     {

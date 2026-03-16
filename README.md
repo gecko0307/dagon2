@@ -7,7 +7,8 @@ New features:
 - Experimental HDR output support
 - Many new DDS/DXGI formats support
 - Window minimize/restore events
-- Abstract resource cache (`dagon.resource.cache`) that can be used for any file types.
+- Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
+- Shadeless materials in deferred pipeline.
 
 Major changes from Dagon 0.x/1.x:
 - Reimplemented `dagon.render` (WIP)

@@ -73,7 +73,7 @@ class ResourceCacheStorage: Owner
         path ~= name;
         path ~= extension;
         
-        logInfo("[Cache]", " Saving ", path, "...");
+        debug logDebug("[Cache]", " Saving ", path, "...");
         OutputStream strm = fs.openForOutput(path, FileSystem.create);
         strm.writeArray(data);
         Delete(strm);
@@ -96,7 +96,7 @@ class ResourceCacheStorage: Owner
             size_t size = cast(size_t)s.sizeInBytes;
             if (size > 0)
             {
-                logInfo("[Cache]", " Loading ", path, "...");
+                debug logDebug("[Cache]", " Loading ", path, "...");
                 auto istrm = fs.openForInput(path);
                 data = New!(ubyte[])(size);
                 istrm.fillArray(data);
