@@ -24,7 +24,8 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 
 #define FLAGS_TEXTURE 0
 
-#define TEXFLAG_HAS_BRDF_LUT 1 << 0
+#define TEXFLAG_HAS_AMBIENT_TEXTURE 1 << 0
+#define TEXFLAG_HAS_BRDF_LUT 2 << 0
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
@@ -38,7 +39,8 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 viewMatrix;
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;
-    uint flags[4];
+    vec4 ambientColor;
+    uvec4 flags;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -47,10 +49,17 @@ layout(location = 0) out vec4 outColor;
 
 vec3 ambient(in vec3 wN, in float perceptualRoughness)
 {
-    ivec2 envMapSize = textureSize(ambientTexture, 0);
-    float resolution = float(max(envMapSize.x, envMapSize.y));
-    float lod = log2(resolution) * perceptualRoughness;
-    return textureLod(ambientTexture, wN, lod).rgb;
+    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_AMBIENT_TEXTURE) != 0)
+    {
+        ivec2 envMapSize = textureSize(ambientTexture, 0);
+        float resolution = float(max(envMapSize.x, envMapSize.y));
+        float lod = log2(resolution) * perceptualRoughness;
+        return textureLod(ambientTexture, wN, lod).rgb * ubo.ambientColor.a;
+    }
+    else
+    {
+        return ubo.ambientColor.rgb * ubo.ambientColor.a;
+    }
 }
 
 const float reflectivity = 1.0;

@@ -25,6 +25,8 @@ class Material: Owner
     float alphaClipThreshold = 0.5f;
     bool shadeless = false;
     
+    bool outputDepth = true;
+    
     this(Owner owner)
     {
         super(owner);

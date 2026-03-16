@@ -37,7 +37,8 @@ struct GeometryShaderFragmentUniformBuffer
 
 enum GeometryFlags
 {
-    Texture = 0
+    Texture = 0,
+    Output = 1
 }
 
 enum GeometryTextureFlags: uint
@@ -48,6 +49,11 @@ enum GeometryTextureFlags: uint
     HasRoughnessMetallicTexture = 1 << 3,
     HasEmissionTexture = 1 << 4,
     HasSkyboxTexture = 1 << 5
+}
+
+enum GeometryOutputFlags: uint
+{
+    Depth = 1 << 0
 }
 
 class GeometryShader: Shader
@@ -91,10 +97,13 @@ class GeometryShader: Shader
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         
         fsUBO.flags[GeometryFlags.Texture] = 0;
-        fsUBO.flags[1] = 0;
+        fsUBO.flags[GeometryFlags.Output] = 0;
         fsUBO.flags[2] = 0;
         fsUBO.flags[3] = 0;
         fsUBO.baseColor = material.baseColor;
+        
+        if (material.outputDepth)
+            fsUBO.flags[GeometryFlags.Output] |= GeometryOutputFlags.Depth;
         
         fsUBO.roughnessMetallic.g = material.roughness;
         fsUBO.roughnessMetallic.b = material.metallic;
@@ -236,7 +245,7 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
         pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
         
-        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS;
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
         pipelineCreateInfo.depth_stencil_state.enable_depth_test = true;
         pipelineCreateInfo.depth_stencil_state.enable_depth_write = true;
         pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;

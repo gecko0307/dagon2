@@ -23,6 +23,7 @@ layout(location = 2) in vec3 eyeNormal;
 layout(location = 3) in vec3 modelPosition;
 
 #define FLAGS_TEXTURE 0
+#define FLAGS_OUTPUT 1
 
 #define TEXFLAG_HAS_BASECOLOR_TEXTURE 1 << 0
 #define TEXFLAG_HAS_NORMAL_TEXTURE 1 << 1
@@ -30,6 +31,8 @@ layout(location = 3) in vec3 modelPosition;
 #define TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE 1 << 3
 #define TEXFLAG_HAS_EMISSION_TEXTURE 1 << 4
 #define TEXFLAG_HAS_SKYBOX_TEXTURE 1 << 5
+
+#define OUTFLAG_DEPTH 1 << 0
 
 layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 layout(set = 2, binding = 1) uniform sampler2D normalTexture;
@@ -44,7 +47,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     vec4 roughnessMetallic;
     vec4 emission;
     vec4 alphaOptions;
-    uint flags[4];
+    uvec4 flags;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -53,6 +56,8 @@ layout(location = 2) out vec4 outRoughnessMetallic;
 layout(location = 3) out vec4 outEmission;
 layout(location = 4) out vec4 outVelocity;
 layout(location = 5) out vec4 outRadiance;
+
+out float gl_FragDepth;
 
 const float ysign = 1.0;
 
@@ -115,4 +120,9 @@ void main()
     outEmission = vec4(emission, alpha);
     outVelocity = vec4(0.0, 0.0, motionBlurMask, alpha); // TODO
     outRadiance = vec4(0.0, 0.0, 0.0, alpha);
+    
+    if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)
+        gl_FragDepth = gl_FragCoord.z;
+    else
+        gl_FragDepth = 1.0;
 }

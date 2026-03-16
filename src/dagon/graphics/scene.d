@@ -3,6 +3,7 @@ module dagon.graphics.scene;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.container.array;
+import dlib.image.color;
 
 import dagon.graphics.entity;
 import dagon.graphics.camera;
@@ -14,7 +15,9 @@ class Scene: Owner
     Array!Entity entities;
     Camera activeCamera;
     Light sun;
+    Color4f ambientColor = Color4f(0.5f, 0.5f, 0.5f, 1.0f);
     Texture ambientTexture;
+    float ambientEnergy = 1.0f;
     
     this(Owner owner)
     {
