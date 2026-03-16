@@ -28,6 +28,7 @@ struct SharpeningShaderVertexUniformBuffer
 struct SharpeningShaderFragmentUniformBuffer
 {
     Vector4f viewSize;
+    Vector4f params;
 }
 
 class SharpeningShader: Shader
@@ -37,6 +38,8 @@ class SharpeningShader: Shader
     SharpeningShaderFragmentUniformBuffer fsUBO;
     
    public:
+    float strength = 0.5f;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -58,6 +61,7 @@ class SharpeningShader: Shader
             gpu.application.drawableWidth,
             gpu.application.drawableHeight,
             0.0f, 0.0f);
+        fsUBO.params = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -66,6 +70,8 @@ class SharpeningShader: Shader
         
         fsUBO.viewSize.x = gpu.application.drawableWidth;
         fsUBO.viewSize.y = gpu.application.drawableHeight;
+        
+        fsUBO.params[0] = strength;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         //pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);

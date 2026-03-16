@@ -10,13 +10,12 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 viewSize;
+    vec4 params;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
-
-const float sharpening = 0.5; // 0.0 – 1.0
 
 void main()
 {
@@ -55,7 +54,7 @@ void main()
     float amp = clamp(contrast > 0.0 ? (min(mn, 1.0 - mx) / mx) : 0.0, 0.0, 1.0);
     amp = sqrt(amp);
 
-    float peak = mix(8.0, 5.0, sharpening);
+    float peak = mix(8.0, 5.0, ubo.params[0]);
     float weight = -amp / peak;
 
     vec3 sharpened = (b + d + f + h) * weight + e;
