@@ -50,8 +50,8 @@ class TestWorld: World
         aOBJSuzanne = loadAsset!OBJAsset("data/suzanne.obj");
         
         scene = New!Scene(this);
-        auto sunMovement = New!MovementController(eventManager, scene.sun);
-        sunMovement.pitch(-45.0f);
+        auto sunTRS = New!TRSController(eventManager, scene.sun);
+        sunTRS.pitch(-45.0f);
         scene.sun.energy = 10.0f;
         
         auto camera = scene.addCamera();
