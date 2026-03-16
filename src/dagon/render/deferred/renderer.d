@@ -41,10 +41,12 @@ class DeferredRenderer: Renderer
         gbuffer = New!GBuffer(gpu, this);
         ppContext = New!PostProcessingContext(gpu, gbuffer, this);
         
+        // TODO: sun shadow pass
         geometryPass = New!GeometryPass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
+        // TODO: light volume pass
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
