@@ -129,7 +129,7 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
-    uint flags[4];
+    uvec4 flags;
     vec4 hdrClampingParams;
 } ubo;
 
