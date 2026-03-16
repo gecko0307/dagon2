@@ -21,7 +21,7 @@ enum EntityLayer
     Foreground = 2
 }
 
-class Entity: Owner
+class Entity: Owner, Updateable
 {
     EntityController controller;
     Matrix4x4f transformation;
@@ -38,6 +38,7 @@ class Entity: Owner
     float motionBlurMask = 1.0f;
     bool visible = true;
     bool castShadow = true;
+    bool autoUpdate = false;
     
     this(Owner owner)
     {
@@ -47,13 +48,22 @@ class Entity: Owner
         position = Vector3f(0.0f, 0.0f, 0.0f);
         rotation = Quaternionf.identity;
         scaling = Vector3f(1.0f, 1.0f, 1.0f);
-        updateTransformation();
+        update(Time(0.0, 0.0));
     }
     
-    void updateTransformation()
+    void update()
+    {
+        update(Time(0.0, 0.0));
+    }
+    
+    void update(Time t)
     {
         transformation = trsMatrix(position, rotation, scaling);
         invTransformation = transformation.inverse;
+        
+        // TODO: parent-child relation
+        modelMatrix = transformation;
+        invModelMatrix = invTransformation;
     }
     
     Vector3f positionAbsolute()
@@ -90,6 +100,82 @@ class Entity: Owner
     {
         return modelMatrix.up;
     }
+    
+    /// Translates the entity by the given vector.
+    void translate(Vector3f v)
+    {
+        position += v;
+    }
+
+    /// Translates the entity by the given vector components.
+    void translate(float vx, float vy, float vz)
+    {
+        position += Vector3f(vx, vy, vz);
+    }
+
+    /// Moves the entity forward by the given speed.
+    void move(float speed)
+    {
+        position += transformation.forward * speed;
+    }
+    
+    /// Strafes (moves to the right) by the given speed.
+    void strafe(float speed)
+    {
+        position += transformation.right * speed;
+    }
+
+    /// Lifts (moves up) by the given speed.
+    void lift(float speed)
+    {
+        position += transformation.up * speed;
+    }
+    
+    /// Rotates the entity by the given Euler angles (degrees).
+    void rotate(Vector3f v)
+    {
+        auto r =
+            rotationQuaternion!float(Axis.x, degtorad(v.x)) *
+            rotationQuaternion!float(Axis.y, degtorad(v.y)) *
+            rotationQuaternion!float(Axis.z, degtorad(v.z));
+        rotation *= r;
+    }
+    
+    /// Rotates the entity by the given Euler angles (degrees).
+    void rotate(float x, float y, float z)
+    {
+        rotate(Vector3f(x, y, z));
+    }
+    
+    /// Rotates the entity around the local X axis.
+    void pitch(float angle)
+    {
+        rotation *= rotationQuaternion!float(Axis.x, degtorad(angle));
+    }
+
+    /// Rotates the entity around the local Y axis.
+    void turn(float angle)
+    {
+        rotation *= rotationQuaternion!float(Axis.y, degtorad(angle));
+    }
+
+    /// Rotates the entity around the local Z axis.
+    void roll(float angle)
+    {
+        rotation *= rotationQuaternion!float(Axis.z, degtorad(angle));
+    }
+
+    /// Scales the entity uniformly.
+    void scale(float s)
+    {
+        scaling += Vector3f(s, s, s);
+    }
+
+    /// Scales the entity non-uniformly by the given vector.
+    void scale(Vector3f s)
+    {
+        scaling += s;
+    }
 }
 
 abstract class EntityController: EventListener, Updateable
@@ -106,99 +192,6 @@ abstract class EntityController: EventListener, Updateable
     void update(Time t)
     {
         //
-    }
-}
-
-class TRSController: EntityController
-{
-    this(EventManager eventManager, Entity entity)
-    {
-        super(eventManager, entity);
-    }
-    
-    /// Translates the entity by the given vector.
-    void translate(Vector3f v)
-    {
-        entity.position += v;
-    }
-
-    /// Translates the entity by the given vector components.
-    void translate(float vx, float vy, float vz)
-    {
-        entity.position += Vector3f(vx, vy, vz);
-    }
-
-    /// Moves the entity forward by the given speed.
-    void move(float speed)
-    {
-        entity.position += entity.transformation.forward * speed;
-    }
-    
-    /// Strafes (moves to the right) by the given speed.
-    void strafe(float speed)
-    {
-        entity.position += entity.transformation.right * speed;
-    }
-
-    /// Lifts (moves up) by the given speed.
-    void lift(float speed)
-    {
-        entity.position += entity.transformation.up * speed;
-    }
-    
-    /// Rotates the entity by the given Euler angles (degrees).
-    void rotate(Vector3f v)
-    {
-        auto r =
-            rotationQuaternion!float(Axis.x, degtorad(v.x)) *
-            rotationQuaternion!float(Axis.y, degtorad(v.y)) *
-            rotationQuaternion!float(Axis.z, degtorad(v.z));
-        entity.rotation *= r;
-    }
-    
-    /// Rotates the entity by the given Euler angles (degrees).
-    void rotate(float x, float y, float z)
-    {
-        rotate(Vector3f(x, y, z));
-    }
-    
-    /// Rotates the entity around the local X axis.
-    void pitch(float angle)
-    {
-        entity.rotation *= rotationQuaternion!float(Axis.x, degtorad(angle));
-    }
-
-    /// Rotates the entity around the local Y axis.
-    void turn(float angle)
-    {
-        entity.rotation *= rotationQuaternion!float(Axis.y, degtorad(angle));
-    }
-
-    /// Rotates the entity around the local Z axis.
-    void roll(float angle)
-    {
-        entity.rotation *= rotationQuaternion!float(Axis.z, degtorad(angle));
-    }
-
-    /// Scales the entity uniformly.
-    void scale(float s)
-    {
-        entity.scaling += Vector3f(s, s, s);
-    }
-
-    /// Scales the entity non-uniformly by the given vector.
-    void scale(Vector3f s)
-    {
-        entity.scaling += s;
-    }
-    
-    override void update(Time t)
-    {
-        entity.updateTransformation();
-        
-        // TODO: child-parent relation
-        entity.modelMatrix = entity.transformation;
-        entity.invModelMatrix = entity.invTransformation;
     }
 }
 

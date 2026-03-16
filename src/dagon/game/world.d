@@ -13,6 +13,7 @@ class World: EventListener
     BaseGame baseGame;
     GPU gpu;
     Scene scene;
+    bool recalculateMatrices = true;
     
     this(BaseGame baseGame)
     {
@@ -30,17 +31,29 @@ class World: EventListener
     {
         processEvents();
         onUpdate(t);
-        updateControllers(t);
-        onPostUpdate(t);
-    }
-    
-    void updateControllers(Time t)
-    {
-        foreach(entity; scene.entities)
+        if (recalculateMatrices)
         {
-            if (entity.controller)
-                entity.controller.update(t);
+            foreach(entity; scene.entities)
+            {
+                if (entity.controller)
+                    entity.controller.update(t);
+                else
+                    entity.update(t);
+            }
+            
+            recalculateMatrices = false;
         }
+        else
+        {
+            foreach(entity; scene.entities)
+            {
+                if (entity.autoUpdate)
+                    entity.update(t);
+                else if (entity.controller)
+                    entity.controller.update(t);
+            }
+        }
+        onPostUpdate(t);
     }
     
     void onUpdate(Time t)
