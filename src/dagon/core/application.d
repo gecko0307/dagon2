@@ -121,6 +121,14 @@ enum DagonEvent
     Exit = -1
 }
 
+///
+enum WindowSystem
+{
+    WindowsDWM,
+    X11,
+    Wayland
+}
+
 /// Supported color profiles.
 enum ColorProfile: uint
 {
@@ -166,8 +174,9 @@ enum ImageFileFormat
 __gshared private
 {
     bool[ImageFileFormat] _imageFileFormatSupported;
-    //int _maxTextureUnits;
-    //int _maxTextureSize;
+    
+    int _maxTextureUnits = 32;
+    int _maxTextureSize = 16384;
     
     VirtualFileSystem _vfs;
     GPU _gpu;
@@ -198,22 +207,18 @@ bool isImageFileFormatSupported(ImageFileFormat ffmt)
 /**
  * Returns the maximum number of texture units supported by the hardware.
  */
-/*
 int maxTextureUnits()
 {
     return _maxTextureUnits;
 }
-*/
 
 /**
  * Returns the maximum supported texture size.
  */
-/*
 int maxTextureSize()
 {
     return _maxTextureSize;
 }
-*/
 
 /// Vertical synchronization mode.
 enum VSyncMode: int
@@ -473,10 +478,28 @@ class Application: EventListener, Updateable
     /// Main SDL window properties.
     SDL_PropertiesID windowProperties;
     
+    /// Detected window system enum.
+    WindowSystem windowSystem;
+    
     version(Windows)
     {
         /// Windows-only: HWND of the main window.
         HWND hwnd;
+        
+        /// Windows-only: HDC of the main window.
+        HDC hdc;
+        
+        /// Windows-only: HINSTANCE of the main window.
+        HINSTANCE hInstance;
+    }
+    
+    version(linux)
+    {
+        /// Linux-only: Wayland surface of the main window.
+        void* waylandSurface;
+        
+        /// Linux-only: X11 window ID of the main window.
+        uint x11WindowID;
     }
     
     /// Main loop runner. Calls `Application.update` with a given fixed frequency (60 Hz by default).
@@ -990,9 +1013,23 @@ class Application: EventListener, Updateable
         version(Windows)
         {
             hwnd = SDL_GetPointerProperty(windowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, null);
-            //TODO: SDL_PROP_WINDOW_WIN32_HDC_POINTER
-            //TODO: SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER
+            hdc = SDL_GetPointerProperty(windowProperties, SDL_PROP_WINDOW_WIN32_HDC_POINTER, null);
+            hInstance = SDL_GetPointerProperty(windowProperties, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, null);
+            windowSystem = WindowSystem.WindowsDWM;
         }
+        else version(linux)
+        {
+            waylandSurface = SDL_GetPointerProperty(windowProperties, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, null);
+            
+            if (waylandSurface is null)
+            {
+                x11WindowID = SDL_GetNumberProperty(windowProperties, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+                windowSystem = WindowSystem.X11;
+            }
+            else
+                windowSystem = WindowSystem.Wayland;
+        }
+        logInfo("Window system: ", windowSystem);
         if ("window.HDROutput" in config.props)
             hdrOutput = cast(bool)(config.props["window.HDROutput"].toUInt);
         whileLevel = SDL_GetFloatProperty(windowProperties, SDL_PROP_WINDOW_SDR_WHITE_LEVEL_FLOAT, 1.0f);
