@@ -7,6 +7,7 @@ import dlib.math.matrix;
 import dlib.image.color;
 
 import dagon.core.sdl3;
+import dagon.core.application;
 import dagon.core.gpu;
 import dagon.core.crashhandler;
 import dagon.graphics.state;
@@ -26,7 +27,7 @@ struct PresentShaderVertexUniformBuffer
 
 struct PresentShaderFragmentUniformBuffer
 {
-    // TODO
+    uint[4] flags;
 }
 
 class PresentShader: Shader
@@ -60,8 +61,10 @@ class PresentShader: Shader
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         
+        fsUBO.flags[0] = gpu.application.outputColorProfile;
+        
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
-        //pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 

@@ -122,7 +122,7 @@ enum DagonEvent
 }
 
 /// Supported color profiles.
-enum ColorProfile
+enum ColorProfile: uint
 {
     Gamma22 = 0,
     sRGB = 1,
@@ -1038,6 +1038,11 @@ class Application: EventListener, Updateable
         
         logInfo("GPU API backend: ", gpu.backend);
         logInfo("Back buffer format: ", gpu.swapchainTextureFormat);
+        
+        if (gpu.hdrSwapchain)
+        {
+            outputColorProfile = ColorProfile.Linear;
+        }
         
         setFullscreen(fullscreen);
         

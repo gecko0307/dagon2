@@ -80,6 +80,9 @@ void main()
     vec2 v_rgbSE = (fragCoord + vec2(1.0, 1.0)) * invScreenSize;
     vec2 v_rgbM = vec2(fragCoord * invScreenSize);
     vec3 outputColor = fxaa(colorBuffer, fragCoord, viewSize, v_rgbNW, v_rgbNE, v_rgbSW, v_rgbSE, v_rgbM).rgb; 
+    
+    // Temporary! Conversion to linear (for CAS) should be done in color grading pass
     outputColor = pow(outputColor, vec3(2.2));
+    
     outColor = vec4(outputColor, 1.0);
 }

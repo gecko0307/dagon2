@@ -1,4 +1,4 @@
-module dagon.render.postprocessing.passes.tonemapping;
+module dagon.render.postprocessing.passes.sharpening;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -20,29 +20,21 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
-enum Tonemapper: uint
-{
-    None = 0,
-    AgX_Base = 1,
-    AgX_Punchy = 2
-}
-
-struct TonemappingShaderVertexUniformBuffer
+struct SharpeningShaderVertexUniformBuffer
 {
     // TODO
 }
 
-struct TonemappingShaderFragmentUniformBuffer
+struct SharpeningShaderFragmentUniformBuffer
 {
-    uint[4] flags;
-    Vector4f hdrClampingParams;
+    Vector4f viewSize;
 }
 
-class TonemappingShader: Shader
+class SharpeningShader: Shader
 {
    protected:
-    TonemappingShaderVertexUniformBuffer vsUBO;
-    TonemappingShaderFragmentUniformBuffer fsUBO;
+    SharpeningShaderVertexUniformBuffer vsUBO;
+    SharpeningShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -50,53 +42,45 @@ class TonemappingShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Tonemapping.vert.glsl", "data/__internal/shaders/Tonemapping/Tonemapping.vert.glsl",
+        vertexModule.create("Sharpening.vert.glsl", "data/__internal/shaders/Sharpening/Sharpening.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Tonemapping.frag.glsl", "data/__internal/shaders/Tonemapping/Tonemapping.frag.glsl",
+        fragmentModule.create("Sharpening.frag.glsl", "data/__internal/shaders/Sharpening/Sharpening.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create TonemappingShader");
+            exitWithError("Failed to create SharpeningShader");
         }
         
-        if (gpu.hdrSwapchain)
-        {
-            fsUBO.flags[0] = Tonemapper.None;
-            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
-        }
-        else
-        {
-            // TODO: get from render.conf
-            fsUBO.flags[0] = Tonemapper.AgX_Punchy;
-            fsUBO.hdrClampingParams = Vector4f(0.0f, 1.0f, 0.0f, 0.0f);
-        }
+        fsUBO.viewSize = Vector4f(
+            gpu.application.drawableWidth,
+            gpu.application.drawableHeight,
+            0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         
-        if (gpu.hdrSwapchain)
-        {
-            fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
-        }
+        fsUBO.viewSize.x = gpu.application.drawableWidth;
+        fsUBO.viewSize.y = gpu.application.drawableHeight;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        //pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class TonemappingPass: RenderPass
+class SharpeningPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
-    TonemappingShader tonemappingShader;
+    SharpeningShader sharpeningShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     
     this(Renderer renderer, PostProcessingContext ppContext)
@@ -106,11 +90,11 @@ class TonemappingPass: RenderPass
         this.gbuffer = ppContext.gbuffer;
         this.ppContext = ppContext;
         
-        tonemappingShader = New!TonemappingShader(gpu, this);
+        sharpeningShader = New!SharpeningShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = tonemappingShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = tonemappingShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = sharpeningShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = sharpeningShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -201,9 +185,9 @@ class TonemappingPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
+        state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
         state.entity = null;
-        tonemappingShader.bindParameters(state);
+        sharpeningShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         

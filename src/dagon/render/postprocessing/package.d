@@ -31,5 +31,6 @@ public
     import dagon.render.postprocessing.context;
     import dagon.render.postprocessing.passes.tonemapping;
     import dagon.render.postprocessing.passes.fxaa;
+    import dagon.render.postprocessing.passes.sharpening;
     import dagon.render.postprocessing.passes.present;
 }
