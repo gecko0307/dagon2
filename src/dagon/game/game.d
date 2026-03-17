@@ -1,5 +1,7 @@
 module dagon.game.game;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.container.array;
@@ -50,10 +52,19 @@ class Game: BaseGame
             repeatUV: false
         };
         
-        Texture outputCubemap = New!Texture(gpu, cubemapOwner);
-        outputCubemap.create(&buffer, &options);
-        cubemapRenderer.generateCubemap(inputEnvmap, outputCubemap);
-        return outputCubemap;
+        Texture cubemap1 = New!Texture(gpu, null);
+        cubemap1.create(&buffer, &options);
+        cubemapRenderer.generateCubemap(inputEnvmap, cubemap1);
+        
+        buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
+        Texture cubemap2 = New!Texture(gpu, cubemapOwner);
+        cubemap2.create(&buffer, &options);
+        
+        cubemapRenderer.prefilterCubemap(cubemap1, cubemap2);
+        
+        Delete(cubemap1);
+        
+        return cubemap2;
     }
     
     override void onUpdate(Time t)
