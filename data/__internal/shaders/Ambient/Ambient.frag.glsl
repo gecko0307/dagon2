@@ -100,7 +100,7 @@ void main()
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
     vec3 diffuse = kD * irradiance * baseColor;
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0) * (1.0 - roughness);
+    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0); // * (1.0 - roughness);
     const float occlusion = 1.0;
     radiance += (diffuse + specular) * occlusion * ambientEnergy;
     

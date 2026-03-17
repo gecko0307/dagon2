@@ -73,6 +73,8 @@ class TextureAsset: Owner
     {
         debug logInfo("Loading ", filename, "...");
         
+        // TODO: check filename existence
+        
         string extension = filename.extension.toLower;
         
         if (extension == ".dds")

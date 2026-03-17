@@ -106,7 +106,7 @@ void main()
         emission = textureLod(skyboxTexture, -normalize(modelPosition), 0.0).rgb;
     else if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
     {
-        emission *= texture(emissionTexture, uv).rgb;
+        emission *= toLinear(texture(emissionTexture, uv).rgb);
         emission += toLinear(baseColor.rgb) * (1.0 - shadedMask);
     }
     
