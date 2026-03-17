@@ -51,7 +51,7 @@ import dlib.math.utils;
 import dagon.core.sdl3;
 import dagon.core.dxgiformat;
 import dagon.core.logger;
-import dagon.graphics.texturebuffer;
+import dagon.graphics.texture;
 
 //version = DDSDebug;
 
@@ -537,7 +537,6 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
  * Returns:
  *   `true` if saving succeeded, `false` otherwise.
  */
-/++
 bool saveDDS(OutputStream output, TextureBuffer* buffer)
 {
     string ddsMagic = "DDS ";
@@ -557,7 +556,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         auto blocksV = max2(1, (buffer.size.height + 3) / 4);
         auto sliceSize  = blocksH * blocksV * buffer.format.blockSize;
         
-        if (buffer.format.target == GL_TEXTURE_3D)
+        if (buffer.format.type == SDL_GPU_TEXTURETYPE_3D)
             header.pitch = sliceSize * buffer.size.depth;
         else
             header.pitch = sliceSize;
@@ -588,6 +587,8 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     dx10.miscFlag = 0;
     dx10.miscFlags2 = 0;
     
+    /*
+    // TODO
     if (isCompressed)
     {
         header.format.flags = DDPF.FOURCC;
@@ -626,16 +627,9 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         header.format.blueMask = 0;
         header.format.alphaMask = 0;
     }
-    else if (buffer.format.internalFormat == GL_RGB8)
-    {
-        header.format.flags = DDPF.RGB;
-        header.format.bpp = 24;
-        header.format.redMask   = 0x000000FF;
-        header.format.greenMask = 0x0000FF00;
-        header.format.blueMask  = 0x00FF0000;
-        header.format.alphaMask = 0x00000000;
-    }
-    else if (buffer.format.internalFormat == GL_RGBA8)
+    else
+    */
+    if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
     {
         header.format.flags = DDPF.RGB | DDPF.ALPHAPIXELS;
         header.format.bpp = 32;
@@ -644,14 +638,14 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         header.format.blueMask  = 0x00FF0000;
         header.format.alphaMask = 0xFF000000;
     }
-    else if (buffer.format.internalFormat == GL_RGBA16F)
+    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT)
     {
         header.format.flags = DDPF.FOURCC;
         header.format.fourCC = FOURCC_DX10;
         dx10.dxgiFormat = DXGIFormat.R16G16B16A16_FLOAT;
         writeDXT10Header = true;
     }
-    else if (buffer.format.internalFormat == GL_RGBA32F)
+    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT)
     {
         header.format.flags = DDPF.FOURCC;
         header.format.fourCC = FOURCC_DX10;
@@ -660,7 +654,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     }
     else
     {
-        logError("saveDDS: unsupported texture internal format ", buffer.format.internalFormat);
+        logError("saveDDS: unsupported texture format ", buffer.format.format);
         return false;
     }
     
@@ -674,7 +668,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         header.caps |= DDSCaps.COMPLEX | DDSCaps.MIPMAP;
     }
     
-    if (buffer.format.target == GL_TEXTURE_CUBE_MAP)
+    if (buffer.format.type == SDL_GPU_TEXTURETYPE_CUBE)
     {
         header.caps |= DDSCaps.COMPLEX;
         
@@ -686,20 +680,18 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
             return false;
         }
     }
-    else if (buffer.format.target == GL_TEXTURE_3D)
+    else if (buffer.format.type == SDL_GPU_TEXTURETYPE_3D)
     {
         header.flags |= DDSHeaderFlags.DEPTH;
         header.depth = buffer.size.depth;
         header.caps2 |= DDSCaps2.VOLUME;
     }
     
-    if (buffer.format.target == GL_TEXTURE_1D)
-        dx10.resourceDimension = D3D10ResourceDimension.Texture1D;
-    else if (buffer.format.target == GL_TEXTURE_2D)
+    if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D)
         dx10.resourceDimension = D3D10ResourceDimension.Texture2D;
-    else if (buffer.format.target == GL_TEXTURE_3D)
+    else if (buffer.format.type == SDL_GPU_TEXTURETYPE_3D)
         dx10.resourceDimension = D3D10ResourceDimension.Texture3D;
-    else if (buffer.format.target == GL_TEXTURE_CUBE_MAP)
+    else if (buffer.format.type == SDL_GPU_TEXTURETYPE_CUBE)
     {
         dx10.resourceDimension = D3D10ResourceDimension.Texture2D;
         dx10.miscFlag = D3D10ResourceMisc.TextureCube;
@@ -728,10 +720,15 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
  */
 bool saveDDS(OutputStream output, Texture texture)
 {
-    TextureBuffer textureBuffer = downloadTexture(texture);
+    TextureBuffer textureBuffer;
+    if (!texture.download(&textureBuffer))
+    {
+        if (textureBuffer.data.length)
+            Delete(textureBuffer.data);
+        return false;
+    }
     bool res = saveDDS(output, &textureBuffer);
     if (textureBuffer.data.length)
         Delete(textureBuffer.data);
     return res;
 }
-++/

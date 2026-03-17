@@ -26,9 +26,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Decode and encode Radiance HDR/RGBE images
+ * Radiance HDR/RGBE loader.
  *
- * Copyright: Timur Gafarov 2016-2025.
+ * Copyright: Timur Gafarov 2016-2026.
  * License: $(LINK2 boost.org/LICENSE_1_0.txt, Boost License 1.0).
  * Authors: Timur Gafarov
  */
