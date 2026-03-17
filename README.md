@@ -5,7 +5,7 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 New features:
 - The renderer is based on SDL GPU, targeting Vulkan instead of OpenGL
 - Deferred renderer, post-processing renderer and presentation renderer are now combined into one
-- Experimental HDR output support
+- Experimental HDR (scRGB) output support
 - Many new DDS/DXGI formats support
 - Window minimize/restore events
 - Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
