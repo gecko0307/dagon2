@@ -11,7 +11,7 @@ import dlib.math.utils;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
-import dagon.graphics.texturebuffer;
+public import dagon.graphics.texturebuffer;
 
 struct TextureCreationOptions
 {
@@ -49,7 +49,35 @@ class Texture: Owner
         if (options.generateMipmaps)
             mipLevels = 1 + cast(uint)floor(log2(cast(double)max(buffer.size.width, buffer.size.height)));
         else
-            mipLevels = 1;
+            mipLevels = buffer.mipLevels;
+        
+        // TODO: customization via TextureCreationOptions
+        SDL_GPUSamplerCreateInfo samplerCreateInfo;
+        samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
+        samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
+        samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+        if (options.repeatUV)
+        {
+            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+        }
+        else
+        {
+            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        }
+        samplerCreateInfo.mip_lod_bias = 0.0f;
+        samplerCreateInfo.max_anisotropy = 16.0f;
+        samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
+        samplerCreateInfo.min_lod = 0.0f;
+        samplerCreateInfo.max_lod = mipLevels - 1;
+        samplerCreateInfo.enable_anisotropy = true;
+        samplerCreateInfo.enable_compare = false;
+        sampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
+        if (sampler is null)
+            return false;
         
         SDL_GPUTextureCreateInfo texCreateInfo;
         texCreateInfo.type = buffer.format.type;
@@ -66,6 +94,10 @@ class Texture: Owner
         
         if (texture is null)
             return false;
+        
+        valid = true;
+        if (buffer.data.length == 0)
+            return valid;
         
         SDL_GPUTransferBufferCreateInfo transferCreateInfo = {
             usage: SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
@@ -161,34 +193,6 @@ class Texture: Owner
         
         SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
         SDL_ReleaseGPUTransferBuffer(gpu.device, texTransferBuffer);
-        
-        // TODO: customization via TextureCreationOptions
-        SDL_GPUSamplerCreateInfo samplerCreateInfo;
-        samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
-        samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
-        samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-        if (options.repeatUV)
-        {
-            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-        }
-        else
-        {
-            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        }
-        samplerCreateInfo.mip_lod_bias = 0.0f;
-        samplerCreateInfo.max_anisotropy = 16.0f;
-        samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
-        samplerCreateInfo.min_lod = 0.0f;
-        samplerCreateInfo.max_lod = mipLevels - 1;
-        samplerCreateInfo.enable_anisotropy = true;
-        samplerCreateInfo.enable_compare = false;
-        sampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
-        if (sampler is null)
-            return false;
         
         valid = true;
         return valid;

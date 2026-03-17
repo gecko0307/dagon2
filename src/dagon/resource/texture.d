@@ -15,6 +15,7 @@ import dagon.graphics.texturebuffer;
 import dagon.graphics.texture;
 import dagon.resource.image;
 import dagon.resource.dds;
+import dagon.resource.hdr;
 
 class TextureAsset: Owner
 {
@@ -77,6 +78,10 @@ class TextureAsset: Owner
         if (extension == ".dds")
         {
             loaded = loadDDS(istrm, &buffer);
+        }
+        else if (extension == ".hdr")
+        {
+            loaded = loadHDR(istrm, &buffer);
         }
         else if (isSupportedImageFormat(extension))
         {
