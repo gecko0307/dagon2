@@ -163,7 +163,7 @@ class ShaderModule: Owner
             if (sourceType == ShaderSourceType.File)
             {
                 string filename = source;
-                ubyte[] data = globalResourceCache.load(name, filename);
+                ubyte[] data = globalResourceCache.load(ResourceType.Shader, name, filename);
                 if (data.length)
                 {
                     compilationNeeded = false;
@@ -186,17 +186,18 @@ class ShaderModule: Owner
             
             if (compilationNeeded)
             {
+                logDebug("Compiling ", name, "...");
                 ShaderCompilationResult res = compileGLSLtoSPIRV(sourceString, pipelineStage);
                 if (res.success)
                 {
                     spirv = res.spirv;
                     valid = true;
-                    globalResourceCache.save(name, spirvAsBytes);
+                    globalResourceCache.save(ResourceType.Shader, name, spirvAsBytes);
                 }
                 else
                 {
                     valid = false;
-                    writefln("%s: shader compilation failed", name);
+                    logError("Shader compilation failed");
                 }
             }
         }

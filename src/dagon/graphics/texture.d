@@ -223,7 +223,7 @@ class Texture: Owner
         else
         {
             // TODO
-            logError("3D textures are not supported yet, sorry");
+            logError("Uploading 3D textures is not supported yet, sorry");
             SDL_ReleaseGPUTransferBuffer(gpu.device, texTransferBuffer);
             valid = false;
             return valid;
@@ -358,8 +358,117 @@ class Texture: Owner
             
             return true;
         }
-        
-        // TODO: 2D and 3D textures
+        else if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D)
+        {
+            // Calculate buffer size
+            uint levelWidth = outBuffer.size.width;
+            uint levelHeight = outBuffer.size.height;
+            
+            for (uint level = 0; level < outBuffer.mipLevels; ++level)
+            {
+                if (outBuffer.format.blockSize > 0)
+                {
+                    uint imageSize =
+                        ((cast(uint)levelWidth + 3) / 4) *
+                        ((cast(uint)levelHeight + 3) / 4) *
+                        outBuffer.format.blockSize;
+                    bufferSize += imageSize;
+                }
+                else
+                {
+                    bufferSize += levelWidth * levelHeight * outBuffer.format.pixelSize;
+                }
+                
+                levelWidth = max2(1, levelWidth / 2);
+                levelHeight = max2(1, levelHeight / 2);
+            }
+            
+            if (bufferSize > 0)
+                data = New!(ubyte[])(bufferSize);
+            else
+                return false;
+            
+            SDL_GPUTransferBufferCreateInfo transferCreateInfo = {
+                usage: SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD,
+                size: bufferSize
+            };
+            SDL_GPUTransferBuffer* downloadBuffer = SDL_CreateGPUTransferBuffer(gpu.device, &transferCreateInfo);
+            
+            SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
+            SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(texCopyCommandBuffer);
+            
+            uint offset = 0;
+            
+            levelWidth = outBuffer.size.width;
+            levelHeight = outBuffer.size.height;
+            
+            for (uint level = 0; level < outBuffer.mipLevels; ++level)
+            {
+                uint levelSize;
+                if (outBuffer.format.blockSize > 0)
+                {
+                    levelSize =
+                        ((cast(uint)levelWidth + 3) / 4) *
+                        ((cast(uint)levelHeight + 3) / 4) *
+                        outBuffer.format.blockSize;
+                }
+                else
+                {
+                    levelSize = levelWidth * levelHeight * outBuffer.format.pixelSize;
+                }
+                
+                SDL_GPUTextureRegion src = {
+                    texture: texture,
+                    mip_level: level,
+                    layer: 0,
+                    x: 0, y: 0, z: 0,
+                    w: levelWidth,
+                    h: levelHeight,
+                    d: 1
+                };
+                SDL_GPUTextureTransferInfo dst = {
+                    transfer_buffer: downloadBuffer,
+                    offset: offset
+                };
+                SDL_DownloadFromGPUTexture(copyPass, &src, &dst);
+                
+                offset += levelSize;
+                
+                levelWidth = max2(1, levelWidth / 2);
+                levelHeight = max2(1, levelHeight / 2);
+            }
+            
+            SDL_EndGPUCopyPass(copyPass);
+            
+            SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(texCopyCommandBuffer);
+            SDL_WaitForGPUFences(gpu.device, true, &fence, 1);
+            SDL_ReleaseGPUFence(gpu.device, fence);
+            
+            void* mappedPtr = SDL_MapGPUTransferBuffer(gpu.device, downloadBuffer, false);
+
+            if (mappedPtr)
+            {
+                SDL_memcpy(data.ptr, mappedPtr, bufferSize);
+                SDL_UnmapGPUTransferBuffer(gpu.device, downloadBuffer);
+            }
+            else
+            {
+                SDL_ReleaseGPUTransferBuffer(gpu.device, downloadBuffer);
+                return false;
+            }
+
+            SDL_ReleaseGPUTransferBuffer(gpu.device, downloadBuffer);
+            
+            outBuffer.data = data;
+            
+            return true;
+        }
+        else
+        {
+            // TODO
+            logError("Downloading 3D textures is not supported yet, sorry");
+            return false;
+        }
         
         return false;
     }

@@ -17,14 +17,14 @@ import dagon.render.deferred;
 
 class Game: BaseGame
 {
-    DeferredRenderer renderer;
     CubemapRenderer cubemapRenderer;
+    DeferredRenderer renderer;
     
     this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
         super(w, h, fullscreen, title, args);
-        renderer = New!DeferredRenderer(gpu, eventManager);
         cubemapRenderer = New!CubemapRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
+        renderer = New!DeferredRenderer(gpu, eventManager);
     }
     
     Texture generateCubemap(Texture inputEnvmap, uint resolution, Owner cubemapOwner)

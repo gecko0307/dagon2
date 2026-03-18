@@ -77,7 +77,7 @@ import dagon.core.locale;
 import dagon.core.updateable;
 import dagon.core.i18n;
 public import dagon.core.cursor;
-import dagon.resource.cache;
+public import dagon.resource.cache;
 
 //import dagon.graphics.font;
 
@@ -567,6 +567,12 @@ class Application: EventListener, Updateable
     
     ///
     ResourceCacheStorage shaderCacheStorage;
+    
+    /// Texture cache path.
+    string textureCachePath = "data/__internal/texture_cache";
+    
+    ///
+    ResourceCacheStorage textureCacheStorage;
     
     ///
     EventManager eventManager;
@@ -1215,21 +1221,22 @@ class Application: EventListener, Updateable
         _resourceCache = resourceCache;
         
         // Init shader cache
-        if ("gl.shaderCache.enabled" in config.props)
-            enableShaderCache = cast(bool)(config.props["gl.shaderCache.enabled"].toUInt);
-        if ("gl.shaderCache.path" in config.props)
-            shaderCachePath = config.props["gl.shaderCache.path"].toString;
+        if ("gpu.shaderCache.enabled" in config.props)
+            enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
+        if ("gpu.shaderCache.path" in config.props)
+            shaderCachePath = config.props["gpu.shaderCache.path"].toString;
         version(Windows)
         {
-            if ("gl.shaderCache.path.windows" in config.props)
-                shaderCachePath = config.props["gl.shaderCache.path.windows"].toString;
+            if ("gpu.shaderCache.path.windows" in config.props)
+                shaderCachePath = config.props["gpu.shaderCache.path.windows"].toString;
         }
         else version(linux)
         {
-            if ("gl.shaderCache.path.linux" in config.props)
-                shaderCachePath = config.props["gl.shaderCache.path.linux"].toString;
+            if ("gpu.shaderCache.path.linux" in config.props)
+                shaderCachePath = config.props["gpu.shaderCache.path.linux"].toString;
         }
-        shaderCacheStorage = resourceCache.addStorage(".glsl", ".spv", shaderCachePath);
+        shaderCacheStorage = resourceCache.addStorage(ResourceType.Shader, ".spv", shaderCachePath);
+        textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
         
         // Get system cursors
         /*

@@ -15,6 +15,15 @@ import dagon.core.application;
 import dagon.core.logger;
 import dagon.core.vfs;
 
+enum ResourceType: uint
+{
+    Shader = 0,
+    Texture = 1
+}
+
+alias ResourceSaveCallback = bool function(string path, OutputStream output, void* data);
+alias ResourceLoadCallback = bool function(string path, InputStream output, void* data);
+
 class ResourceCacheStorage: Owner
 {
     ///
@@ -73,9 +82,28 @@ class ResourceCacheStorage: Owner
         path ~= name;
         path ~= extension;
         
-        debug logDebug("[Cache]", " Saving ", path, "...");
+        logDebug("[Cache]", " Saving ", path, "...");
         OutputStream strm = fs.openForOutput(path, FileSystem.create);
         strm.writeArray(data);
+        Delete(strm);
+        
+        path.free();
+    }
+    
+    void saveFile(string name, ResourceSaveCallback saveCallback, void* userData)
+    {
+        string dirSeparator;
+        version(Windows) dirSeparator = "\\";
+        version(Posix) dirSeparator = "/";
+        
+        String path = String(directory);
+        path ~= "/";
+        path ~= name;
+        path ~= extension;
+        
+        logDebug("[Cache]", " Saving ", path, "...");
+        OutputStream strm = fs.openForOutput(path, FileSystem.create);
+        saveCallback(path, strm, userData);
         Delete(strm);
         
         path.free();
@@ -96,11 +124,42 @@ class ResourceCacheStorage: Owner
             size_t size = cast(size_t)s.sizeInBytes;
             if (size > 0)
             {
-                debug logDebug("[Cache]", " Loading ", path, "...");
+                logDebug("[Cache]", " Loading ", path, "...");
                 auto istrm = fs.openForInput(path);
                 data = New!(ubyte[])(size);
                 istrm.fillArray(data);
                 Delete(istrm);
+            }
+        }
+        
+        path.free();
+        
+        return data;
+    }
+    
+    ubyte[] loadFile(string name, ResourceLoadCallback loadCallback, void* userData)
+    {
+        ubyte[] data;
+        
+        String path = String(directory);
+        path ~= "/";
+        path ~= name;
+        path ~= extension;
+        
+        FileStat s;
+        if (fs.stat(path, s))
+        {
+            size_t size = cast(size_t)s.sizeInBytes;
+            if (size > 0)
+            {
+                logDebug("[Cache]", " Loading ", path, "...");
+                auto istrm = fs.openForInput(path);
+                data = New!(ubyte[])(size);
+                istrm.fillArray(data);
+                Delete(istrm);
+                ArrayStream astrm = New!ArrayStream(data, data.length);
+                loadCallback(path, astrm, userData);
+                Delete(astrm);
             }
         }
         
@@ -113,43 +172,51 @@ class ResourceCacheStorage: Owner
 class ResourceCache: Owner
 {
     Application application;
-    Dict!(ResourceCacheStorage, string) cacheStorage;
+    Dict!(ResourceCacheStorage, uint) cacheStorage;
     
     this(Application application, Owner owner = null)
     {
         super(owner);
         this.application = application;
-        cacheStorage = dict!(ResourceCacheStorage, string)();
+        cacheStorage = dict!(ResourceCacheStorage, uint)();
     }
     
-    ResourceCacheStorage addStorage(string srcFileExtension, string cachedFileExtension, string directory)
+    ResourceCacheStorage addStorage(uint resourceType, string cachedFileExtension, string directory)
     {
         ResourceCacheStorage rcs = New!ResourceCacheStorage(this, directory, cachedFileExtension);
-        cacheStorage[srcFileExtension] = rcs;
+        cacheStorage[resourceType] = rcs;
         return rcs;
     }
     
-    ResourceCacheStorage getStorage(string srcFileExtension)
+    ResourceCacheStorage getStorage(uint resourceType)
     {
-        if (srcFileExtension in cacheStorage)
-            return cacheStorage[srcFileExtension];
+        if (resourceType in cacheStorage)
+            return cacheStorage[resourceType];
         else
             return null;
     }
     
-    void save(string name, ubyte[] data)
+    void save(uint resourceType, string name, ubyte[] data)
     {
-        ResourceCacheStorage rcs = getStorage(name.extension);
+        ResourceCacheStorage rcs = getStorage(resourceType);
         if (rcs is null)
             return;
         rcs.saveFile(name, data);
     }
     
-    ubyte[] load(string name, string srcPath)
+    void save(uint resourceType, string name, ResourceSaveCallback saveCallback, void* userData)
+    {
+        ResourceCacheStorage rcs = getStorage(resourceType);
+        if (rcs is null)
+            return;
+        rcs.saveFile(name, saveCallback, userData);
+    }
+    
+    ubyte[] load(uint resourceType, string name, string srcPath)
     {
         ubyte[] res;
         
-        ResourceCacheStorage rcs = getStorage(name.extension);
+        ResourceCacheStorage rcs = getStorage(resourceType);
         if (rcs is null)
             return res;
         
@@ -159,9 +226,23 @@ class ResourceCache: Owner
             if (rcs.isFileValid(name, s.modificationTimestamp))
                 res = rcs.loadFile(name);
         }
-        else
+        
+        return res;
+    }
+    
+    ubyte[] load(uint resourceType, string name, string srcPath, ResourceLoadCallback loadCallback, void* userData)
+    {
+        ubyte[] res;
+        
+        ResourceCacheStorage rcs = getStorage(resourceType);
+        if (rcs is null)
+            return res;
+        
+        FileStat s;
+        if (rcs.fs.stat(srcPath, s))
         {
-            res = rcs.loadFile(name);
+            if (rcs.isFileValid(name, s.modificationTimestamp))
+                res = rcs.loadFile(name, loadCallback, userData);
         }
         
         return res;

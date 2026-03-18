@@ -11,6 +11,7 @@ import dlib.math.utils;
 import dlib.filesystem.filesystem;
 
 import dagon.core.sdl3;
+import dagon.core.application;
 import dagon.core.gpu;
 import dagon.core.dxt;
 import dagon.core.logger;
@@ -52,6 +53,9 @@ class TextureAsset: Owner
     bool compress = false;
     
     ///
+    bool cache = false;
+    
+    ///
     bool persistent = false;
     
     ///
@@ -82,53 +86,62 @@ class TextureAsset: Owner
     
     bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
-        debug logInfo("Loading ", filename, "...");
+        string name = filename.baseName;
         
-        // TODO: check filename existence
-        
-        string extension = filename.extension.toLower;
-        
-        if (extension == ".dds")
+        ubyte[] data = globalResourceCache.load(ResourceType.Texture, name, filename, &textureLoadCallback, &buffer);
+        if (data.length)
         {
-            loaded = loadDDS(istrm, &buffer);
+            Delete(data);
         }
-        else if (extension == ".hdr")
+        else
         {
-            loaded = loadHDR(istrm, &buffer);
-        }
-        else if (isSupportedImageFormat(extension))
-        {
-            loaded = loadImage(istrm, extension, &buffer, &conversion);
-        }
-        // TODO: custom loaders
-        
-        //logInfo("Decoded ", filename);
-        
-        if (!loaded)
-        {
-            if (!persistent)
-                releaseBuffer();
-            return false;
-        }
-        
-        if (compress && !buffer.format.isCompressed)
-        {
-            if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D &&
-                buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
+            logDebug("Decoding ", name, "...");
+            
+            string extension = filename.extension.toLower;
+            
+            if (extension == ".dds")
             {
-                // Compress to DXT5
-                logInfo("Compressing ", filename, " to DXT5/BC3");
-                compressTexture(TextureCompressionFormat.DXT5);
-                generateMipmaps = false;
+                loaded = loadDDS(istrm, &buffer);
             }
-            else
+            else if (extension == ".hdr")
             {
-                logWarning(
-                    filename, ": ",
-                    "texture compression for type ", textureTypeStr(buffer.format.type),
-                    " and format ", textureFormatStr(buffer.format.format),
-                    " is not supported");
+                loaded = loadHDR(istrm, &buffer);
             }
+            else if (isSupportedImageFormat(extension))
+            {
+                loaded = loadImage(istrm, extension, &buffer, &conversion);
+            }
+            // TODO: custom loaders
+            
+            if (!loaded)
+            {
+                if (!persistent)
+                    releaseBuffer();
+                return false;
+            }
+            
+            if (compress && !buffer.format.isCompressed)
+            {
+                if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D &&
+                    buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
+                {
+                    // Compress to DXT5
+                    logInfo("Compressing ", filename, " to DXT5/BC3");
+                    compressTexture(TextureCompressionFormat.DXT5);
+                    generateMipmaps = false;
+                }
+                else
+                {
+                    logWarning(
+                        filename, ": ",
+                        "texture compression for type ", textureTypeStr(buffer.format.type),
+                        " and format ", textureFormatStr(buffer.format.format),
+                        " is not supported");
+                }
+            }
+            
+            if (cache)
+                globalResourceCache.save(ResourceType.Texture, name, &textureSaveCallback, &buffer);
         }
         
         texture = New!Texture(gpu, this);
@@ -137,8 +150,6 @@ class TextureAsset: Owner
             repeatUV: repeatUV
         };
         loaded = texture.create(&buffer, &options);
-        
-        //logInfo("Uploaded ", filename);
         
         if (!persistent)
             releaseBuffer();
@@ -252,6 +263,16 @@ class TextureAsset: Owner
         buffer.format.blockSize = blockSize;
         buffer.mipLevels = mipLevels;
     }
+}
+
+bool textureSaveCallback(string path, OutputStream outputStream, void* data)
+{
+    return saveDDS(outputStream, cast(TextureBuffer*)data);
+}
+
+bool textureLoadCallback(string path, InputStream inputStream, void* data)
+{
+    return loadDDS(inputStream, cast(TextureBuffer*)data);
 }
 
 ///
