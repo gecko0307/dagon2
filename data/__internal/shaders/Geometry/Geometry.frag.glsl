@@ -114,12 +114,12 @@ void main()
     if (alpha < ubo.alphaOptions.x) // alpha clipping
         discard;
     
-    outColor = vec4(baseColor.rgb, alpha);
-    outNormal = vec4(N, alpha);
-    outRoughnessMetallic = vec4(shadedMask, roughness, metallic, alpha);
-    outEmission = vec4(emission, alpha);
-    outVelocity = vec4(0.0, 0.0, motionBlurMask, alpha); // TODO
-    outRadiance = vec4(0.0, 0.0, 0.0, alpha);
+    outColor = vec4(baseColor.rgb, 1.0);
+    outNormal = vec4(N, 1.0);
+    outRoughnessMetallic = vec4(shadedMask, roughness, metallic, 1.0);
+    outEmission = vec4(emission, 1.0);
+    outVelocity = vec4(0.0, 0.0, motionBlurMask, 1.0); // TODO
+    outRadiance = vec4(0.0, 0.0, 0.0, 1.0);
     
     if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)
         gl_FragDepth = gl_FragCoord.z;

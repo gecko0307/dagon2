@@ -2,6 +2,7 @@ module dagon.resource.texture;
 
 import std.math;
 import std.string;
+import std.conv;
 import std.path;
 
 import dlib.core.memory;
@@ -12,8 +13,10 @@ import dlib.filesystem.filesystem;
 
 import dagon.core.sdl3;
 import dagon.core.application;
+import dagon.core.crashhandler;
 import dagon.core.gpu;
 import dagon.core.dxt;
+import dagon.core.bc7;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
 import dagon.graphics.texture;
@@ -24,8 +27,21 @@ import dagon.resource.hdr;
 ///
 enum TextureCompressionFormat
 {
-    DXT1 = 0,
-    DXT5 = 1
+    None = 0,
+    BC1 = 1,
+    BC3 = 3,
+    BC7 = 7,
+    
+    DXT1 = 1,
+    DXT5 = 3,
+}
+
+__gshared bc7enc_compress_block_params bc7Params;
+
+static this()
+{
+    bc7enc_compress_block_init();
+    bc7enc_compress_block_params_init(&bc7Params);
 }
 
 ///
@@ -50,7 +66,7 @@ class TextureAsset: Owner
     bool repeatUV = true;
     
     ///
-    bool compress = false;
+    TextureCompressionFormat compressionFormat = TextureCompressionFormat.None;
     
     ///
     bool cache = false;
@@ -132,14 +148,13 @@ class TextureAsset: Owner
                 return false;
             }
             
-            if (compress && !buffer.format.isCompressed)
+            if (compressionFormat != TextureCompressionFormat.None && !buffer.format.isCompressed)
             {
                 if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D &&
                     buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
                 {
-                    // Compress to DXT5
-                    logInfo("Compressing ", filename, " to DXT5/BC3");
-                    compressTexture(TextureCompressionFormat.DXT5);
+                    logInfo("Compressing ", filename);
+                    compressTexture();
                     generateMipmaps = false;
                 }
                 else
@@ -169,7 +184,7 @@ class TextureAsset: Owner
         return loaded;
     }
     
-    protected void compressTexture(TextureCompressionFormat compressionFormat)
+    protected void compressTexture()
     {
         uint width = buffer.size.width;
         uint height = buffer.size.height;
@@ -179,15 +194,20 @@ class TextureAsset: Owner
         
         uint blockSize;
         SDL_GPUTextureFormat newFormat;
-        if (compressionFormat == TextureCompressionFormat.DXT1)
+        if (compressionFormat == TextureCompressionFormat.BC1)
         {
             blockSize = 8;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM;
         }
-        else if (compressionFormat == TextureCompressionFormat.DXT5)
+        else if (compressionFormat == TextureCompressionFormat.BC3)
         {
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
+        }
+        else if (compressionFormat == TextureCompressionFormat.BC7)
+        {
+            blockSize = 16;
+            newFormat = SDL_GPU_TEXTUREFORMAT_BC7_RGBA_UNORM;
         }
         
         ubyte[] compressedTextureBuffer;
@@ -243,9 +263,18 @@ class TextureAsset: Owner
                 
                 auto blocksH = max2(1, (levelWidth + 3) / 4);
                 auto blocksV = max2(1, (levelHeight + 3) / 4);
-                auto levelSizeCompressed = blocksH * blocksV * blockSize; //alignUp(blocksH * blocksV * blockSize, 4);
+                auto levelSizeCompressed = blocksH * blocksV * blockSize;
                 ubyte[] levelCompDst = compressedMipChainBuffer[offsetCompressed..offsetCompressed + levelSizeCompressed];
-                dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, compressionFormat);
+                
+                if (compressionFormat == TextureCompressionFormat.BC1)
+                    dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 0);
+                else if (compressionFormat == TextureCompressionFormat.BC3)
+                    dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 1);
+                else if (compressionFormat == TextureCompressionFormat.BC7)
+                    bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
+                else
+                    exitWithError("Unsupported texture compression format: " ~ compressionFormat.to!string);
+                
                 offsetCompressed += levelSizeCompressed;
                 
                 prevLevelWidth = levelWidth;
