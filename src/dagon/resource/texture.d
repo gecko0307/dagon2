@@ -84,6 +84,18 @@ class TextureAsset: Owner
         }
     }
     
+    bool load(string filename, ReadOnlyFileSystem fs)
+    {
+        InputStream istrm;
+        FileStat s;
+        if (fs.stat(filename, s))
+            istrm = fs.openForInput(filename);
+        bool res = load(filename, istrm, fs);
+        if (istrm)
+            Delete(istrm);
+        return res;
+    }
+    
     bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
         string name = filename.baseName;
