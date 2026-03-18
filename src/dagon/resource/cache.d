@@ -226,6 +226,8 @@ class ResourceCache: Owner
             if (rcs.isFileValid(name, s.modificationTimestamp))
                 res = rcs.loadFile(name);
         }
+        else
+            res = rcs.loadFile(name);
         
         return res;
     }
@@ -244,6 +246,8 @@ class ResourceCache: Owner
             if (rcs.isFileValid(name, s.modificationTimestamp))
                 res = rcs.loadFile(name, loadCallback, userData);
         }
+        else
+            res = rcs.loadFile(name, loadCallback, userData);
         
         return res;
     }
