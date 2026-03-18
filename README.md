@@ -6,7 +6,7 @@ New features:
 - The renderer is based on SDL GPU, targeting Vulkan instead of OpenGL
 - Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Experimental HDR (scRGB) output support
-- BC7 texture compressor based on D port of Rich Gieldrich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
+- BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
 - Window minimize/restore events
