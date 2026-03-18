@@ -93,14 +93,14 @@ void main()
     float NE = max(dot(N, E), 0.0);
     
     vec3 irradiance = ambient(wN, 0.99); // TODO: support separate irradiance map
-    vec3 reflection = ambient(wR, sqrt(roughness)) * reflectivity;
-    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    vec3 kD = (1.0 - F) * (1.0 - metallic);
+    vec3 reflection = ambient(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
-    vec3 diffuse = kD * irradiance * baseColor;
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0); // * (1.0 - roughness);
+    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
+    F = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    vec3 diffuse = irradiance * baseColor * (1.0 - F) * (1.0 - metallic);
+    vec3 specular = reflection * F * reflectivity;
     const float occlusion = 1.0;
     radiance += (diffuse + specular) * occlusion * ambientEnergy;
     
