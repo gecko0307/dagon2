@@ -109,11 +109,11 @@ class Texture: Owner
         SDL_memcpy(map, buffer.data.ptr, cast(uint)buffer.data.length);
         
         SDL_UnmapGPUTransferBuffer(gpu.device, texTransferBuffer);
-        SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
         
         // TODO: compressed formats support
         if (buffer.format.isCubemap)
         {
+            SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
             SDL_GPUCopyPass* texCopyPass = SDL_BeginGPUCopyPass(texCopyCommandBuffer);
             
             uint offset = 0;
@@ -124,7 +124,18 @@ class Texture: Owner
                 
                 for (uint mipLevel = 0; mipLevel < buffer.mipLevels; mipLevel++)
                 {
-                    uint levelSize = levelWidth * levelHeight * buffer.format.pixelSize;
+                    uint levelSize;
+                    if (buffer.format.blockSize > 0)
+                    {
+                        levelSize =
+                             ((cast(uint)levelWidth + 3) / 4) *
+                             ((cast(uint)levelHeight + 3) / 4) *
+                             buffer.format.blockSize;
+                    }
+                    else
+                    {
+                        levelSize = levelWidth * levelHeight * buffer.format.pixelSize;
+                    }
                     
                     SDL_GPUTextureTransferInfo source = {
                         transfer_buffer: texTransferBuffer,
@@ -150,18 +161,35 @@ class Texture: Owner
             }
             
             SDL_EndGPUCopyPass(texCopyPass);
+            
+            if (options.generateMipmaps && !buffer.format.isCompressed)
+                SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
+            
+            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
         }
-        else
+        else if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D)
         {
             uint offset = 0;
             uint levelWidth = buffer.size.width;
             uint levelHeight = buffer.size.height;
             
+            SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
             SDL_GPUCopyPass* texCopyPass = SDL_BeginGPUCopyPass(texCopyCommandBuffer);
             
             for (uint mipLevel = 0; mipLevel < buffer.mipLevels; mipLevel++)
             {
-                uint levelSize = levelWidth * levelHeight * buffer.format.pixelSize;
+                uint levelSize;
+                if (buffer.format.blockSize > 0)
+                {
+                    levelSize =
+                         ((cast(uint)levelWidth + 3) / 4) *
+                         ((cast(uint)levelHeight + 3) / 4) *
+                         buffer.format.blockSize;
+                }
+                else
+                {
+                    levelSize = levelWidth * levelHeight * buffer.format.pixelSize;
+                }
                 
                 SDL_GPUTextureTransferInfo source = {
                     transfer_buffer: texTransferBuffer,
@@ -186,12 +214,21 @@ class Texture: Owner
             }
             
             SDL_EndGPUCopyPass(texCopyPass);
+            
+            if (options.generateMipmaps && !buffer.format.isCompressed)
+                SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
+            
+            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
+        }
+        else
+        {
+            // TODO
+            logError("3D textures are not supported yet, sorry");
+            SDL_ReleaseGPUTransferBuffer(gpu.device, texTransferBuffer);
+            valid = false;
+            return valid;
         }
         
-        if (options.generateMipmaps && !buffer.format.isCompressed)
-            SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
-        
-        SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
         SDL_ReleaseGPUTransferBuffer(gpu.device, texTransferBuffer);
         
         valid = true;

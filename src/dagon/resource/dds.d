@@ -587,37 +587,44 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     dx10.miscFlag = 0;
     dx10.miscFlags2 = 0;
     
-    /*
-    // TODO
     if (isCompressed)
     {
         header.format.flags = DDPF.FOURCC;
         
-        switch (buffer.format.internalFormat)
+        switch (buffer.format.format)
         {
-            case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM:
                 header.format.fourCC = FOURCC_DXT1;
                 break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case SDL_GPU_TEXTUREFORMAT_BC2_RGBA_UNORM:
                 header.format.fourCC = FOURCC_DXT3;
                 break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM:
                 header.format.fourCC = FOURCC_DXT5;
                 break;
-            case GL_COMPRESSED_RED_RGTC1:
+            case SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM:
                 header.format.fourCC = FOURCC_BC4U;
                 break;
-            case GL_COMPRESSED_SIGNED_RED_RGTC1:
-                header.format.fourCC = FOURCC_BC4S;
-                break;
-            case GL_COMPRESSED_RG_RGTC2:
+            case SDL_GPU_TEXTUREFORMAT_BC5_RG_UNORM:
                 header.format.fourCC = FOURCC_BC5U;
                 break;
-            case GL_COMPRESSED_SIGNED_RG_RGTC2:
-                header.format.fourCC = FOURCC_BC5S;
+            case SDL_GPU_TEXTUREFORMAT_BC7_RGBA_UNORM:
+                header.format.fourCC = FOURCC_DX10;
+                dx10.dxgiFormat = DXGIFormat.BC7_UNORM;
+                writeDXT10Header = true;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_BC6H_RGB_FLOAT:
+                header.format.fourCC = FOURCC_DX10;
+                dx10.dxgiFormat = DXGIFormat.BC6H_SF16;
+                writeDXT10Header = true;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_BC6H_RGB_UFLOAT:
+                header.format.fourCC = FOURCC_DX10;
+                dx10.dxgiFormat = DXGIFormat.BC6H_UF16;
+                writeDXT10Header = true;
                 break;
             default:
-                logError("saveDDS: unsupported texture internal format ", buffer.format.internalFormat);
+                logError("saveDDS: unsupported texture format ", buffer.format.format);
                 return false;
         }
         
@@ -627,9 +634,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         header.format.blueMask = 0;
         header.format.alphaMask = 0;
     }
-    else
-    */
-    if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
+    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
     {
         header.format.flags = DDPF.RGB | DDPF.ALPHAPIXELS;
         header.format.bpp = 32;
