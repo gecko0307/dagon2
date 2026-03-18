@@ -57,7 +57,7 @@ class DeferredRenderer: Renderer
         TextureAsset brdfAsset = New!TextureAsset(gpu, this);
         brdfAsset.generateMipmaps = false;
         brdfAsset.repeatUV = false;
-        brdfAsset.cache = true;
+        brdfAsset.cache = false;
         auto istrm = gpu.application.vfs.openForInput(brdfLUTFilename);
         brdfAsset.load(brdfLUTFilename, istrm, gpu.application.vfs);
         Delete(istrm);
