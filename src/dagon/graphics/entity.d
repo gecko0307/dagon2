@@ -38,7 +38,7 @@ class Entity: Owner, Updateable
     float motionBlurMask = 1.0f;
     bool visible = true;
     bool castShadow = true;
-    bool autoUpdate = false;
+    bool dynamic = false;
     
     this(Owner owner)
     {

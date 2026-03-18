@@ -47,7 +47,7 @@ class World: EventListener
         {
             foreach(entity; scene.entities)
             {
-                if (entity.autoUpdate)
+                if (entity.dynamic)
                     entity.update(t);
                 else if (entity.controller)
                     entity.controller.update(t);
