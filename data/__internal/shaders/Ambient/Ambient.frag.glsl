@@ -92,7 +92,7 @@ void main()
     
     vec3 radiance = vec3(0.0);
     
-    vec3 irradiance = ambient(wN, 0.85); // TODO: support separate irradiance map
+    vec3 irradiance = ambient(wN, 0.9); // TODO: support separate irradiance map
     vec3 reflection = ambient(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, 1.0 - roughness)).rg :
