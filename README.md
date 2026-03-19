@@ -9,8 +9,9 @@ New features:
 - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
-- Window minimize/restore events
-- Shadeless materials in deferred pipeline.
+- Multiple scattering support for IBL
+- Shadeless materials in deferred pipeline
+- Window minimize/restore events.
 
 Major changes from Dagon 0.x/1.x:
 - Reimplemented `dagon.render` (WIP)
