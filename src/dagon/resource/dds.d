@@ -650,6 +650,13 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         dx10.dxgiFormat = DXGIFormat.R16G16B16A16_FLOAT;
         writeDXT10Header = true;
     }
+    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT)
+    {
+        header.format.flags = DDPF.FOURCC;
+        header.format.fourCC = FOURCC_DX10;
+        dx10.dxgiFormat = DXGIFormat.R16G16_FLOAT;
+        writeDXT10Header = true;
+    }
     else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT)
     {
         header.format.flags = DDPF.FOURCC;

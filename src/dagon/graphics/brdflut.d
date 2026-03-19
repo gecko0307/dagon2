@@ -26,8 +26,6 @@ struct BRDFLUTShaderVertexUniformBuffer
 struct BRDFLUTShaderFragmentUniformBuffer
 {
     Vector4f resolution;
-    Vector4f fparams;
-    uint[4] iparams;
 }
 
 class BRDFLUTShader: Shader
@@ -37,20 +35,8 @@ class BRDFLUTShader: Shader
     BRDFLUTShaderFragmentUniformBuffer fsUBO;
     
    public:
-    Texture cubemap;
-    CubeFace cubeFace;
     Vector2f resolution = Vector2f(0.0f, 0.0f);
-    float roughness = 0.5f;
-    float inputMipLevel = 0.0f;
-    float inputThreshold = 10.0f;
-    float inputScale = 2.0f;
-    
-    /**
-     * Constructs a cube map generation shader.
-     *
-     * Params:
-     *   owner  = Owner object.
-     */
+
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -69,29 +55,153 @@ class BRDFLUTShader: Shader
         }
         
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.fparams = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
-    /**
-     * Binds shader parameters and input textures for rendering.
-     *
-     * Params:
-     *   state = Pointer to the current graphics state.
-     */
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         
-        pass.bindTexture(PipelineStage.Fragment, 0, cubemap);
-        
         fsUBO.resolution.x = resolution.x;
         fsUBO.resolution.y = resolution.y;
-        fsUBO.fparams = Vector4f(
-            inputMipLevel, roughness, inputThreshold, inputScale
-        );
-        fsUBO.iparams[0] = cubeFace;
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+    }
+}
+
+class BRDFLUTPass: RenderPass
+{
+    BRDFLUTShader brdflutShader;
+    Texture outputTexture;
+    SDL_GPUColorTargetDescription colorTargetDescription;
+    SDL_GPUColorTargetInfo colorTargetInfo;
+    
+    this(Renderer renderer, SDL_GPUTextureFormat outputFormat)
+    {
+        super(renderer);
+        
+        brdflutShader = New!BRDFLUTShader(renderer.gpu, this);
+        
+        SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
+        pipelineCreateInfo.vertex_shader = brdflutShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = brdflutShader.fragmentModule.shader;
+        pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+        
+        SDL_GPUVertexBufferDescription[2] vbDescriptions;
+        
+        vbDescriptions[0].slot = VertexAttribute.Position;
+        vbDescriptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[0].instance_step_rate = 0;
+        vbDescriptions[0].pitch = Vector2f.sizeof;
+        
+        vbDescriptions[1].slot = VertexAttribute.Texcoord;
+        vbDescriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[1].instance_step_rate = 0;
+        vbDescriptions[1].pitch = Vector2f.sizeof;
+        
+        pipelineCreateInfo.vertex_input_state.num_vertex_buffers = vbDescriptions.length;
+        pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
+        
+        SDL_GPUVertexAttribute[2] vertexAttributes;
+        
+        // Position
+        vertexAttributes[0].buffer_slot = VertexAttribute.Position;
+        vertexAttributes[0].location = VertexAttribute.Position;
+        vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[0].offset = 0;
+        
+        // Texcoords
+        vertexAttributes[1].buffer_slot = VertexAttribute.Texcoord;
+        vertexAttributes[1].location = VertexAttribute.Texcoord;
+        vertexAttributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[1].offset = 0;
+        
+        pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
+        pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
+        
+        SDL_GPUColorTargetBlendState blendState = {
+            src_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            color_blend_op: SDL_GPU_BLENDOP_ADD,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            alpha_blend_op: SDL_GPU_BLENDOP_ADD,
+            color_write_mask: 0,
+            enable_blend: false,
+            enable_color_write_mask: false
+        };
+        colorTargetDescription.format = outputFormat;
+        colorTargetDescription.blend_state = blendState;
+        
+        pipelineCreateInfo.target_info.num_color_targets = 1;
+        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
+        pipelineCreateInfo.target_info.has_depth_stencil_target = false;
+        
+        pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+        pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+        pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_slope_factor = 1.0f;
+        pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
+        pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
+        
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
+        pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;
+        
+        graphicsPipeline = SDL_CreateGPUGraphicsPipeline(renderer.gpu.device, &pipelineCreateInfo);
+        
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 1.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        
+        colorTargetsInfo = &colorTargetInfo;
+        numColorTargets = 1;
+        depthStencilTargetInfo = null;
+        enableDepthTarget = false;
+    }
+    
+    override void render(GraphicsState* state)
+    {
+        colorTargetInfo.texture = outputTexture.texture;
+        colorTargetInfo.mip_level = 0;
+        colorTargetInfo.layer_or_depth_plane = 0;
+        
+        beginPass();
+        
+        brdflutShader.resolution = Vector2f(renderer.view.width, renderer.view.height);
+        brdflutShader.bindParameters(state);
+        
+        renderer.renderScreenQuad(state);
+        
+        endPass();
+    }
+}
+
+class BRDFLUTRenderer: Renderer
+{
+    BRDFLUTPass brdflutPass;
+    
+    this(GPU gpu, EventManager eventManager, SDL_GPUTextureFormat format)
+    {
+        super(gpu, eventManager);
+        brdflutPass = New!BRDFLUTPass(this, format);
+    }
+    
+    void generateTexture(Texture outputTexture)
+    {
+        view.resize(outputTexture.buffer.size.width, outputTexture.buffer.size.height);
+        brdflutPass.outputTexture = outputTexture;
+        
+        state.reset();
+        
+        commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
+        
+        state.pass = brdflutPass;
+        brdflutPass.render(&state);
+        
+        SDL_SubmitGPUCommandBuffer(commandBuffer);
     }
 }

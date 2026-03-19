@@ -62,7 +62,6 @@ class DeferredRenderer: Renderer
         auto istrm = gpu.application.vfs.openForInput(brdfLUTFilename);
         brdfAsset.load(brdfLUTFilename, istrm, gpu.application.vfs);
         Delete(istrm);
-        
         brdfLUT = brdfAsset.texture;
         state.brdfLUT = brdfLUT;
         state.brdfLUTEnabled = true;
