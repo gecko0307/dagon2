@@ -99,11 +99,21 @@ void main()
         vec2(1.0, 0.0);
     
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    vec3 kD = (1.0 - F) * (1.0 - metallic);
-    vec3 diffuse = kD * irradiance * baseColor;
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
     
-    radiance += (diffuse + specular) * occlusion;
+    // Single scattering
+    //vec3 kD = (1.0 - F) * (1.0 - metallic);
+    //vec3 diffuse = kD * irradiance * baseColor;
+    //vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    //radiance += (diffuse + specular) * occlusion;
+    
+    // Multiple scattering (Fdez-Agüera)
+    vec3 diffuse = baseColor * (1.0 - 0.04) * (1.0 - metallic);
+    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    float Ems = (1.0 - (brdf.x + brdf.y));
+    vec3 Favg = f0 + (1.0 - f0) / 21.0;
+    vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
+    vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
+    radiance += FssEss * reflection + (FmsEms + kD) * irradiance;
     
     outColor = vec4(radiance * shadedMask, 1.0f);
 }
