@@ -76,7 +76,7 @@ void main()
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
-    float NE = max(dot(N, E), 0.0);
+    float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
     vec3 wE = normalize(worldPos - worldCamPos);
