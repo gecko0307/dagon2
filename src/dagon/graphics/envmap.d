@@ -255,7 +255,7 @@ class CubemapPrefilterShader: Shader
     float roughness = 0.5f;
     float inputMipLevel = 0.0f;
     float inputThreshold = 100.0f;
-    float inputScale = 2.0f;
+    float inputScale = 1.0f;
     
     /**
      * Constructs a cube map generation shader.

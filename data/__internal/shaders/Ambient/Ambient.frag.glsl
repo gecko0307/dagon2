@@ -7,13 +7,7 @@ const float INVPI = 1.0 / PI;
 // Converts normalized device coordinates to eye space position
 vec3 unproject(mat4 invProjMatrix, vec3 ndc)
 {
-    vec4 clipPos = vec4(
-        ndc.x * 2.0 - 1.0,
-        (1.0 - ndc.y) * 2.0 - 1.0,
-        ndc.z,
-        1.0
-    );
-    
+    vec4 clipPos = vec4(ndc * 2.0 - 1.0, 1.0);
     vec4 res = invProjMatrix * clipPos;
     return res.xyz / res.w;
 }
@@ -75,6 +69,7 @@ void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
     vec3 ndc = vec3(texCoords, depth);
+    ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
@@ -100,7 +95,7 @@ void main()
     vec3 irradiance = ambient(wN, 0.99); // TODO: support separate irradiance map
     vec3 reflection = ambient(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
-        texture(brdfLUT, vec2(NE, roughness)).rg :
+        texture(brdfLUT, vec2(NE, 1.0 - roughness)).rg :
         vec2(1.0, 0.0);
     
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
