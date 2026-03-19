@@ -13,10 +13,12 @@ import dagon.core.gpu;
 import dagon.core.logger;
 public import dagon.graphics.texturebuffer;
 
+///
 struct TextureCreationOptions
 {
     bool generateMipmaps;
     bool repeatUV;
+    bool anisotropicFiltering;
 }
 
 class Texture: Owner
@@ -73,7 +75,7 @@ class Texture: Owner
         samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
         samplerCreateInfo.min_lod = 0.0f;
         samplerCreateInfo.max_lod = mipLevels - 1;
-        samplerCreateInfo.enable_anisotropy = true;
+        samplerCreateInfo.enable_anisotropy = options.anisotropicFiltering;
         samplerCreateInfo.enable_compare = false;
         sampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
         if (sampler is null)

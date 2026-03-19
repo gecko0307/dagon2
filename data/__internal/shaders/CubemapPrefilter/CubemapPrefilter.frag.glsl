@@ -6,20 +6,22 @@ const float PI2 = PI * 2.0;
 vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 {
     float a = roughness * roughness;
+    
+    // Sample in spherical coordinates
     float phi = PI2 * Xi.x;
     float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
     
+    // Construct tangent space vector
     vec3 H;
     H.x = sinTheta * cos(phi);
     H.y = sinTheta * sin(phi);
     H.z = cosTheta;
     
+    // Tangent to world space
     vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     vec3 tangentX = normalize(cross(upVector, N));
     vec3 tangentY = cross(N, tangentX);
-    
-    // Tangent to world space
     return tangentX * H.x + tangentY * H.y + N * H.z;
 }
 
@@ -71,7 +73,8 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
         float NL = clamp(dot(N, L), 0.0, 1.0);
         if (NL > 0.0)
         {
-            vec3 inputColor = clamp(textureLod(envmap, L, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+            vec3 inputColor =
+                clamp(textureLod(envmap, L, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
             result += inputColor * NL;
             totalWeight += NL;
         }

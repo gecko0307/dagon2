@@ -24,18 +24,6 @@ import dagon.resource.image;
 import dagon.resource.dds;
 import dagon.resource.hdr;
 
-///
-enum TextureCompressionFormat
-{
-    None = 0,
-    BC1 = 1,
-    BC3 = 3,
-    BC7 = 7,
-    
-    DXT1 = 1,
-    DXT5 = 3,
-}
-
 __gshared bc7enc_compress_block_params bc7Params;
 
 static this()
@@ -57,16 +45,10 @@ class TextureAsset: Owner
     Texture texture;
     
     ///
-    ImageConversionOptions conversion;
+    ImageConversionOptions conversionOptions;
     
     ///
-    bool generateMipmaps = true;
-    
-    ///
-    bool repeatUV = true;
-    
-    ///
-    TextureCompressionFormat compressionFormat = TextureCompressionFormat.None;
+    TextureCreationOptions creationOptions;
     
     ///
     bool cache = false;
@@ -81,9 +63,9 @@ class TextureAsset: Owner
     {
         super(owner);
         this.gpu = gpu;
-        conversion.width = 0;
-        conversion.height = 0;
-        conversion.hint = 0;
+        conversionOptions.width = 0;
+        conversionOptions.height = 0;
+        conversionOptions.hint = 0;
     }
     
     ~this()
@@ -137,7 +119,7 @@ class TextureAsset: Owner
             }
             else if (isSupportedImageFormat(extension))
             {
-                loaded = loadImage(istrm, extension, &buffer, &conversion);
+                loaded = loadImage(istrm, extension, &buffer, &conversionOptions);
             }
             // TODO: custom loaders
             
@@ -148,14 +130,15 @@ class TextureAsset: Owner
                 return false;
             }
             
-            if (compressionFormat != TextureCompressionFormat.None && !buffer.format.isCompressed)
+            if (conversionOptions.compressionFormat != TextureCompressionFormat.None && 
+                !buffer.format.isCompressed)
             {
                 if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D &&
                     buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
                 {
                     logInfo("Compressing ", filename);
                     compressTexture();
-                    generateMipmaps = false;
+                    creationOptions.generateMipmaps = false;
                 }
                 else
                 {
@@ -172,11 +155,7 @@ class TextureAsset: Owner
         }
         
         texture = New!Texture(gpu, this);
-        TextureCreationOptions options = {
-            generateMipmaps: generateMipmaps,
-            repeatUV: repeatUV
-        };
-        loaded = texture.create(&buffer, &options);
+        loaded = texture.create(&buffer, &creationOptions);
         
         if (!persistent)
             releaseBuffer();
@@ -194,17 +173,17 @@ class TextureAsset: Owner
         
         uint blockSize;
         SDL_GPUTextureFormat newFormat;
-        if (compressionFormat == TextureCompressionFormat.BC1)
+        if (conversionOptions.compressionFormat == TextureCompressionFormat.BC1)
         {
             blockSize = 8;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM;
         }
-        else if (compressionFormat == TextureCompressionFormat.BC3)
+        else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC3)
         {
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
         }
-        else if (compressionFormat == TextureCompressionFormat.BC7)
+        else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC7)
         {
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC7_RGBA_UNORM;
@@ -212,7 +191,7 @@ class TextureAsset: Owner
         
         ubyte[] compressedTextureBuffer;
         
-        if (generateMipmaps && buffer.mipLevels == 1)
+        if (creationOptions.generateMipmaps && buffer.mipLevels == 1)
         {
             mipLevels = 1 + cast(uint)floor(log2(cast(double)max2(width, height)));
             
@@ -266,14 +245,22 @@ class TextureAsset: Owner
                 auto levelSizeCompressed = blocksH * blocksV * blockSize;
                 ubyte[] levelCompDst = compressedMipChainBuffer[offsetCompressed..offsetCompressed + levelSizeCompressed];
                 
-                if (compressionFormat == TextureCompressionFormat.BC1)
-                    dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 0);
-                else if (compressionFormat == TextureCompressionFormat.BC3)
-                    dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 1);
-                else if (compressionFormat == TextureCompressionFormat.BC7)
-                    bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
-                else
-                    exitWithError("Unsupported texture compression format: " ~ compressionFormat.to!string);
+                switch(conversionOptions.compressionFormat)
+                {
+                    case TextureCompressionFormat.BC1:
+                        dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 0);
+                        break;
+                    case TextureCompressionFormat.BC3:
+                        dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 1);
+                        break;
+                    case TextureCompressionFormat.BC7:
+                        bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
+                        break;
+                    default:
+                        exitWithError("Unsupported texture compression format: " ~ 
+                            conversionOptions.compressionFormat.to!string);
+                        break;
+                }
                 
                 offsetCompressed += levelSizeCompressed;
                 
@@ -293,9 +280,27 @@ class TextureAsset: Owner
         else
         {
             mipLevels = 1;
-            uint compressedDataSize = ((width + 3) / 4) * ((height + 3) / 4) * blockSize;
+            auto blocksH = max2(1, (width + 3) / 4);
+            auto blocksV = max2(1, (height + 3) / 4);
+            auto compressedDataSize = blocksH * blocksV * blockSize;
             compressedTextureBuffer = New!(ubyte[])(compressedDataSize);
-            dxtCompress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, compressionFormat);
+            
+            switch(conversionOptions.compressionFormat)
+            {
+                case TextureCompressionFormat.BC1:
+                    dxtCompress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 0);
+                    break;
+                case TextureCompressionFormat.BC3:
+                    dxtCompress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 1);
+                    break;
+                case TextureCompressionFormat.BC7:
+                    bc7Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, &bc7Params);
+                    break;
+                default:
+                    exitWithError("Unsupported texture compression format: " ~ 
+                        conversionOptions.compressionFormat.to!string);
+                    break;
+            }
         }
         
         releaseBuffer();

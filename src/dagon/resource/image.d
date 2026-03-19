@@ -71,6 +71,18 @@ bool isSupportedImageFormat(string formatExtension)
     return supportedImageFormats.canFind(formatExtension);
 }
 
+///
+enum TextureCompressionFormat
+{
+    None = 0,
+    BC1 = 1,
+    BC3 = 3,
+    BC7 = 7,
+    
+    DXT1 = 1,
+    DXT5 = 3,
+}
+
 /**
  * Options for texture conversion.
  */
@@ -81,6 +93,9 @@ struct ImageConversionOptions
 
     /// Target height (optional).
     uint height;
+    
+    /// Target compression format (optional, uncompressed by default).
+    TextureCompressionFormat compressionFormat;
 
     /// Loader-specific hint value.
     int hint;

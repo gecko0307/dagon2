@@ -254,7 +254,7 @@ class CubemapPrefilterShader: Shader
     Vector2f resolution = Vector2f(0.0f, 0.0f);
     float roughness = 0.5f;
     float inputMipLevel = 0.0f;
-    float inputThreshold = 10.0f;
+    float inputThreshold = 100.0f;
     float inputScale = 2.0f;
     
     /**
@@ -458,6 +458,8 @@ class CubemapRenderer: Renderer
             cubemapGeneratorPass.outputCubemapFace = face;
             cubemapGeneratorPass.render(&state);
         }
+        
+        SDL_GenerateMipmapsForGPUTexture(commandBuffer, outputCubemap.texture);
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
     }

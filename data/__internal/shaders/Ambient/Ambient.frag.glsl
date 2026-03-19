@@ -7,7 +7,13 @@ const float INVPI = 1.0 / PI;
 // Converts normalized device coordinates to eye space position
 vec3 unproject(mat4 invProjMatrix, vec3 ndc)
 {
-    vec4 clipPos = vec4(ndc * 2.0 - 1.0, 1.0);
+    vec4 clipPos = vec4(
+        ndc.x * 2.0 - 1.0,
+        (1.0 - ndc.y) * 2.0 - 1.0,
+        ndc.z,
+        1.0
+    );
+    
     vec4 res = invProjMatrix * clipPos;
     return res.xyz / res.w;
 }
@@ -62,8 +68,8 @@ vec3 ambient(in vec3 wN, in float perceptualRoughness)
     }
 }
 
-const float reflectivity = 1.0;
-const float ambientEnergy = 1.0;
+// TODO: read from occlusion buffer
+const float occlusion = 1.0;
 
 void main()
 {
@@ -75,10 +81,11 @@ void main()
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
+    float NE = max(dot(N, E), 0.0);
     
-    vec3 camPos = (ubo.invViewMatrix[3]).xyz;
-    vec3 wE = normalize(worldPos - camPos);
-    vec3 wN = normalize((vec4(N, 0.0) * ubo.viewMatrix).xyz);
+    vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
+    vec3 wE = normalize(worldPos - worldCamPos);
+    vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
     vec3 wR = reflect(wE, wN);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
@@ -90,18 +97,18 @@ void main()
     
     vec3 radiance = vec3(0.0);
     
-    float NE = max(dot(N, E), 0.0);
-    
     vec3 irradiance = ambient(wN, 0.99); // TODO: support separate irradiance map
     vec3 reflection = ambient(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
+    
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    vec3 diffuse = irradiance * baseColor * (1.0 - F) * (1.0 - metallic);
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0) * reflectivity;
-    const float occlusion = 1.0;
-    radiance += (diffuse + specular) * occlusion * ambientEnergy;
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
+    vec3 diffuse = kD * irradiance * baseColor;
+    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    
+    radiance += (diffuse + specular) * occlusion;
     
     outColor = vec4(radiance * shadedMask, 1.0f);
 }
