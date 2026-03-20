@@ -4,7 +4,7 @@
 const float PI2 = PI * 2.0;
 const float EPSILON = 0.00001;
 
-const uint numSamples = 1024u;
+const uint numSamples = 1024u * 64;
 const float invNumSamples = 1.0 / float(numSamples);
 
 // Generates the i-th 2D Hammersley point out of N
@@ -59,7 +59,6 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 fragColor;
 
-const float inputThreshold = 10.0f;
 const float inputScale = 1.0f;
 
 void main()
@@ -77,7 +76,7 @@ void main()
         vec2 u  = hammersley(i);
         vec3 Li = tangentToWorld(sampleHemisphere(u.x, u.y), N, S, T);
         float cosTheta = max(0.0, dot(Li, N));
-        vec3 inputColor = clamp(textureLod(inputCubemap, Li, 0).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+        vec3 inputColor = max(textureLod(inputCubemap, Li, 0).rgb, vec3(0.0)) * inputScale;
         irradiance += 2.0 * inputColor * cosTheta;
     }
     irradiance /= vec3(numSamples);

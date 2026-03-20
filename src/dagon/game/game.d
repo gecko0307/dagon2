@@ -67,8 +67,8 @@ class Game: BaseGame
         cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
         
         TextureBuffer irrBuffer = buffer;
-        irrBuffer.size.width = resolution / 2;
-        irrBuffer.size.height = resolution / 2;
+        irrBuffer.size.width = 64;
+        irrBuffer.size.height = 64;
         Texture irradianceCubemap = New!Texture(gpu, cubemapsOwner);
         irradianceCubemap.create(&irrBuffer, &options);
         cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemap);
