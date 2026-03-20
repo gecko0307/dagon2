@@ -1100,7 +1100,11 @@ class EventManager: Owner
                     if (!application.stereoRendering)
                     {
                         SDL_GetWindowSizeInPixels(window, &application.drawableWidth, &application.drawableHeight);
+                        application.drawableWidth = cast(uint)(application.drawableWidth * application.supersampling);
+                        application.drawableHeight = cast(uint)(application.drawableHeight * application.supersampling);
                     }
+                    drawableWidth = application.drawableWidth;
+                    drawableHeight = application.drawableHeight;
                     e = Event(EventType.Resize);
                     e.width = windowWidth;
                     e.height = windowHeight;

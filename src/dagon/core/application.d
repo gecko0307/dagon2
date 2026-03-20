@@ -436,6 +436,9 @@ class Application: EventListener, Updateable
     /// Actual drawable area height of the window.
     int drawableHeight;
     
+    ///
+    float supersampling = 1.0f;
+    
     /// Ratio of the resolution in physical pixels to the resolution in logical pixels.
     float pixelRatio = 1.0f;
     
@@ -1060,6 +1063,10 @@ class Application: EventListener, Updateable
         {
             SDL_GetWindowSizeInPixels(window, &drawableWidth, &drawableHeight);
         }
+        if ("supersampling" in config.props)
+            supersampling = config.props["supersampling"].toFloat;
+        drawableWidth = cast(uint)(drawableWidth * supersampling);
+        drawableHeight = cast(uint)(drawableHeight * supersampling);
         logInfo("Window drawable size: ", drawableWidth, "x", drawableHeight);
         
         pixelRatio = cast(float)drawableHeight / cast(float)windowHeight;
