@@ -58,20 +58,27 @@ class Game: BaseGame
         };
         
         TextureCreationOptions options = {
-            generateMipmaps: false,
-            repeatUV: false
+            generateMipmaps: true,
+            repeatUV: false,
+            anisotropicFiltering: false
         };
         
         Texture inputCubemap = New!Texture(gpu, null);
         inputCubemap.create(&buffer, &options);
         cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
         
+        options.generateMipmaps = false;
+        
         TextureBuffer irrBuffer = buffer;
         irrBuffer.size.width = 64;
         irrBuffer.size.height = 64;
+        Texture irradianceCubemapCoarse = New!Texture(gpu, null);
+        irradianceCubemapCoarse.create(&irrBuffer, &options);
+        cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemapCoarse);
+        
         Texture irradianceCubemap = New!Texture(gpu, cubemapsOwner);
         irradianceCubemap.create(&irrBuffer, &options);
-        cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemap);
+        cubemapRenderer.prefilterCubemapIrradiance(irradianceCubemapCoarse, irradianceCubemap);
         
         buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
         Texture radianceCubemap = New!Texture(gpu, cubemapsOwner);
@@ -79,6 +86,7 @@ class Game: BaseGame
         
         cubemapRenderer.prefilterCubemap(inputCubemap, radianceCubemap);
         
+        Delete(irradianceCubemapCoarse);
         Delete(inputCubemap);
         
         return IBLData(irradianceCubemap, radianceCubemap, renderer.brdfLUT);

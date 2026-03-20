@@ -4,7 +4,7 @@
 const float PI2 = PI * 2.0;
 const float EPSILON = 0.00001;
 
-const uint numSamples = 1024u * 64;
+const uint numSamples = 1024u * 32;
 const float invNumSamples = 1.0 / float(numSamples);
 
 // Generates the i-th 2D Hammersley point out of N
@@ -59,27 +59,57 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 fragColor;
 
+const float inputThreshold = 100.0f;
 const float inputScale = 1.0f;
+
+vec3 sampleHemisphereCosine(float u1, float u2) {
+    float phi = PI2 * u1;
+    float cosTheta = sqrt(1.0 - u2);
+    float sinTheta = sqrt(u2);
+    return vec3(cosTheta * cos(phi), cosTheta * sin(phi), sinTheta);
+}
+
+vec3 importanceSample(vec2 Xi, vec3 N)
+{
+    // Sample in spherical coordinates
+    float phi = PI2 * Xi.x;
+    float cosTheta = sqrt(1.0 - Xi.y);
+    float sinTheta = sqrt(Xi.y);
+    
+    // Construct tangent space vector
+    vec3 H;
+    H.x = sinTheta * cos(phi);
+    H.y = sinTheta * sin(phi);
+    H.z = cosTheta;
+    
+    // Tangent to world space
+    vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangentX = normalize(cross(upVector, N));
+    vec3 tangentY = cross(N, tangentX);
+    return tangentX * H.x + tangentY * H.y + N * H.z;
+}
 
 void main()
 {
     vec3 N = getDirectionForCubemapFace(cubemapFaceIndex, texCoords);
-    vec3 S, T;
-    T = cross(N, vec3(0.0, 1.0, 0.0));
-    T = mix(cross(N, vec3(1.0, 0.0, 0.0)), T, step(EPSILON, dot(T, T)));
-    T = normalize(T);
-    S = normalize(cross(N, T));
 
     vec3 irradiance = vec3(0);
+    float totalWeight = 0.0;
+    
     for (uint i = 0; i < numSamples; ++i)
     {
-        vec2 u  = hammersley(i);
-        vec3 Li = tangentToWorld(sampleHemisphere(u.x, u.y), N, S, T);
-        float cosTheta = max(0.0, dot(Li, N));
-        vec3 inputColor = max(textureLod(inputCubemap, Li, 0).rgb, vec3(0.0)) * inputScale;
-        irradiance += 2.0 * inputColor * cosTheta;
+        vec2 Xi = hammersley(i);
+        vec3 L = importanceSample(Xi, N);
+        float cosTheta = max(0.0, dot(L, N));
+        if (cosTheta > 0.0)
+        {
+            vec3 inputColor = max(textureLod(inputCubemap, L, 0).rgb, vec3(0.0)) * inputScale;
+            irradiance += inputColor * cosTheta;
+            totalWeight += cosTheta;
+        }
     }
-    irradiance /= vec3(numSamples);
+    if (totalWeight > 0.0)
+        irradiance /= totalWeight;
 
     fragColor = vec4(irradiance, 1.0);
 }
