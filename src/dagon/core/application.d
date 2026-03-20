@@ -1064,7 +1064,7 @@ class Application: EventListener, Updateable
             SDL_GetWindowSizeInPixels(window, &drawableWidth, &drawableHeight);
         }
         if ("supersampling" in config.props)
-            supersampling = config.props["supersampling"].toFloat;
+            supersampling = max2(config.props["supersampling"].toFloat, 1.0f);
         drawableWidth = cast(uint)(drawableWidth * supersampling);
         drawableHeight = cast(uint)(drawableHeight * supersampling);
         logInfo("Window drawable size: ", drawableWidth, "x", drawableHeight);

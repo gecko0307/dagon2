@@ -9,6 +9,7 @@ New features:
 - Many improvements in deferred renderer. The image is now almost identical to Blender's Eevee
 - Multiple scattering support
 - Experimental HDR (scRGB) output support
+- Supersampling support
 - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
