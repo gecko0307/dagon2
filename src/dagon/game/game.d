@@ -16,6 +16,13 @@ import dagon.game.basegame;
 import dagon.game.world;
 import dagon.render.deferred;
 
+struct IBLData
+{
+    Texture irradianceCubemap;
+    Texture radianceCubemap;
+    Texture brdfLUT;
+}
+
 class Game: BaseGame
 {
     CubemapRenderer cubemapRenderer;
@@ -30,7 +37,7 @@ class Game: BaseGame
         renderer = New!DeferredRenderer(gpu, eventManager);
     }
     
-    Texture generateCubemap(Texture inputEnvmap, uint resolution, Owner cubemapOwner)
+    IBLData generateCubemaps(Texture inputEnvmap, uint resolution, Owner cubemapsOwner)
     {
         TextureBuffer buffer = {
             format: {
@@ -55,19 +62,26 @@ class Game: BaseGame
             repeatUV: false
         };
         
-        Texture cubemap1 = New!Texture(gpu, null);
-        cubemap1.create(&buffer, &options);
-        cubemapRenderer.generateCubemap(inputEnvmap, cubemap1);
+        Texture inputCubemap = New!Texture(gpu, null);
+        inputCubemap.create(&buffer, &options);
+        cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
+        
+        TextureBuffer irrBuffer = buffer;
+        irrBuffer.size.width = resolution / 2;
+        irrBuffer.size.height = resolution / 2;
+        Texture irradianceCubemap = New!Texture(gpu, cubemapsOwner);
+        irradianceCubemap.create(&irrBuffer, &options);
+        cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemap);
         
         buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
-        Texture cubemap2 = New!Texture(gpu, cubemapOwner);
-        cubemap2.create(&buffer, &options);
+        Texture radianceCubemap = New!Texture(gpu, cubemapsOwner);
+        radianceCubemap.create(&buffer, &options);
         
-        cubemapRenderer.prefilterCubemap(cubemap1, cubemap2);
+        cubemapRenderer.prefilterCubemap(inputCubemap, radianceCubemap);
         
-        Delete(cubemap1);
+        Delete(inputCubemap);
         
-        return cubemap2;
+        return IBLData(irradianceCubemap, radianceCubemap, renderer.brdfLUT);
     }
     
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)

@@ -20,8 +20,9 @@ import dagon.render.deferred.gbuffer;
 
 enum AmbientTextureFlags: uint
 {
-    HasAmbientTexture = 1 << 0,
-    HasBRDFLUT = 2 << 0
+    HasRadianceTexture = 1 << 0,
+    HasIrradianceTexture = 1 << 1,
+    HasBRDFLUT = 1 << 2
 }
 
 struct AmbientShaderVertexUniformBuffer
@@ -73,7 +74,9 @@ class AmbientShader: Shader
         auto pass = state.pass;
         auto view = pass.view;
         auto scene = state.scene;
-        auto ambientTexture = scene.ambientTexture;
+        auto radianceTexture = scene.radianceTexture;
+        auto irradianceTexture = scene.irradianceTexture;
+        auto brdfLUT = scene.brdfLUT;
         
         fsUBO.viewMatrix = view.viewMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
@@ -86,21 +89,30 @@ class AmbientShader: Shader
         
         fsUBO.ambientColor = scene.ambientColor;
         fsUBO.ambientColor.a = scene.ambientEnergy;
-        if (ambientTexture)
+        
+        if (radianceTexture)
         {
-            pass.bindTexture(PipelineStage.Fragment, 4, ambientTexture);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasAmbientTexture;
+            pass.bindTexture(PipelineStage.Fragment, 4, radianceTexture);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasRadianceTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
         
-        if (state.brdfLUT && state.brdfLUTEnabled)
+        if (irradianceTexture)
         {
-            pass.bindTexture(PipelineStage.Fragment, 5, state.brdfLUT);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasBRDFLUT;
+            pass.bindTexture(PipelineStage.Fragment, 5, irradianceTexture);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasIrradianceTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 5);
+        
+        if (brdfLUT && scene.brdfLUTEnabled)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 6, brdfLUT);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasBRDFLUT;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 6);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

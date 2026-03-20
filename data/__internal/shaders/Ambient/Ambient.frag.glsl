@@ -24,15 +24,17 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 
 #define FLAGS_TEXTURE 0
 
-#define TEXFLAG_HAS_AMBIENT_TEXTURE 1 << 0
-#define TEXFLAG_HAS_BRDF_LUT 2 << 0
+#define TEXFLAG_HAS_RADIANCE_TEXTURE 1 << 0
+#define TEXFLAG_HAS_IRRADIANCE_TEXTURE 1 << 1
+#define TEXFLAG_HAS_BRDF_LUT 1 << 2
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
-layout(set = 2, binding = 4) uniform samplerCube ambientTexture;
-layout(set = 2, binding = 5) uniform sampler2D brdfLUT;
+layout(set = 2, binding = 4) uniform samplerCube radianceTexture;
+layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
+layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -47,14 +49,26 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-vec3 ambient(in vec3 wN, in float perceptualRoughness)
+vec3 sampleRadiance(in vec3 wN, in float perceptualRoughness)
 {
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_AMBIENT_TEXTURE) != 0)
+    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_RADIANCE_TEXTURE) != 0)
     {
-        ivec2 envMapSize = textureSize(ambientTexture, 0);
+        ivec2 envMapSize = textureSize(radianceTexture, 0);
         float resolution = float(max(envMapSize.x, envMapSize.y));
         float lod = log2(resolution) * perceptualRoughness;
-        return textureLod(ambientTexture, wN, lod).rgb * ubo.ambientColor.a;
+        return textureLod(radianceTexture, wN, lod).rgb * ubo.ambientColor.a;
+    }
+    else
+    {
+        return ubo.ambientColor.rgb * ubo.ambientColor.a;
+    }
+}
+
+vec3 sampleIrradiance(in vec3 wN)
+{
+    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_IRRADIANCE_TEXTURE) != 0)
+    {
+        return texture(irradianceTexture, wN).rgb * ubo.ambientColor.a;
     }
     else
     {
@@ -92,8 +106,8 @@ void main()
     
     vec3 radiance = vec3(0.0);
     
-    vec3 irradiance = ambient(wN, 0.9); // TODO: support separate irradiance map
-    vec3 reflection = ambient(wR, sqrt(roughness));
+    vec3 irradiance = sampleIrradiance(wN);
+    vec3 reflection = sampleRadiance(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, 1.0 - roughness)).rg :
         vec2(1.0, 0.0);

@@ -16,7 +16,10 @@ class Scene: Owner
     Camera activeCamera;
     Light sun;
     Color4f ambientColor = Color4f(0.5f, 0.5f, 0.5f, 1.0f);
-    Texture ambientTexture;
+    Texture radianceTexture;
+    Texture irradianceTexture;
+    Texture brdfLUT;
+    bool brdfLUTEnabled = true;
     float ambientEnergy = 1.0f;
     
     this(Owner owner)
