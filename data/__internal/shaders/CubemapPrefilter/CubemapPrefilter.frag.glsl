@@ -71,13 +71,10 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
         vec3 H = importanceSampleGGX(Xi, roughness, N);
         vec3 L = 2.0 * dot(V, H) * H - V;
         float NL = clamp(dot(N, L), 0.0, 1.0);
-        if (NL > 0.0)
-        {
-            vec3 inputColor =
-                clamp(textureLod(envmap, L, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
-            result += inputColor * NL;
-            totalWeight += NL;
-        }
+        vec3 inputColor =
+            clamp(textureLod(envmap, L, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+        result += inputColor * NL;
+        totalWeight += NL;
     }
     
     if (totalWeight == 0.0)

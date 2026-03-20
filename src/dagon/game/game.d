@@ -41,7 +41,7 @@ class Game: BaseGame
         renderer.state.brdfLUTEnabled = true;
     }
     
-    IBLData generateCubemaps(Texture inputEnvmap, uint resolution, Owner cubemapsOwner)
+    IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
     {
         TextureBuffer buffer = {
             format: {
@@ -53,8 +53,8 @@ class Game: BaseGame
                 pixelSize: 8
             },
             size: {
-                width: resolution,
-                height: resolution,
+                width: specularResolution,
+                height: specularResolution,
                 depth: 1
             },
             mipLevels: 1,
@@ -72,8 +72,8 @@ class Game: BaseGame
         cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
         
         TextureBuffer irrBuffer = buffer;
-        irrBuffer.size.width = 64;
-        irrBuffer.size.height = 64;
+        irrBuffer.size.width = 32;
+        irrBuffer.size.height = 32;
         Texture irradianceCubemapCoarse = New!Texture(gpu, null);
         irradianceCubemapCoarse.create(&irrBuffer, &options);
         cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemapCoarse);

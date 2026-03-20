@@ -101,7 +101,7 @@ void main()
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
-    float roughness = sqrt(roughnessMetallic.g);
+    float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
@@ -109,7 +109,7 @@ void main()
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
     vec3 irradiance = sampleIrradiance(wN);
-    vec3 reflection = sampleSpecularReflection(wR, roughness);
+    vec3 reflection = sampleSpecularReflection(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);

@@ -4,7 +4,7 @@
 const float PI2 = PI * 2.0;
 const float EPSILON = 0.00001;
 
-const uint numSamples = 1024u * 32;
+const uint numSamples = 1024u * 16;
 const float invNumSamples = 1.0 / float(numSamples);
 
 // Generates the i-th 2D Hammersley point out of N
@@ -101,12 +101,9 @@ void main()
         vec2 Xi = hammersley(i);
         vec3 L = importanceSample(Xi, N);
         float cosTheta = max(0.0, dot(L, N));
-        if (cosTheta > 0.0)
-        {
-            vec3 inputColor = max(textureLod(inputCubemap, L, 0).rgb, vec3(0.0)) * inputScale;
-            irradiance += inputColor * cosTheta;
-            totalWeight += cosTheta;
-        }
+        vec3 inputColor = max(textureLod(inputCubemap, L, 0).rgb, vec3(0.0)) * inputScale;
+        irradiance += inputColor * cosTheta;
+        totalWeight += cosTheta;
     }
     if (totalWeight > 0.0)
         irradiance /= totalWeight;
