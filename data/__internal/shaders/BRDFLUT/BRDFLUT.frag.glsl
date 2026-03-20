@@ -94,11 +94,11 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    float roughness = clamp(1.0 - (gl_FragCoord.y + 0.5) / ubo.resolution.y, 0.0, 1.0);
-    float NoV = clamp((gl_FragCoord.x + 0.5) / ubo.resolution.x, 0.0, 1.0);
+    float roughness = texCoords.y;
+    float NoV = texCoords.x;
     
-    NoV = clamp(NoV, 0.001, 0.999);
-    roughness = clamp(roughness, 0.04, 0.999);
+    NoV = clamp(NoV, 0.0, 1.0);
+    roughness = clamp(roughness, 0.04, 1.0);
     
     vec2 res = integrateBRDF(roughness, NoV);
     fragColor = vec4(res.x, res.y, roughness, 1.0);

@@ -13,6 +13,8 @@ class Material: Owner
     float metallic = 0.0f;
     Color4f emissionColor = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
     float emissionEnergy = 0.0f;
+    float ior = 1.5f;
+    float iorLevel = 0.5f;
     
     Texture baseColorTexture;
     Texture normalTexture;

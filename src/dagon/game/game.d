@@ -35,6 +35,10 @@ class Game: BaseGame
         cubemapRenderer = New!CubemapRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
         brdflutRenderer = New!BRDFLUTRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
         renderer = New!DeferredRenderer(gpu, eventManager);
+        
+        renderer.brdfLUT = generateBRDFLUT(256, this);
+        renderer.state.brdfLUT = renderer.brdfLUT;
+        renderer.state.brdfLUTEnabled = true;
     }
     
     IBLData generateCubemaps(Texture inputEnvmap, uint resolution, Owner cubemapsOwner)

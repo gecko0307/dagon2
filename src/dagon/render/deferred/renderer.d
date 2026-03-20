@@ -53,6 +53,7 @@ class DeferredRenderer: Renderer
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
         
+        /*
         string brdfLUTFilename = "data/__internal/textures/brdf.dds";
         TextureAsset brdfAsset = New!TextureAsset(gpu, this);
         brdfAsset.cache = false;
@@ -65,6 +66,7 @@ class DeferredRenderer: Renderer
         brdfLUT = brdfAsset.texture;
         state.brdfLUT = brdfLUT;
         state.brdfLUTEnabled = true;
+        */
     }
     
     void clearColor(Color4f color) @property

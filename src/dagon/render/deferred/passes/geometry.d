@@ -121,7 +121,8 @@ class GeometryShader: Shader
         fsUBO.alphaOptions.z = entity.motionBlurMask;
         fsUBO.alphaOptions.w = entity.opacity * material.opacity;
         
-        fsUBO.fparams[0] = material.skyboxTextureMipLevel;
+        fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
+        fsUBO.fparams[1] = material.skyboxTextureMipLevel;
         
         if (material.baseColorTexture)
         {

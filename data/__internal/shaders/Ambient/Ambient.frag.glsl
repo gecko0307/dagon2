@@ -29,6 +29,8 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 #define TEXFLAG_HAS_IRRADIANCE_TEXTURE 1 << 1
 #define TEXFLAG_HAS_BRDF_LUT 1 << 2
 
+#define FPARAM_F0 0
+
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
@@ -44,6 +46,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invProjectionMatrix;
     vec4 ambientColor;
     uvec4 flags;
+    vec4 fparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -97,21 +100,21 @@ void main()
     vec3 wR = reflect(wE, wN);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
-    float shadedMask = roughnessMetallic.r;
+    float f0_scalar = roughnessMetallic.r;
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
+    float shadedMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
-    vec3 f0 = mix(vec3(0.04), baseColor, metallic);
     
-    vec3 radiance = vec3(0.0);
+    vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
     vec3 irradiance = sampleIrradiance(wN);
     vec3 reflection = sampleRadiance(wR, sqrt(roughness));
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
-        texture(brdfLUT, vec2(NE, 1.0 - roughness)).rg :
+        texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
     
-    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
+    vec3 F = max(fresnelRoughness(NE, f0, roughness), 0.0);
     
     // Single scattering
     //vec3 kD = (1.0 - F) * (1.0 - metallic);
@@ -120,13 +123,13 @@ void main()
     //radiance += (diffuse + specular) * occlusion;
     
     // Multiple scattering (Fdez-Agüera)
-    vec3 diffuse = baseColor * (1.0 - 0.04) * (1.0 - metallic);
+    vec3 diffuse = baseColor * (1.0 - metallic) * (1.0 - f0_scalar);
     vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
     float Ems = (1.0 - (brdf.x + brdf.y));
     vec3 Favg = f0 + (1.0 - f0) / 21.0;
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
-    radiance += FssEss * reflection + (FmsEms + kD) * irradiance;
+    vec3 radiance = FssEss * reflection + (FmsEms + kD) * irradiance;
     
     outColor = vec4(radiance * shadedMask, 1.0f);
 }

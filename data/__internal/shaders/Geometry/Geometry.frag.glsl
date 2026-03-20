@@ -34,6 +34,9 @@ layout(location = 3) in vec3 modelPosition;
 
 #define OUTFLAG_DEPTH 1 << 0
 
+#define FPARAM_F0 0
+#define FPARAM_SKYBOX_MIP_LEVEL 1
+
 layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 layout(set = 2, binding = 1) uniform sampler2D normalTexture;
 layout(set = 2, binding = 2) uniform sampler2D heightTexture;
@@ -96,6 +99,8 @@ void main()
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BASECOLOR_TEXTURE) != 0)
         baseColor *= texture(baseColorTexture, uv);
     
+    float f0 = ubo.fparams[FPARAM_F0];
+    
     vec4 roughnessMetallic = ubo.roughnessMetallic;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE) != 0)
         roughnessMetallic = texture(roughnessMetallicTexture, uv);
@@ -104,7 +109,7 @@ void main()
     
     vec3 emission = ubo.emission.rgb;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
-        emission = textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[0]).rgb;
+        emission = textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[FPARAM_SKYBOX_MIP_LEVEL]).rgb;
     else if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
     {
         emission *= toLinear(texture(emissionTexture, uv).rgb);
@@ -117,7 +122,7 @@ void main()
     
     outColor = vec4(baseColor.rgb, 1.0);
     outNormal = vec4(N, 1.0);
-    outRoughnessMetallic = vec4(shadedMask, roughness, metallic, 1.0);
+    outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(0.0, 0.0, motionBlurMask, 1.0); // TODO
     outRadiance = vec4(0.0, 0.0, 0.0, 1.0);

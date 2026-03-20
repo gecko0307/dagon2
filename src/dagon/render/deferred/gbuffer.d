@@ -44,7 +44,7 @@ class GBuffer: Owner
             dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
             color_write_mask: 0,
-            enable_blend: true,
+            enable_blend: false,
             enable_color_write_mask: false
         };
         
