@@ -58,7 +58,7 @@ class Game: BaseGame
         };
         
         TextureCreationOptions options = {
-            generateMipmaps: true,
+            generateMipmaps: false,
             repeatUV: false,
             anisotropicFiltering: false
         };
@@ -66,8 +66,6 @@ class Game: BaseGame
         Texture inputCubemap = New!Texture(gpu, null);
         inputCubemap.create(&buffer, &options);
         cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
-        
-        options.generateMipmaps = false;
         
         TextureBuffer irrBuffer = buffer;
         irrBuffer.size.width = 64;

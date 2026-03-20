@@ -55,7 +55,7 @@ vec3 agxLook(vec3 color, int look)
 
     if (look == AGX_LOOK_PUNCHY)
     {
-        slope = vec3(1.0);
+        slope = vec3(1.25);
         power = vec3(1.35, 1.35, 1.35);
         sat = 1.4;
     }
@@ -96,15 +96,16 @@ vec3 tonemapAgX(vec3 color, int look)
     color = log2(color);
     color = (color - AgxMinEv) / (AgxMaxEv - AgxMinEv);
     color = clamp(color, 0.0, 1.0);
-
+    
     // Apply sigmoid
     color = agxDefaultContrastApprox(color);
-
+    
     // Apply AgX look
     color = agxLook(color, look);
-
+    
+    // Inverse input transform (outset)
     color = AgXOutsetMatrix * color;
-
+    
     // Linearize
     color = pow(max(vec3(0.0), color), vec3(2.2));
 

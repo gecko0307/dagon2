@@ -72,7 +72,7 @@ class TonemappingShader: Shader
         else
         {
             // TODO: get from render.conf
-            fsUBO.flags[0] = Tonemapper.AgX_Punchy;
+            fsUBO.flags[0] = Tonemapper.AgX_Base;
             fsUBO.hdrClampingParams = Vector4f(0.0f, 1.0f, 0.0f, 0.0f);
         }
     }
