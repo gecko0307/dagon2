@@ -16,7 +16,7 @@ class Scene: Owner
     Camera activeCamera;
     Light sun;
     Color4f ambientColor = Color4f(0.5f, 0.5f, 0.5f, 1.0f);
-    Texture radianceTexture;
+    Texture specularTexture;
     Texture irradianceTexture;
     Texture brdfLUT;
     bool brdfLUTEnabled = true;

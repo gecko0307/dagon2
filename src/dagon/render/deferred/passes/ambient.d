@@ -22,7 +22,7 @@ import dagon.render.deferred.gbuffer;
 
 enum AmbientTextureFlags: uint
 {
-    HasRadianceTexture = 1 << 0,
+    HasSpecularTexture = 1 << 0,
     HasIrradianceTexture = 1 << 1,
     HasBRDFLUT = 1 << 2
 }
@@ -76,7 +76,7 @@ class AmbientShader: Shader
         auto pass = state.pass;
         auto view = pass.view;
         auto scene = state.scene;
-        auto radianceTexture = scene.radianceTexture;
+        auto specularTexture = scene.specularTexture;
         auto irradianceTexture = scene.irradianceTexture;
         auto brdfLUT = scene.brdfLUT;
         
@@ -92,11 +92,11 @@ class AmbientShader: Shader
         fsUBO.ambientColor = scene.ambientColor;
         fsUBO.ambientColor.a = scene.ambientEnergy;
         
-        if (radianceTexture)
+        if (specularTexture)
         {
-            pass.bindTexture(PipelineStage.Fragment, 4, radianceTexture);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasRadianceTexture;
-            fsUBO.flags[1] = radianceTexture.mipLevels - 1;
+            pass.bindTexture(PipelineStage.Fragment, 4, specularTexture);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasSpecularTexture;
+            fsUBO.flags[1] = specularTexture.mipLevels - 1;
         }
         else
         {

@@ -19,7 +19,7 @@ import dagon.render.deferred;
 struct IBLData
 {
     Texture irradianceCubemap;
-    Texture radianceCubemap;
+    Texture specularCubemap;
     Texture brdfLUT;
 }
 
@@ -33,7 +33,7 @@ class Game: BaseGame
     {
         super(w, h, fullscreen, title, args);
         cubemapRenderer = New!CubemapRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
-        brdflutRenderer = New!BRDFLUTRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
+        brdflutRenderer = New!BRDFLUTRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT);
         renderer = New!DeferredRenderer(gpu, eventManager);
         
         renderer.brdfLUT = generateBRDFLUT(256, this);
@@ -83,15 +83,15 @@ class Game: BaseGame
         cubemapRenderer.prefilterCubemapIrradiance(irradianceCubemapCoarse, irradianceCubemap);
         
         buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
-        Texture radianceCubemap = New!Texture(gpu, cubemapsOwner);
-        radianceCubemap.create(&buffer, &options);
+        Texture specularCubemap = New!Texture(gpu, cubemapsOwner);
+        specularCubemap.create(&buffer, &options);
         
-        cubemapRenderer.prefilterCubemap(inputCubemap, radianceCubemap);
+        cubemapRenderer.prefilterCubemap(inputCubemap, specularCubemap);
         
         Delete(irradianceCubemapCoarse);
         Delete(inputCubemap);
         
-        return IBLData(irradianceCubemap, radianceCubemap, renderer.brdfLUT);
+        return IBLData(irradianceCubemap, specularCubemap, renderer.brdfLUT);
     }
     
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)
@@ -99,11 +99,11 @@ class Game: BaseGame
         TextureBuffer buffer = {
             format: {
                 type: SDL_GPU_TEXTURETYPE_2D,
-                format: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
+                format: SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
                 blockSize: 0,
                 cubeFaces: CubeFaceBit.None,
-                numChannels: 4,
-                pixelSize: 8
+                numChannels: 2,
+                pixelSize: 4
             },
             size: {
                 width: resolution,

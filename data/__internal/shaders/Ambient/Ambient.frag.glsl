@@ -25,7 +25,7 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 #define FLAGS_TEXTURE 0
 #define FLAGS_MAX_LOD_LEVEL 1
 
-#define TEXFLAG_HAS_RADIANCE_TEXTURE 1 << 0
+#define TEXFLAG_HAS_SPECULAR_TEXTURE 1 << 0
 #define TEXFLAG_HAS_IRRADIANCE_TEXTURE 1 << 1
 #define TEXFLAG_HAS_BRDF_LUT 1 << 2
 
@@ -35,7 +35,7 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
-layout(set = 2, binding = 4) uniform samplerCube radianceTexture;
+layout(set = 2, binding = 4) uniform samplerCube specularTexture;
 layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
 layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
 
@@ -53,12 +53,12 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-vec3 sampleRadiance(in vec3 wN, in float roughnessSqrt)
+vec3 sampleSpecularReflection(in vec3 wN, in float roughnessSqrt)
 {
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_RADIANCE_TEXTURE) != 0)
+    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SPECULAR_TEXTURE) != 0)
     {
         float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_LOD_LEVEL]);
-        return textureLod(radianceTexture, wN, lod).rgb * ubo.ambientColor.a;
+        return textureLod(specularTexture, wN, lod).rgb * ubo.ambientColor.a;
     }
     else
     {
@@ -101,15 +101,15 @@ void main()
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
-    float roughness = roughnessMetallic.g;
+    float roughness = sqrt(roughnessMetallic.g);
     float metallic = roughnessMetallic.b;
-    float shadedMask = roughnessMetallic.a;
+    float shadingMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
     vec3 irradiance = sampleIrradiance(wN);
-    vec3 reflection = sampleRadiance(wR, sqrt(roughness));
+    vec3 reflection = sampleSpecularReflection(wR, roughness);
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
@@ -131,5 +131,5 @@ void main()
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
     vec3 radiance = FssEss * reflection + (FmsEms + kD) * irradiance;
     
-    outColor = vec4(radiance * shadedMask, 1.0f);
+    outColor = vec4(radiance * shadingMask, 1.0f);
 }

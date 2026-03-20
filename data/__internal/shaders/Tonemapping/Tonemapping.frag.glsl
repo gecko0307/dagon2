@@ -56,7 +56,7 @@ vec3 agxLook(vec3 color, int look)
     if (look == AGX_LOOK_PUNCHY)
     {
         slope = vec3(1.0);
-        power = vec3(1.35, 1.35, 1.35);
+        power = vec3(1.5, 1.5, 1.5);
         sat = 1.0;
     }
 

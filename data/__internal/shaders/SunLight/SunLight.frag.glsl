@@ -7,13 +7,7 @@ const float INVPI = 1.0 / PI;
 // Converts normalized device coordinates to eye space position
 vec3 unproject(mat4 invProjMatrix, vec3 ndc)
 {
-    vec4 clipPos = vec4(
-        ndc.x * 2.0 - 1.0,
-        (1.0 - ndc.y) * 2.0 - 1.0,
-        ndc.z,
-        1.0
-    );
-    
+    vec4 clipPos = vec4(ndc * 2.0 - 1.0, 1.0);
     vec4 res = invProjMatrix * clipPos;
     return res.xyz / res.w;
 }
@@ -78,6 +72,7 @@ void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
     vec3 ndc = vec3(texCoords, depth);
+    ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
@@ -85,13 +80,12 @@ void main()
     vec3 R = reflect(E, N);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
-    float shadedMask = roughnessMetallic.r;
+    float f0_scalar = roughnessMetallic.r;
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
+    float shadingMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
-    vec3 f0 = mix(vec3(0.04), baseColor, metallic);
-    
-    vec3 radiance = vec3(0.0);
+    vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
 
     vec3 L = ubo.lighVector.xyz;
     float NL = max(dot(N, L), 0.0);
@@ -112,7 +106,7 @@ void main()
     const float occlusion = shadow * 1.0;
     vec3 diffuse = INVPI * baseColor * (kD * NL * occlusion) * (1.0 - metallic);
     
-    radiance += (diffuse + (specular * shadow * NL)) * incomingLight;
+    vec3 radiance = (diffuse + (specular * shadow * NL)) * incomingLight;
     
-    outColor = vec4(radiance * shadedMask, 1.0f);
+    outColor = vec4(radiance * shadingMask, 1.0f);
 }
