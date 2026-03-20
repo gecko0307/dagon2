@@ -33,6 +33,7 @@ struct GeometryShaderFragmentUniformBuffer
     Color4f emission;
     Vector4f alphaOptions;
     uint[4] flags;
+    float[4] fparams;
 }
 
 enum GeometryFlags
@@ -84,6 +85,11 @@ class GeometryShader: Shader
         fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
+        
+        fsUBO.fparams[0] = 0.0f;
+        fsUBO.fparams[1] = 0.0f;
+        fsUBO.fparams[2] = 0.0f;
+        fsUBO.fparams[3] = 0.0f;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -114,6 +120,8 @@ class GeometryShader: Shader
         fsUBO.alphaOptions.y = cast(float)!material.shadeless;
         fsUBO.alphaOptions.z = entity.motionBlurMask;
         fsUBO.alphaOptions.w = entity.opacity * material.opacity;
+        
+        fsUBO.fparams[0] = material.skyboxTextureMipLevel;
         
         if (material.baseColorTexture)
         {

@@ -48,6 +48,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     vec4 emission;
     vec4 alphaOptions;
     uvec4 flags;
+    vec4 fparams;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -103,7 +104,7 @@ void main()
     
     vec3 emission = ubo.emission.rgb;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
-        emission = textureLod(skyboxTexture, -normalize(modelPosition), 0.0).rgb;
+        emission = textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[0]).rgb;
     else if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
     {
         emission *= toLinear(texture(emissionTexture, uv).rgb);

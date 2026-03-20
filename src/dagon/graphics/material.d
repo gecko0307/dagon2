@@ -25,6 +25,8 @@ class Material: Owner
     float alphaClipThreshold = 0.5f;
     bool shadeless = false;
     
+    float skyboxTextureMipLevel = 0.0f;
+    
     bool outputDepth = true;
     
     this(Owner owner)
