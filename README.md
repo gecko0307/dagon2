@@ -4,6 +4,7 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 
 New features:
 - The renderer is based on SDL GPU, targeting Vulkan instead of OpenGL
+- Many improvements in deferred renderer. The image is now almost identical to Blender's Eevee
 - Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Experimental HDR (scRGB) output support
 - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
