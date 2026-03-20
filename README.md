@@ -5,7 +5,7 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 [![comparison](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee-1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee-1.jpg)
 
 New features:
-- The renderer is based on SDL GPU, targeting Vulkan instead of OpenGL
+- Rendering is based on SDL GPU, targeting Vulkan instead of OpenGL
 - Many improvements in deferred renderer. The image is now almost identical to Blender's Eevee
 - Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Experimental HDR (scRGB) output support
