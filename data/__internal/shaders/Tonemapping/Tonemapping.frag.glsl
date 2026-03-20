@@ -55,9 +55,9 @@ vec3 agxLook(vec3 color, int look)
 
     if (look == AGX_LOOK_PUNCHY)
     {
-        slope = vec3(1.25);
+        slope = vec3(1.0);
         power = vec3(1.35, 1.35, 1.35);
-        sat = 1.4;
+        sat = 1.0;
     }
 
     // ASC CDL
