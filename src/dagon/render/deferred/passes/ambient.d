@@ -94,9 +94,13 @@ class AmbientShader: Shader
         {
             pass.bindTexture(PipelineStage.Fragment, 4, radianceTexture);
             fsUBO.flags[0] |= AmbientTextureFlags.HasRadianceTexture;
+            fsUBO.flags[1] = radianceTexture.mipLevels - 1;
         }
         else
+        {
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
+            fsUBO.flags[1] = 0;
+        }
         
         if (irradianceTexture)
         {

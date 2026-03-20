@@ -23,6 +23,7 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 }
 
 #define FLAGS_TEXTURE 0
+#define FLAGS_MAX_LOD_LEVEL 1
 
 #define TEXFLAG_HAS_RADIANCE_TEXTURE 1 << 0
 #define TEXFLAG_HAS_IRRADIANCE_TEXTURE 1 << 1
@@ -49,13 +50,11 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-vec3 sampleRadiance(in vec3 wN, in float perceptualRoughness)
+vec3 sampleRadiance(in vec3 wN, in float roughnessSqrt)
 {
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_RADIANCE_TEXTURE) != 0)
     {
-        ivec2 envMapSize = textureSize(radianceTexture, 0);
-        float resolution = float(max(envMapSize.x, envMapSize.y));
-        float lod = log2(resolution) * perceptualRoughness;
+        float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_LOD_LEVEL]);
         return textureLod(radianceTexture, wN, lod).rgb * ubo.ambientColor.a;
     }
     else
