@@ -22,3 +22,4 @@ Major changes from Dagon 0.x/1.x:
 - Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`
 - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
+- The renderer now uses separate irradiance cubemap.
