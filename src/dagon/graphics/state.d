@@ -21,6 +21,7 @@ struct GraphicsState
     InputBuffer roughnessMetallicBuffer;
     InputBuffer emissionBuffer;
     InputBuffer velocityBuffer;
+    InputBuffer occlusionBuffer;
     InputBuffer radianceBuffer;
     RenderPass pass;
     Scene scene;
@@ -39,6 +40,7 @@ struct GraphicsState
         roughnessMetallicBuffer = InputBuffer.init;
         emissionBuffer = InputBuffer.init;
         velocityBuffer = InputBuffer.init;
+        occlusionBuffer = InputBuffer.init;
         radianceBuffer = InputBuffer.init;
     }
 }

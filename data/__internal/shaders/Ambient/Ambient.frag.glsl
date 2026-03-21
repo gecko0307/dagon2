@@ -28,6 +28,7 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
 #define TEXFLAG_HAS_SPECULAR_TEXTURE 1 << 0
 #define TEXFLAG_HAS_IRRADIANCE_TEXTURE 1 << 1
 #define TEXFLAG_HAS_BRDF_LUT 1 << 2
+#define TEXFLAG_HAS_OCCLUSION_BUFFER 1 << 3
 
 #define FPARAM_F0 0
 
@@ -38,6 +39,7 @@ layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 4) uniform samplerCube specularTexture;
 layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
 layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
+layout(set = 2, binding = 7) uniform sampler2D occlusionBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -78,9 +80,6 @@ vec3 sampleIrradiance(in vec3 wN)
     }
 }
 
-// TODO: read from occlusion buffer
-const float occlusion = 1.0;
-
 void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
@@ -105,6 +104,9 @@ void main()
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
+    float occlusion = 1.0;
+    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_OCCLUSION_BUFFER) != 0)
+        occlusion = texture(occlusionBuffer, texCoords).r;
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
@@ -129,7 +131,7 @@ void main()
     vec3 Favg = f0 + (1.0 - f0) / 21.0;
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
-    vec3 radiance = FssEss * reflection + (FmsEms + kD) * irradiance;
+    vec3 radiance = (FssEss * reflection + (FmsEms + kD) * irradiance) * occlusion;
     
-    outColor = vec4(radiance * shadingMask, 1.0f);
+    outColor = vec4(radiance * shadingMask, 1.0);
 }

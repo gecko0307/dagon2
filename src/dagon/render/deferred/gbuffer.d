@@ -22,6 +22,8 @@ class GBuffer: Owner
     SDL_GPUTexture* emissionBuffer;
     SDL_GPUTexture* velocityBuffer;
     SDL_GPUTexture* radianceBuffer;
+    SDL_GPUTexture* occlusionBuffer1;
+    SDL_GPUTexture* occlusionBuffer2;
     
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
@@ -162,6 +164,10 @@ class GBuffer: Owner
             SDL_ReleaseGPUTexture(gpu.device, velocityBuffer);
         if (radianceBuffer)
             SDL_ReleaseGPUTexture(gpu.device, radianceBuffer);
+        if (occlusionBuffer1)
+            SDL_ReleaseGPUTexture(gpu.device, occlusionBuffer1);
+        if (occlusionBuffer2)
+            SDL_ReleaseGPUTexture(gpu.device, occlusionBuffer2);
     }
     
     void createBuffers(uint width, uint height)
@@ -206,6 +212,12 @@ class GBuffer: Owner
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         radianceBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[5].texture = radianceBuffer;
+        
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
+        textureCreateInfo.width = width / 2;
+        textureCreateInfo.height = height / 2;
+        occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        occlusionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
     }
     
     void resize(uint width, uint height)

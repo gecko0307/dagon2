@@ -1,6 +1,6 @@
-module dagon.render.deferred.passes.ambient;
+module dagon.render.deferred.passes.ssao;
 
-import std.math;
+//import std.math;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -20,33 +20,23 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
-enum AmbientTextureFlags: uint
+struct SSAOShaderVertexUniformBuffer
 {
-    HasSpecularTexture = 1 << 0,
-    HasIrradianceTexture = 1 << 1,
-    HasBRDFLUT = 1 << 2,
-    HasOcclusionBuffer = 1 << 3
 }
 
-struct AmbientShaderVertexUniformBuffer
-{
-    // TODO
-}
-
-struct AmbientShaderFragmentUniformBuffer
+struct SSAOShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;
     Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
-    Color4f ambientColor;
-    uint[4] flags;
+    Vector4f resolution;
 }
 
-class AmbientShader: Shader
+class SSAOShader: Shader
 {
    protected:
-    AmbientShaderVertexUniformBuffer vsUBO;
-    AmbientShaderFragmentUniformBuffer fsUBO;
+    SSAOShaderVertexUniformBuffer vsUBO;
+    SSAOShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -54,86 +44,49 @@ class AmbientShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Ambient.vert.glsl", "data/__internal/shaders/Ambient/Ambient.vert.glsl",
+        vertexModule.create("SSAO.vert.glsl", "data/__internal/shaders/SSAO/SSAO.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Ambient.frag.glsl", "data/__internal/shaders/Ambient/Ambient.frag.glsl",
+        fragmentModule.create("SSAO.frag.glsl", "data/__internal/shaders/SSAO/SSAO.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create AmbientShader");
+            exitWithError("Failed to create SSAOShader");
         }
         
         fsUBO.viewMatrix = Matrix4x4f.identity;
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
-        fsUBO.ambientColor = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+        fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         auto view = pass.view;
-        auto scene = state.scene;
-        auto specularTexture = scene.specularTexture;
-        auto irradianceTexture = scene.irradianceTexture;
-        auto brdfLUT = scene.brdfLUT;
+        
+        fsUBO.resolution.x = view.width / 2;
+        fsUBO.resolution.x = view.height / 2;
         
         fsUBO.viewMatrix = view.viewMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
-        
-        fsUBO.ambientColor = scene.ambientColor;
-        fsUBO.ambientColor.a = scene.ambientEnergy;
-        
-        if (specularTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 4, specularTexture);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasSpecularTexture;
-            fsUBO.flags[1] = specularTexture.mipLevels - 1;
-        }
-        else
-        {
-            pass.bindDefaultTexture(PipelineStage.Fragment, 4);
-            fsUBO.flags[1] = 0;
-        }
-        
-        if (irradianceTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 5, irradianceTexture);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasIrradianceTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 5);
-        
-        if (brdfLUT && scene.brdfLUTEnabled)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 6, brdfLUT);
-            fsUBO.flags[0] |= AmbientTextureFlags.HasBRDFLUT;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 6);
-        
-        pass.bindInputBuffer(PipelineStage.Fragment, 7, &state.occlusionBuffer);
-        fsUBO.flags[0] |= AmbientTextureFlags.HasOcclusionBuffer;
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class AmbientPass: RenderPass
+class SSAOPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    AmbientShader ambientShader;
+    SSAOShader ssaoShader;
     
     SDL_GPUColorTargetDescription colorTargetDescription;
     SDL_GPUColorTargetInfo colorTargetInfo;
@@ -143,11 +96,11 @@ class AmbientPass: RenderPass
         super(renderer);
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
-        ambientShader = New!AmbientShader(gpu, this);
+        ssaoShader = New!SSAOShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = ambientShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = ambientShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = ssaoShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = ssaoShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -190,10 +143,10 @@ class AmbientPass: RenderPass
             dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
             color_write_mask: 0,
-            enable_blend: true,
+            enable_blend: false,
             enable_color_write_mask: false
         };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
         colorTargetDescription.blend_state = blendState;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
@@ -216,10 +169,10 @@ class AmbientPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo.clear_color = SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo.texture = gbuffer.occlusionBuffer1;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -236,7 +189,7 @@ class AmbientPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo.texture = gbuffer.occlusionBuffer1;
         
         beginPass();
         
@@ -246,10 +199,9 @@ class AmbientPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.occlusionBuffer = InputBuffer(gbuffer.occlusionBuffer2, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(null, null);
+        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
-        ambientShader.bindParameters(state);
+        ssaoShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         

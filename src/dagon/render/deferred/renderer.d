@@ -13,6 +13,8 @@ import dagon.resource.texture;
 import dagon.render.renderer;
 import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.geometry;
+import dagon.render.deferred.passes.ssao;
+import dagon.render.deferred.passes.ssaodenoise;
 import dagon.render.deferred.passes.ambient;
 import dagon.render.deferred.passes.selfillumination;
 import dagon.render.deferred.passes.sunlight;
@@ -28,6 +30,8 @@ class DeferredRenderer: Renderer
     GBuffer gbuffer;
     PostProcessingContext ppContext;
     GeometryPass geometryPass;
+    SSAOPass ssaoPass;
+    SSAODenoisePass ssaoDenoisePass;
     AmbientPass ambientPass;
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
@@ -44,6 +48,8 @@ class DeferredRenderer: Renderer
         
         // TODO: sun shadow pass
         geometryPass = New!GeometryPass(this, gbuffer);
+        ssaoPass = New!SSAOPass(this, gbuffer);
+        ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
