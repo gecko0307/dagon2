@@ -12,6 +12,7 @@ vec3 unproject(mat4 invProjMatrix, vec3 ndc)
     return res.xyz / res.w;
 }
 
+// Trowbridge-Reitz GGX normal distribution
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;

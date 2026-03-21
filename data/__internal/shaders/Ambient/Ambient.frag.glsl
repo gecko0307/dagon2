@@ -88,7 +88,7 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
+    vec3 N = texture(normalBuffer, texCoords).rgb; //normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
     float NE = clamp(dot(N, E), 0.0, 1.0);
@@ -116,13 +116,17 @@ void main()
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
     
-    vec3 F = max(fresnelRoughness(NE, f0, roughness), 0.0);
+    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     
     // Single scattering
-    //vec3 kD = (1.0 - F) * (1.0 - metallic);
-    //vec3 diffuse = kD * irradiance * baseColor;
-    //vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
-    //radiance += (diffuse + specular) * occlusion;
+    /*
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
+    vec3 diffuse = kD * irradiance * baseColor;
+    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    vec3 radiance = (diffuse + specular) * occlusion;
+    */
+    
+    float specularOcclusion = clamp(pow(NE + occlusion, exp2(6.0 * (1.0 - roughness))) - 1.0 + occlusion, 0.0, 1.0);
     
     // Multiple scattering (Fdez-Agüera)
     vec3 diffuse = baseColor * (1.0 - metallic) * (1.0 - f0_scalar);
@@ -131,7 +135,7 @@ void main()
     vec3 Favg = f0 + (1.0 - f0) / 21.0;
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
-    vec3 radiance = (FssEss * reflection + (FmsEms + kD) * irradiance) * occlusion;
+    vec3 radiance = (FssEss * reflection * specularOcclusion + (FmsEms + kD) * irradiance * occlusion);
     
     outColor = vec4(radiance * shadingMask, 1.0);
 }

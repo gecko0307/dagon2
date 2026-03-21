@@ -3,6 +3,7 @@
 #define PI 3.14159265359
 const float PI2 = PI * 2.0;
 
+// Brian Karis, "Real Shading in Unreal Engine 4"
 vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 {
     float a = roughness * roughness;
@@ -23,6 +24,15 @@ vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
     vec3 tangentX = normalize(cross(upVector, N));
     vec3 tangentY = cross(N, tangentX);
     return tangentX * H.x + tangentY * H.y + N * H.z;
+}
+
+// Trowbridge-Reitz GGX normal distribution
+float distributionGGX(float cosLh, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float denom = (cosLh * cosLh) * (a2 - 1.0) + 1.0;
+    return a2 / (PI * denom * denom);
 }
 
 // Generates the i-th 2D Hammersley point out of N
@@ -65,14 +75,19 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
     vec3 result = vec3(0.0, 0.0, 0.0);
     float totalWeight = 0.0;
     
+    vec2 inputSize = vec2(textureSize(envmap, 0));
+    float wt = 4.0 * PI / (6 * inputSize.x * inputSize.y);
+    
     for (uint i = 0u; i < numSamples; i++)
     {
         vec2 Xi = hammersley(i, numSamples);
         vec3 H = importanceSampleGGX(Xi, roughness, N);
         vec3 L = 2.0 * dot(V, H) * H - V;
         float NL = clamp(dot(N, L), 0.0, 1.0);
-        vec3 inputColor =
-            clamp(textureLod(envmap, L, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+        float pdf = distributionGGX(NL, roughness) * 0.25;
+        float ws = 1.0 / (numSamples * pdf);
+        float mipLevel = max(0.5 * log2(ws / wt) + 1.0, 0.0);
+        vec3 inputColor = clamp(textureLod(envmap, L, mipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
         result += inputColor * NL;
         totalWeight += NL;
     }
