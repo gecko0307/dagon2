@@ -48,7 +48,7 @@ vec2 hammersley(uint i, uint N)
     return vec2(float(i) / float(N), rdi);
 }
 
-layout(set = 2, binding = 0) uniform samplerCube envmap;
+layout(set = 2, binding = 0) uniform samplerCube inputCubemap;
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
@@ -75,7 +75,7 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
     vec3 result = vec3(0.0, 0.0, 0.0);
     float totalWeight = 0.0;
     
-    vec2 inputSize = vec2(textureSize(envmap, 0));
+    vec2 inputSize = vec2(textureSize(inputCubemap, 0));
     float wt = 4.0 * PI / (6 * inputSize.x * inputSize.y);
     
     for (uint i = 0u; i < numSamples; i++)
@@ -87,7 +87,7 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
         float pdf = distributionGGX(NL, roughness) * 0.25;
         float ws = 1.0 / (numSamples * pdf);
         float mipLevel = max(0.5 * log2(ws / wt) + 1.0, 0.0);
-        vec3 inputColor = clamp(textureLod(envmap, L, mipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+        vec3 inputColor = clamp(textureLod(inputCubemap, L, mipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
         result += inputColor * NL;
         totalWeight += NL;
     }
@@ -118,6 +118,6 @@ void main()
     if (roughness > 0.0)
         result = prefilterEnvMap(roughness, R);
     else
-        result = clamp(textureLod(envmap, R, inputMipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+        result = clamp(textureLod(inputCubemap, R, 0.0).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
     fragColor = vec4(result, 1.0);
 }
