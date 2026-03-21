@@ -2,7 +2,7 @@
 
 Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon).
 
-[![comparison](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee-1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee-1.jpg)
+[![comparison](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)
 
 New features:
 - Rendering is based on SDL GPU, targeting Vulkan instead of OpenGL
