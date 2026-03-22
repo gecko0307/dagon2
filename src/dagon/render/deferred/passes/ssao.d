@@ -46,7 +46,7 @@ class SSAOShader: Shader
     
    public:
     float radius = 0.07f;
-    float power = 8.0f;
+    float power = 6.0f;
     uint numSamplesMax = 30;
     uint numSamplesMin = 5;
     bool temporalAccumulation = true;
