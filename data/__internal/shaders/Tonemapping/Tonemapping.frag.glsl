@@ -57,7 +57,7 @@ vec3 agxLook(vec3 color, int look)
     {
         slope = vec3(1.0);
         power = vec3(1.5, 1.5, 1.5);
-        sat = 1.0;
+        sat = 1.1;
     }
 
     // ASC CDL
@@ -109,6 +109,7 @@ vec3 tonemapAgX(vec3 color, int look)
     // Linearize
     color = pow(max(vec3(0.0), color), vec3(2.2));
 
+    // Back to sRGB
     color = LINEAR_REC2020_TO_LINEAR_SRGB * color;
 
     // Gamut mapping. Simple clamp for now
