@@ -10,6 +10,7 @@ import dlib.image.color;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;
+import dagon.core.time;
 import dagon.core.crashhandler;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
@@ -31,6 +32,7 @@ struct SSAOShaderFragmentUniformBuffer
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
     float[4] fparams;
+    uint[4] iparams;
 }
 
 class SSAOShader: Shader
@@ -39,8 +41,11 @@ class SSAOShader: Shader
     SSAOShaderVertexUniformBuffer vsUBO;
     SSAOShaderFragmentUniformBuffer fsUBO;
     float time = 0.0f;
+    bool disableAccumulationForNextFrame = false;
     
    public:
+    bool temporalAccumulation = true;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -69,22 +74,26 @@ class SSAOShader: Shader
         fsUBO.fparams[3] = 0.0f;
     }
     
+    void update(Time t)
+    {
+        time += 8.0f * t.delta;
+        if (time > PI * 2.0f)
+            time = 0.0f;
+    }
+    
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         auto view = pass.view;
         
-        fsUBO.resolution.x = view.width / 2;
-        fsUBO.resolution.x = view.height / 2;
-        
         fsUBO.viewMatrix = view.viewMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
-        
+        fsUBO.resolution.x = view.width / 2;
+        fsUBO.resolution.x = view.height / 2;
         fsUBO.fparams[0] = time;
-        time += 8.0f * state.time.delta;
-        if (time > PI * 2.0f)
-            time = 0.0f;
+        fsUBO.iparams[0] = temporalAccumulation && !disableAccumulationForNextFrame;
+        disableAccumulationForNextFrame = false;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
@@ -93,6 +102,12 @@ class SSAOShader: Shader
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+    }
+    
+    void resetAccumulation()
+    {
+        disableAccumulationForNextFrame = true;
+        time = 0.0f;
     }
 }
 
@@ -198,6 +213,11 @@ class SSAOPass: RenderPass
     {
     }
     
+    override void update(Time t)
+    {
+        ssaoShader.update(t);
+    }
+    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
@@ -224,5 +244,10 @@ class SSAOPass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+    }
+    
+    override void resize(uint width, uint height)
+    {
+        ssaoShader.resetAccumulation();
     }
 }

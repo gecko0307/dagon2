@@ -3,6 +3,7 @@ module dagon.render.pass;
 import dlib.core.ownership;
 
 import dagon.core.sdl3;
+import dagon.core.time;
 import dagon.graphics.texture;
 import dagon.graphics.state;
 import dagon.resource.shader.shadermodule;
@@ -140,6 +141,11 @@ abstract class RenderPass: Owner
     void drawIndexedPrimitives(uint numIndices, uint numInstances, uint firstIndex, int vertexOffset, uint firstInstance)
     {
         SDL_DrawGPUIndexedPrimitives(renderPass, numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
+    }
+    
+    void update(Time t)
+    {
+        //
     }
     
     void render(GraphicsState* state)

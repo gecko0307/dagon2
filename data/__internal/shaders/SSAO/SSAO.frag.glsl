@@ -24,6 +24,9 @@ layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D prevOcclusionBuffer;
 layout(set = 2, binding = 3) uniform sampler2D velocityBuffer;
 
+#define FPARAM_TIME 0
+#define IPARAM_TEMPORAL_ACCUMULATION 0
+
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
@@ -31,6 +34,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invProjectionMatrix;
     vec4 resolution;
     vec4 fparams;
+    uvec4 iparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -68,7 +72,7 @@ float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
     float invSamples = 1.0 / float(ssaoSamples);
     float radius = 0.0;
 
-    float rotatePhase = hash(uv * 467.759) * 6.28 + ubo.fparams[0];
+    float rotatePhase = hash(uv * 467.759) * 6.28 + ubo.fparams[FPARAM_TIME];
     float rStep = invSamples * rad;
     vec2 spiralUV;
 
@@ -101,11 +105,14 @@ void main()
     occlusion = mix(occlusion, 1.0, clamp(-eyePos.z / 100.0, 0.0, 1.0));
     
     // Temporal accumulation
-    vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
-    float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
-    float velocityLength = length(uvVelocity);
-    float alpha = mix(0.01, 1.0, clamp(velocityLength * 80.0, 0.0, 1.0));
-    occlusion = mix(prevOcclusion, occlusion, alpha);
+    if (ubo.iparams[IPARAM_TEMPORAL_ACCUMULATION] == 1)
+    {
+        vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
+        float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
+        float velocityLength = length(uvVelocity);
+        float alpha = mix(0.01, 1.0, clamp(velocityLength * 80.0, 0.0, 1.0));
+        occlusion = mix(prevOcclusion, occlusion, alpha);
+    }
     
     outColor = vec4(vec3(occlusion), 0.0);
 }

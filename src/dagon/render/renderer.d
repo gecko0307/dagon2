@@ -52,6 +52,27 @@ abstract class Renderer: EventListener, Updateable
         renderPass.view = view;
     }
     
+    void update(Time t)
+    {
+        processEvents();
+        
+        if (state.scene)
+        {
+            view.camera = state.scene.activeCamera;
+        }
+        
+        view.update(t);
+        
+        state.time = t;
+        
+        foreach(pass; renderPasses)
+        {
+            pass.update(t);
+        }
+        
+        onUpdate(t);
+    }
+    
     void render()
     {
         if (!active)
@@ -71,22 +92,6 @@ abstract class Renderer: EventListener, Updateable
         }
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
-    }
-    
-    void update(Time t)
-    {
-        processEvents();
-        
-        if (state.scene)
-        {
-            view.camera = state.scene.activeCamera;
-        }
-        
-        view.update(t);
-        
-        state.time = t;
-        
-        onUpdate(t);
     }
     
     void onUpdate(Time t)
