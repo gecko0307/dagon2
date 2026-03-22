@@ -21,6 +21,8 @@ layout(location = 0) in vec3 eyePosition;
 layout(location = 1) in vec2 texCoords;
 layout(location = 2) in vec3 eyeNormal;
 layout(location = 3) in vec3 modelPosition;
+layout(location = 4) in vec4 currPosition;
+layout(location = 5) in vec4 prevPosition;
 
 #define FLAGS_TEXTURE 0
 #define FLAGS_OUTPUT 1
@@ -52,6 +54,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     vec4 alphaOptions;
     uvec4 flags;
     vec4 fparams;
+    vec4 resolution;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -120,11 +123,17 @@ void main()
     if (alpha < ubo.alphaOptions.x) // alpha clipping
         discard;
     
+    vec2 posScreen = (currPosition.xy / currPosition.w) * 0.5 + 0.5;
+    posScreen.y = 1.0 - posScreen.y;
+    vec2 prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
+    prevPosScreen.y = 1.0 - prevPosScreen.y;
+    vec2 velocity = posScreen - prevPosScreen;
+    
     outColor = vec4(baseColor.rgb, 1.0);
     outNormal = vec4(N, 1.0);
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
-    outVelocity = vec4(0.0, 0.0, motionBlurMask, 1.0); // TODO
+    outVelocity = vec4(velocity, motionBlurMask, 1.0);
     outRadiance = vec4(0.0, 0.0, 0.0, 1.0);
     
     if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)

@@ -80,8 +80,11 @@ abstract class Renderer: EventListener, Updateable
         if (state.scene)
         {
             view.camera = state.scene.activeCamera;
-            view.update();
         }
+        
+        view.update(t);
+        
+        state.time = t;
         
         onUpdate(t);
     }

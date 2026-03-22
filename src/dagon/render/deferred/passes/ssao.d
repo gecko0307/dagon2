@@ -1,6 +1,6 @@
 module dagon.render.deferred.passes.ssao;
 
-//import std.math;
+import std.math;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -30,6 +30,7 @@ struct SSAOShaderFragmentUniformBuffer
     Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
+    float[4] fparams;
 }
 
 class SSAOShader: Shader
@@ -37,6 +38,7 @@ class SSAOShader: Shader
    protected:
     SSAOShaderVertexUniformBuffer vsUBO;
     SSAOShaderFragmentUniformBuffer fsUBO;
+    float time = 0.0f;
     
    public:
     this(GPU gpu, Owner owner)
@@ -60,6 +62,11 @@ class SSAOShader: Shader
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        
+        fsUBO.fparams[0] = 0.0f;
+        fsUBO.fparams[1] = 0.0f;
+        fsUBO.fparams[2] = 0.0f;
+        fsUBO.fparams[3] = 0.0f;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -74,8 +81,15 @@ class SSAOShader: Shader
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         
+        fsUBO.fparams[0] = time;
+        time += 8.0f * state.time.delta;
+        if (time > PI * 2.0f)
+            time = 0.0f;
+        
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.occlusionBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.velocityBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -136,11 +150,11 @@ class SSAOPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetBlendState blendState = {
-            src_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            src_color_blendfactor: SDL_GPU_BLENDFACTOR_CONSTANT_COLOR,
+            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR,
             color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_CONSTANT_COLOR,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
             color_write_mask: 0,
             enable_blend: false,
@@ -172,7 +186,7 @@ class SSAOPass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.occlusionBuffer1;
+        colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -189,9 +203,12 @@ class SSAOPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.occlusionBuffer1;
+        gbuffer.swapOcclusionBuffers();
+        colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
         
         beginPass();
+        
+        //SDL_SetGPUBlendConstants(renderPass, SDL_FColor(0.02f, 0.02f, 0.02f, 1.0f));
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
@@ -199,6 +216,7 @@ class SSAOPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        state.occlusionBuffer = InputBuffer(gbuffer.previousOcclusionBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
         ssaoShader.bindParameters(state);

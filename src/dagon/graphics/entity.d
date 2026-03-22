@@ -28,6 +28,7 @@ class Entity: Owner, Updateable
     Matrix4x4f invTransformation;
     Matrix4x4f modelMatrix;
     Matrix4x4f invModelMatrix;
+    Matrix4x4f prevModelMatrix;
     Vector3f position;
     Quaternionf rotation;
     Vector3f scaling;
@@ -45,6 +46,7 @@ class Entity: Owner, Updateable
         super(owner);
         modelMatrix = Matrix4x4f.identity;
         invModelMatrix = Matrix4x4f.identity;
+        prevModelMatrix = Matrix4x4f.identity;
         position = Vector3f(0.0f, 0.0f, 0.0f);
         rotation = Quaternionf.identity;
         scaling = Vector3f(1.0f, 1.0f, 1.0f);
@@ -62,6 +64,7 @@ class Entity: Owner, Updateable
         invTransformation = transformation.inverse;
         
         // TODO: parent-child relation
+        prevModelMatrix = modelMatrix;
         modelMatrix = transformation;
         invModelMatrix = invTransformation;
     }
@@ -209,6 +212,7 @@ class PositionSync: EntityController
     {
         entity.transformation = trsMatrix(targetEntity.positionAbsolute, entity.rotation, entity.scaling);
         entity.invTransformation = entity.transformation.inverse;
+        entity.prevModelMatrix = entity.modelMatrix;
         entity.modelMatrix = entity.transformation;
         entity.invModelMatrix = entity.invTransformation;
     }

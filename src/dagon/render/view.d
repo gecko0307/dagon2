@@ -5,6 +5,7 @@ import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.transformation;
 
+import dagon.core.time;
 import dagon.graphics.camera;
 
 class View: Owner
@@ -20,6 +21,9 @@ class View: Owner
     
     ///
     Matrix4x4f invViewMatrix;
+    
+    ///
+    Matrix4x4f prevViewMatrix;
     
     ///
     uint width;
@@ -47,6 +51,7 @@ class View: Owner
         super(owner);
         viewMatrix = Matrix4x4f.identity;
         invViewMatrix = Matrix4x4f.identity;
+        prevViewMatrix = Matrix4x4f.identity;
         resize(width, height);
     }
     
@@ -55,11 +60,14 @@ class View: Owner
         this.width = width;
         this.height = height;
         aspectRatio = cast(float)width / cast(float)height;
-        update();
+        update(Time(0.0, 0.0));
+        prevViewMatrix = viewMatrix;
     }
     
-    void update()
+    void update(Time t)
     {
+        prevViewMatrix = viewMatrix;
+        
         if (camera)
         {
             fov = camera.fov;

@@ -31,7 +31,7 @@ class DeferredRenderer: Renderer
     PostProcessingContext ppContext;
     GeometryPass geometryPass;
     SSAOPass ssaoPass;
-    SSAODenoisePass ssaoDenoisePass;
+    //SSAODenoisePass ssaoDenoisePass;
     AmbientPass ambientPass;
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
@@ -49,7 +49,7 @@ class DeferredRenderer: Renderer
         // TODO: sun shadow pass
         geometryPass = New!GeometryPass(this, gbuffer);
         ssaoPass = New!SSAOPass(this, gbuffer);
-        ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
+        //ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);

@@ -24,6 +24,8 @@ class GBuffer: Owner
     SDL_GPUTexture* radianceBuffer;
     SDL_GPUTexture* occlusionBuffer1;
     SDL_GPUTexture* occlusionBuffer2;
+    SDL_GPUTexture* previousOcclusionBuffer;
+    SDL_GPUTexture* currentOcclusionBuffer;
     
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
@@ -226,6 +228,9 @@ class GBuffer: Owner
         textureCreateInfo.height = height / 2;
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         occlusionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        
+        currentOcclusionBuffer = occlusionBuffer1;
+        previousOcclusionBuffer = occlusionBuffer2;
     }
     
     void resize(uint width, uint height)
@@ -249,5 +254,19 @@ class GBuffer: Owner
             linearColor.g,
             linearColor.b,
             1.0f);
+    }
+    
+    void swapOcclusionBuffers()
+    {
+        if (currentOcclusionBuffer is occlusionBuffer1)
+        {
+            currentOcclusionBuffer = occlusionBuffer2;
+            previousOcclusionBuffer = occlusionBuffer1;
+        }
+        else
+        {
+            currentOcclusionBuffer = occlusionBuffer1;
+            previousOcclusionBuffer = occlusionBuffer2;
+        }
     }
 }

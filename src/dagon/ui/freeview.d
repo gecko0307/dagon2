@@ -243,13 +243,12 @@ class FreeviewController: EntityController
         
         transform = invTransform.inverse;
         
-        //entity.prevTransformation = entity.transformation;
         entity.transformation = transform;
         entity.invTransformation = invTransform;
         
+        entity.prevModelMatrix = entity.modelMatrix;
         entity.modelMatrix = entity.transformation;
         entity.invModelMatrix = entity.invTransformation;
-        //entity.prevAbsoluteTransformation = entity.prevTransformation;
     }
     
     /// Sets the camera rotation (pitch, yaw, roll) instantly.

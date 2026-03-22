@@ -8,20 +8,30 @@ layout(location = 0) out vec3 eyePosition;
 layout(location = 1) out vec2 texCoords;
 layout(location = 2) out vec3 eyeNormal;
 layout(location = 3) out vec3 modelPosition;
+layout(location = 4) out vec4 currPosition;
+layout(location = 5) out vec4 prevPosition;
 
 layout(set = 1, binding = 0) uniform UniformBuffer
 {
     mat4 modelViewMatrix;
     mat4 normalMatrix;
     mat4 projectionMatrix;
+    mat4 prevModelViewMatrix;
 } ubo;
 
 void main()
 {
-    vec4 eyePosHmg = ubo.modelViewMatrix * vec4(va_position, 1.0);
+    vec4 modelPosHmg = vec4(va_position, 1.0);
+    vec4 eyePosHmg = ubo.modelViewMatrix * modelPosHmg;
     eyePosition = eyePosHmg.xyz;
     texCoords = va_texcoords;
     eyeNormal = (ubo.normalMatrix * vec4(va_normal, 0.0)).xyz;
     modelPosition = va_position;
-    gl_Position = ubo.projectionMatrix * eyePosHmg;
+    
+    currPosition = ubo.projectionMatrix * eyePosHmg;
+    prevPosition = ubo.projectionMatrix * (ubo.prevModelViewMatrix * modelPosHmg);
+    //posScreen = (currPosition.xy / currPosition.w) * 0.5 + 0.5;
+    //prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
+    
+    gl_Position = currPosition;
 }

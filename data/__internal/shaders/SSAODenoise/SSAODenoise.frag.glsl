@@ -47,6 +47,8 @@ float bilateral()
 
 void main()
 {
-    float res = bilateral();
+    //float res = bilateral();
+    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+    float res = texelFetch(occlusionBuffer, pixelCoord, 0).r;
     outColor = vec4(vec3(res), 1.0); 
 }

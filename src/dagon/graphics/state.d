@@ -1,6 +1,7 @@
 module dagon.graphics.state;
 
 import dagon.core.sdl3;
+import dagon.core.time;
 import dagon.render.pass;
 import dagon.graphics.entity;
 import dagon.graphics.material;
@@ -15,6 +16,7 @@ struct InputBuffer
 
 struct GraphicsState
 {
+    Time time;
     InputBuffer depthBuffer;
     InputBuffer colorBuffer;
     InputBuffer normalBuffer;

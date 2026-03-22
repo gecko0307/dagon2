@@ -40,6 +40,7 @@ layout(set = 2, binding = 4) uniform samplerCube specularTexture;
 layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
 layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
 layout(set = 2, binding = 7) uniform sampler2D occlusionBuffer;
+layout(set = 2, binding = 8) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -126,7 +127,7 @@ void main()
     vec3 radiance = (diffuse + specular) * occlusion;
     */
     
-    float specularOcclusion = clamp(pow(NE + occlusion, exp2(6.0 * (1.0 - roughness))) - 1.0 + occlusion, 0.0, 1.0);
+    float specularOcclusion = clamp(pow(NE + occlusion, exp2(1.0 - roughness)) - 1.0 + occlusion, 0.0, 1.0);
     
     // Multiple scattering (Fdez-Agüera)
     vec3 diffuse = baseColor * (1.0 - metallic) * (1.0 - f0_scalar);
@@ -136,6 +137,8 @@ void main()
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
     vec3 radiance = (FssEss * reflection * specularOcclusion + (FmsEms + kD) * irradiance * occlusion);
+    
+    //radiance = vec3(clamp(texture(velocityBuffer, texCoords).rg * 20.0, vec2(0.0), vec2(1.0)), 0.0);
     
     outColor = vec4(radiance * shadingMask, 1.0);
 }

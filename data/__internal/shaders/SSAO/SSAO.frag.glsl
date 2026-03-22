@@ -21,6 +21,8 @@ float hash(vec2 p)
 
 layout(set = 2, binding = 0) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
+layout(set = 2, binding = 2) uniform sampler2D prevOcclusionBuffer;
+layout(set = 2, binding = 3) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -28,6 +30,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
+    vec4 fparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -37,9 +40,9 @@ layout(location = 0) out vec4 outColor;
 // SSAO implementation based on code by Reinder Nijhoff
 // https://www.shadertoy.com/view/Ms33WB
 
-const uint ssaoSamples = 30;
+const uint ssaoSamples = 5;
 const float ssaoRadius = 0.07;
-const float ssaoPower = 4.0;
+const float ssaoPower = 6.0;
 
 #define SSAO_SCALE 1.0
 #define SSAO_BIAS 0.01
@@ -65,7 +68,7 @@ float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
     float invSamples = 1.0 / float(ssaoSamples);
     float radius = 0.0;
 
-    float rotatePhase = hash(uv * 467.759) * 6.28;
+    float rotatePhase = hash(uv * 467.759) * 6.28 + ubo.fparams[0];
     float rStep = invSamples * rad;
     vec2 spiralUV;
 
@@ -96,6 +99,13 @@ void main()
     occlusion = pow(clamp(1.0 - occlusion, 0.0, 1.0), ssaoPower);
     
     occlusion = mix(occlusion, 1.0, clamp(-eyePos.z / 100.0, 0.0, 1.0));
+    
+    // Temporal accumulation
+    vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
+    float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
+    float velocityLength = length(uvVelocity);
+    float alpha = mix(0.01, 1.0, clamp(velocityLength * 25.0, 0.0, 1.0));
+    occlusion = mix(prevOcclusion, occlusion, alpha);
     
     outColor = vec4(vec3(occlusion), 0.0);
 }

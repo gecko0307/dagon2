@@ -124,6 +124,8 @@ class AmbientShader: Shader
         pass.bindInputBuffer(PipelineStage.Fragment, 7, &state.occlusionBuffer);
         fsUBO.flags[0] |= AmbientTextureFlags.HasOcclusionBuffer;
         
+        pass.bindInputBuffer(PipelineStage.Fragment, 8, &state.velocityBuffer);
+        
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
@@ -246,7 +248,7 @@ class AmbientPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.occlusionBuffer = InputBuffer(gbuffer.occlusionBuffer2, gbuffer.colorSampler);
+        state.occlusionBuffer = InputBuffer(gbuffer.currentOcclusionBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(null, null);
         state.entity = null;
         ambientShader.bindParameters(state);

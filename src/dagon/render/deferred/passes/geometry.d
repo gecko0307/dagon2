@@ -24,6 +24,7 @@ struct GeometryShaderVertexUniformBuffer
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
     Matrix4x4f projectionMatrix;
+    Matrix4x4f prevModelViewMatrix;
 }
 
 struct GeometryShaderFragmentUniformBuffer
@@ -34,6 +35,7 @@ struct GeometryShaderFragmentUniformBuffer
     Vector4f alphaOptions;
     uint[4] flags;
     float[4] fparams;
+    Vector4f resolution;
 }
 
 enum GeometryFlags
@@ -81,6 +83,11 @@ class GeometryShader: Shader
             exitWithError("Failed to create GeometryShader");
         }
         
+        vsUBO.modelViewMatrix = Matrix4x4f.identity;
+        vsUBO.normalMatrix = Matrix4x4f.identity;
+        vsUBO.projectionMatrix = Matrix4x4f.identity;
+        vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
+        
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
@@ -90,6 +97,8 @@ class GeometryShader: Shader
         fsUBO.fparams[1] = 0.0f;
         fsUBO.fparams[2] = 0.0f;
         fsUBO.fparams[3] = 0.0f;
+        
+        fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -101,6 +110,7 @@ class GeometryShader: Shader
         vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
+        vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
         
         fsUBO.flags[GeometryFlags.Texture] = 0;
         fsUBO.flags[GeometryFlags.Output] = 0;
@@ -123,6 +133,9 @@ class GeometryShader: Shader
         
         fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
         fsUBO.fparams[1] = material.skyboxTextureMipLevel;
+        
+        fsUBO.resolution.x = pass.view.width;
+        fsUBO.resolution.y = pass.view.height;
         
         if (material.baseColorTexture)
         {
