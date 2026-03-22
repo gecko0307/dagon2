@@ -183,37 +183,45 @@ class GBuffer: Owner
             sample_count: SDL_GPU_SAMPLECOUNT_1
         };
         
+        // Depth/stencil
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         textureCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
         depthBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         depthStencilTargetInfo.texture = depthBuffer;
         
+        // Color
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
         textureCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,
         colorBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[0].texture = colorBuffer;
         
+        // Normal
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         normalBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[1].texture = normalBuffer;
         
+        // Roughness-metallic
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
         roughnessMetallicBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[2].texture = roughnessMetallicBuffer;
         
+        // Emission
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         emissionBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[3].texture = emissionBuffer;
         
+        // Velocity
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         velocityBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[4].texture = velocityBuffer;
         
+        // Radiance
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         radianceBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[5].texture = radianceBuffer;
         
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
+        // Occlusion
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
         textureCreateInfo.width = width / 2;
         textureCreateInfo.height = height / 2;
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);

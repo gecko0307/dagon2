@@ -133,7 +133,7 @@ class SSAODenoisePass: RenderPass
             enable_blend: false,
             enable_color_write_mask: false
         };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
         colorTargetDescription.blend_state = blendState;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
