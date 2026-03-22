@@ -105,9 +105,10 @@ void main()
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
-    float occlusion = 1.0;
+    float diffuseOcclusion = 1.0;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_OCCLUSION_BUFFER) != 0)
-        occlusion = texture(occlusionBuffer, texCoords).r;
+        diffuseOcclusion = texture(occlusionBuffer, texCoords).r;
+    float specularOcclusion = clamp(pow(NE + diffuseOcclusion, exp2(1.0 - roughness)) - 1.0 + diffuseOcclusion, 0.0, 1.0);
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
@@ -124,21 +125,17 @@ void main()
     vec3 kD = (1.0 - F) * (1.0 - metallic);
     vec3 diffuse = kD * irradiance * baseColor;
     vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
-    vec3 radiance = (diffuse + specular) * occlusion;
+    vec3 radiance = diffuse * diffuseOcclusion + specular * specularOcclusion;
     */
     
-    float specularOcclusion = clamp(pow(NE + occlusion, exp2(1.0 - roughness)) - 1.0 + occlusion, 0.0, 1.0);
-    
     // Multiple scattering (Fdez-Agüera)
-    vec3 diffuse = baseColor * occlusion * (1.0 - metallic) * (1.0 - f0_scalar);
+    vec3 diffuse = baseColor * diffuseOcclusion * (1.0 - metallic) * (1.0 - f0_scalar);
     vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
     float Ems = (1.0 - (brdf.x + brdf.y));
     vec3 Favg = f0 + (1.0 - f0) / 21.0;
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
     vec3 radiance = (FssEss * reflection * specularOcclusion + (FmsEms + kD) * irradiance);
-    
-    //radiance = vec3(clamp(texture(velocityBuffer, texCoords).rg * 20.0, vec2(0.0), vec2(1.0)), 0.0);
     
     outColor = vec4(radiance * shadingMask, 1.0);
 }
