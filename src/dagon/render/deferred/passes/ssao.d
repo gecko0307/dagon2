@@ -228,8 +228,6 @@ class SSAOPass: RenderPass
         
         beginPass();
         
-        //SDL_SetGPUBlendConstants(renderPass, SDL_FColor(0.02f, 0.02f, 0.02f, 1.0f));
-        
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
         state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
