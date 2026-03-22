@@ -223,7 +223,7 @@ class GBuffer: Owner
         colorTargetsInfo[5].texture = radianceBuffer;
         
         // Occlusion
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
         textureCreateInfo.width = width / 2;
         textureCreateInfo.height = height / 2;
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);

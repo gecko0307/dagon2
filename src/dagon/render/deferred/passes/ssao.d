@@ -41,9 +41,14 @@ class SSAOShader: Shader
     SSAOShaderVertexUniformBuffer vsUBO;
     SSAOShaderFragmentUniformBuffer fsUBO;
     float time = 0.0f;
+    uint numSamples = 0;
     bool disableAccumulationForNextFrame = false;
     
    public:
+    float radius = 0.07f;
+    float power = 8.0f;
+    uint numSamplesMax = 30;
+    uint numSamplesMin = 5;
     bool temporalAccumulation = true;
     
     this(GPU gpu, Owner owner)
@@ -72,13 +77,20 @@ class SSAOShader: Shader
         fsUBO.fparams[1] = 0.0f;
         fsUBO.fparams[2] = 0.0f;
         fsUBO.fparams[3] = 0.0f;
+        
+        numSamples = numSamplesMax;
+        fsUBO.iparams[0] = numSamples;
+        fsUBO.iparams[1] = temporalAccumulation;
     }
     
     void update(Time t)
     {
-        time += 8.0f * t.delta;
+        time += 4.0f * t.delta;
         if (time > PI * 2.0f)
             time = 0.0f;
+        
+        if (numSamples > numSamplesMin)
+            numSamples--;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -92,7 +104,10 @@ class SSAOShader: Shader
         fsUBO.resolution.x = view.width / 2;
         fsUBO.resolution.x = view.height / 2;
         fsUBO.fparams[0] = time;
-        fsUBO.iparams[0] = temporalAccumulation && !disableAccumulationForNextFrame;
+        fsUBO.fparams[1] = radius;
+        fsUBO.fparams[2] = power;
+        fsUBO.iparams[0] = numSamples;
+        fsUBO.iparams[1] = temporalAccumulation && !disableAccumulationForNextFrame;
         disableAccumulationForNextFrame = false;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
@@ -108,6 +123,7 @@ class SSAOShader: Shader
     {
         disableAccumulationForNextFrame = true;
         time = 0.0f;
+        numSamples = numSamplesMax;
     }
 }
 
@@ -175,7 +191,7 @@ class SSAOPass: RenderPass
             enable_blend: false,
             enable_color_write_mask: false
         };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
         colorTargetDescription.blend_state = blendState;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;

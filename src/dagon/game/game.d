@@ -28,6 +28,7 @@ class Game: BaseGame
     CubemapRenderer cubemapRenderer;
     BRDFLUTRenderer brdflutRenderer;
     DeferredRenderer renderer;
+    Texture brdfLUT;
     
     this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
@@ -36,8 +37,8 @@ class Game: BaseGame
         brdflutRenderer = New!BRDFLUTRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT);
         renderer = New!DeferredRenderer(gpu, eventManager);
         
-        renderer.brdfLUT = generateBRDFLUT(256, this);
-        renderer.state.brdfLUT = renderer.brdfLUT;
+        brdfLUT = generateBRDFLUT(256, this);
+        renderer.state.brdfLUT = brdfLUT;
         renderer.state.brdfLUTEnabled = true;
     }
     
@@ -93,7 +94,7 @@ class Game: BaseGame
         Delete(irradianceCubemapCoarse);
         Delete(inputCubemap);
         
-        return IBLData(irradianceCubemap, specularCubemap, renderer.brdfLUT);
+        return IBLData(irradianceCubemap, specularCubemap, brdfLUT);
     }
     
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)

@@ -26,12 +26,10 @@ import dagon.render.postprocessing.passes.present;
 
 class DeferredRenderer: Renderer
 {
-    Texture brdfLUT;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
     GeometryPass geometryPass;
     SSAOPass ssaoPass;
-    //SSAODenoisePass ssaoDenoisePass;
     AmbientPass ambientPass;
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
@@ -49,7 +47,6 @@ class DeferredRenderer: Renderer
         // TODO: sun shadow pass
         geometryPass = New!GeometryPass(this, gbuffer);
         ssaoPass = New!SSAOPass(this, gbuffer);
-        //ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
@@ -58,21 +55,6 @@ class DeferredRenderer: Renderer
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
-        
-        /*
-        string brdfLUTFilename = "data/__internal/textures/brdf.dds";
-        TextureAsset brdfAsset = New!TextureAsset(gpu, this);
-        brdfAsset.cache = false;
-        brdfAsset.creationOptions.generateMipmaps = false;
-        brdfAsset.creationOptions.repeatUV = false;
-        brdfAsset.creationOptions.anisotropicFiltering = false;
-        auto istrm = gpu.application.vfs.openForInput(brdfLUTFilename);
-        brdfAsset.load(brdfLUTFilename, istrm, gpu.application.vfs);
-        Delete(istrm);
-        brdfLUT = brdfAsset.texture;
-        state.brdfLUT = brdfLUT;
-        state.brdfLUTEnabled = true;
-        */
     }
     
     void clearColor(Color4f color) @property

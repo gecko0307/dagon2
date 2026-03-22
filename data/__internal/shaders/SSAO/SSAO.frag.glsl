@@ -25,7 +25,10 @@ layout(set = 2, binding = 2) uniform sampler2D prevOcclusionBuffer;
 layout(set = 2, binding = 3) uniform sampler2D velocityBuffer;
 
 #define FPARAM_TIME 0
-#define IPARAM_TEMPORAL_ACCUMULATION 0
+#define FPARAM_RADIUS 1
+#define FPARAM_POWER 2
+#define IPARAM_NUM_SAMPLES 0
+#define IPARAM_TEMPORAL_ACCUMULATION 1
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -44,9 +47,9 @@ layout(location = 0) out vec4 outColor;
 // SSAO implementation based on code by Reinder Nijhoff
 // https://www.shadertoy.com/view/Ms33WB
 
-const uint ssaoSamples = 5;
-const float ssaoRadius = 0.07;
-const float ssaoPower = 6.0;
+uint ssaoSamples = ubo.iparams[IPARAM_NUM_SAMPLES];
+float ssaoRadius = ubo.fparams[FPARAM_RADIUS];
+float ssaoPower = ubo.fparams[FPARAM_POWER];
 
 #define SSAO_SCALE 1.0
 #define SSAO_BIAS 0.01
@@ -93,6 +96,13 @@ float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
 void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
+    
+    if (depth == 1.0)
+    {
+        outColor = vec4(1.0, 1.0, 1.0, 0.0);
+        return;
+    }
+    
     vec3 ndc = vec3(texCoords, depth);
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
@@ -101,7 +111,6 @@ void main()
 
     float occlusion = spiralSSAO(texCoords, eyePos, N, ssaoRadius / -eyePos.z);
     occlusion = pow(clamp(1.0 - occlusion, 0.0, 1.0), ssaoPower);
-    
     occlusion = mix(occlusion, 1.0, clamp(-eyePos.z / 100.0, 0.0, 1.0));
     
     // Temporal accumulation
