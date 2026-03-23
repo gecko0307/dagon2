@@ -24,7 +24,38 @@ enum Tonemapper: uint
 {
     None = 0,
     AgX_Base = 1,
-    AgX_Punchy = 2
+    AgX_Custom = 2
+}
+
+struct AgXLook
+{
+    Vector3f offset;
+    Vector3f slope;
+    Vector3f power;
+    float saturation;
+}
+
+struct AgXLookPreset
+{
+    static AgXLook Base()
+    {
+        return AgXLook(
+            Vector3f(0.0f, 0.0f, 0.0f),
+            Vector3f(1.0f, 1.0f, 1.0f),
+            Vector3f(1.0f, 1.0f, 1.0f),
+            1.0f
+        );
+    }
+    
+    static AgXLook Punchy()
+    {
+        return AgXLook(
+            Vector3f(0.0f, 0.0f, 0.0f),
+            Vector3f(1.0f, 1.0f, 1.0f),
+            Vector3f(1.5f, 1.5f, 1.5f),
+            1.0f
+        );
+    }
 }
 
 struct TonemappingShaderVertexUniformBuffer
@@ -36,6 +67,9 @@ struct TonemappingShaderFragmentUniformBuffer
 {
     uint[4] flags;
     Vector4f hdrClampingParams;
+    Vector4f agxOffset;
+    Vector4f agxSlope;
+    Vector4f agxPowerSat;
 }
 
 class TonemappingShader: Shader
@@ -45,6 +79,7 @@ class TonemappingShader: Shader
     TonemappingShaderFragmentUniformBuffer fsUBO;
     
    public:
+    AgXLook look = AgXLookPreset.Punchy;
     bool enableGammaCorrection = true;
     
     this(GPU gpu, Owner owner)
@@ -71,10 +106,13 @@ class TonemappingShader: Shader
         }
         else
         {
-            // TODO: get from render.conf
-            fsUBO.flags[0] = Tonemapper.AgX_Punchy;
+            fsUBO.flags[0] = Tonemapper.AgX_Custom;
             fsUBO.hdrClampingParams = Vector4f(0.0f, 1.0f, 0.0f, 0.0f);
         }
+        
+        fsUBO.agxOffset = Vector4f(look.offset.x, look.offset.y, look.offset.z, 0.0f);
+        fsUBO.agxSlope = Vector4f(look.slope.x, look.slope.y, look.slope.z, 0.0f);
+        fsUBO.agxPowerSat = Vector4f(look.power.x, look.power.y, look.power.z, look.saturation);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -87,6 +125,10 @@ class TonemappingShader: Shader
         }
         
         fsUBO.flags[1] = enableGammaCorrection;
+        
+        fsUBO.agxOffset = Vector4f(look.offset.x, look.offset.y, look.offset.z, 0.0f);
+        fsUBO.agxSlope = Vector4f(look.slope.x, look.slope.y, look.slope.z, 0.0f);
+        fsUBO.agxPowerSat = Vector4f(look.power.x, look.power.y, look.power.z, look.saturation);
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         

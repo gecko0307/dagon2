@@ -1,5 +1,24 @@
 #version 460
 
+#define TONEMAPPER_NONE 0
+#define TONEMAPPER_AGX_BASE 1
+#define TONEMAPPER_AGX_CUSTOM 2
+
+layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
+
+layout(set = 3, binding = 0) uniform UniformBuffer
+{
+    uvec4 flags;
+    vec4 hdrClampingParams;
+    vec4 agxOffset;
+    vec4 agxSlope;
+    vec4 agxPowerSat;
+} ubo;
+
+layout(location = 0) in vec2 texCoords;
+
+layout(location = 0) out vec4 outColor;
+
 // Matrices for Rec. 2020 <> Rec. 709 color space conversion.
 // Matrix provided in row-major order so it has been transposed.
 // https://www.itu.int/pub/R-REP-BT.2407-2017
@@ -21,7 +40,7 @@ const mat3 LINEAR_SRGB_TO_LINEAR_REC2020 = mat3(
 // Inputs and outputs are encoded as Linear-sRGB.
 
 #define AGX_LOOK_BASE 0
-#define AGX_LOOK_PUNCHY 1
+#define AGX_LOOK_CUSTOM 1
 
 // https://iolite-engine.com/blog_posts/minimal_agx_implementation
 // Mean error^2: 3.6705141e-06
@@ -48,18 +67,11 @@ vec3 agxLook(vec3 color, int look)
 
     float luma = dot(color, lw);
 
-    vec3 offset = vec3(0.0);
-    vec3 slope = vec3(1.0);
-    vec3 power = vec3(1.0);
-    float sat = 1.0;
-
-    if (look == AGX_LOOK_PUNCHY)
-    {
-        slope = vec3(1.0);
-        power = vec3(1.5, 1.5, 1.5);
-        sat = 1.1;
-    }
-
+    vec3 offset = ubo.agxOffset.xyz;
+    vec3 slope = ubo.agxSlope.xyz;
+    vec3 power = ubo.agxPowerSat.xyz;
+    float sat = ubo.agxPowerSat.w;
+    
     // ASC CDL
     color = pow(color * slope + offset, power);
 
@@ -118,22 +130,6 @@ vec3 tonemapAgX(vec3 color, int look)
     return color;
 }
 
-#define TONEMAPPER_NONE 0
-#define TONEMAPPER_AGX_BASE 1
-#define TONEMAPPER_AGX_PUNCHY 2
-
-layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
-
-layout(set = 3, binding = 0) uniform UniformBuffer
-{
-    uvec4 flags;
-    vec4 hdrClampingParams;
-} ubo;
-
-layout(location = 0) in vec2 texCoords;
-
-layout(location = 0) out vec4 outColor;
-
 void main()
 {
     vec4 inputColor = texture(colorBuffer, texCoords);
@@ -142,12 +138,12 @@ void main()
         outputColor = clamp(inputColor.rgb, ubo.hdrClampingParams.x, ubo.hdrClampingParams.y);
     else if (ubo.flags[0] == TONEMAPPER_AGX_BASE)
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_BASE);
-    else if (ubo.flags[0] == TONEMAPPER_AGX_PUNCHY)
-        outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_PUNCHY);
+    else if (ubo.flags[0] == TONEMAPPER_AGX_CUSTOM)
+        outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_CUSTOM);
     
     if (ubo.flags[1] > 0)
     {
-        // Gamma-correction (next filters work in gamma space)
+        // 2.2 gamma transfer function (next filters work in gamma space)
         outputColor = pow(outputColor, vec3(1.0 / 2.2));
     }
     
