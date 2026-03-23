@@ -8,6 +8,7 @@ import dlib.image.color;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;
+import dagon.core.time;
 import dagon.core.crashhandler;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
@@ -25,6 +26,7 @@ struct SSAODenoiseShaderVertexUniformBuffer
 struct SSAODenoiseShaderFragmentUniformBuffer
 {
     Vector4f resolution;
+    float[4] fparams;
 }
 
 class SSAODenoiseShader: Shader
@@ -34,6 +36,8 @@ class SSAODenoiseShader: Shader
     SSAODenoiseShaderFragmentUniformBuffer fsUBO;
     
    public:
+    float factor = 1.0f;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -52,6 +56,18 @@ class SSAODenoiseShader: Shader
         }
         
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.fparams[0] = factor;
+        fsUBO.fparams[1] = 0.0f;
+        fsUBO.fparams[2] = 0.0f;
+        fsUBO.fparams[3] = 0.0f;
+    }
+    
+    void update(Time t)
+    {
+        if (factor >= 4.0f * t.delta)
+            factor -= 4.0f * t.delta;
+        else
+            factor = 0.0f;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -61,8 +77,10 @@ class SSAODenoiseShader: Shader
         
         fsUBO.resolution.x = view.width / 2;
         fsUBO.resolution.x = view.height / 2;
+        fsUBO.fparams[0] = factor;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.occlusionBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -168,6 +186,11 @@ class SSAODenoisePass: RenderPass
     
     ~this()
     {
+    }
+    
+    override void update(Time t)
+    {
+        ssaoDenoiseShader.update(t);
     }
     
     override void render(GraphicsState* state)

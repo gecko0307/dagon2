@@ -1,20 +1,21 @@
 #version 460
 
 layout(set = 2, binding = 0) uniform sampler2D occlusionBuffer;
+layout(set = 2, binding = 1) uniform sampler2D depthBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
+    vec4 fparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-const float radius = 2.0;
-const float spatialSigma = 0.7;
-const float rangeSigma = 0.7;
-const float factor = 1.0;
+float factor = ubo.fparams[0];
+const int radius = 2;
+const bool depthAware = true;
 
 float bilateral()
 {
@@ -24,19 +25,13 @@ float bilateral()
     float res = 0.0;
     float total = 0.0;
     
-    for (float x = -radius; x <= radius; x += 1.0)
+    for (int x = -radius; x <= radius; x += 1)
     {
-        for (float y = -radius; y <= radius; y += 1.0)
+        for (int y = -radius; y <= radius; y += 1)
         {
-            float sampleAO = texelFetch(occlusionBuffer, pixelCoord + ivec2(x, y), 0).r;
-            
-            float spatialDistSq = float(x * x + y * y);
-            float spatialWeight = exp(-0.5 * spatialDistSq / (spatialSigma * spatialSigma));
-            
-            float rDiff = abs(sampleAO - centerAO);
-            float rangeWeight = exp(-0.5 * (rDiff * rDiff) / (rangeSigma * rangeSigma));
-            
-            float weight = spatialWeight * rangeWeight;
+            ivec2 offset = ivec2(x, y);
+            float sampleAO = texelFetch(occlusionBuffer, pixelCoord + offset, 0).r;
+            float weight = max(0.0, 1.0 - abs(sampleAO - centerAO) * 0.25);
             res += sampleAO * weight;
             total += weight;
        }

@@ -132,6 +132,9 @@ class FreeviewController: EntityController
     /// Enables mouse zoom.
     bool enableMouseZoom;
     
+    ///
+    bool isMoving = false;
+    
     /**
      * Constructs a freeview component for the given entity.
      *
@@ -192,6 +195,7 @@ class FreeviewController: EntityController
             smoothTarget = target;
         }
         
+        isMoving = false;
         if (active)
         {
             if (eventManager.mouseButtonPressed[MB_RIGHT] && enableMouseTranslation)
@@ -200,12 +204,16 @@ class FreeviewController: EntityController
                 float shifty = -(eventManager.mouseY - prevMouseY) * mouseTranslationSensibility;
                 Vector3f trans = up * shifty + right * shiftx;
                 target += trans;
+                if (abs(shiftx) > 0.0f || abs(shifty) > 0.0f)
+                    isMoving = true;
             }
             else if (eventManager.mouseButtonPressed[MB_LEFT] && eventManager.keyPressed[KEY_LCTRL] && enableMouseZoom)
             {
                 float shiftx = (eventManager.mouseX - prevMouseX) * mouseZoomSensibility;
                 float shifty = (eventManager.mouseY - prevMouseY) * mouseZoomSensibility;
                 zoom(shiftx + shifty);
+                if (abs(shiftx) > 0.0f || abs(shifty) > 0.0f)
+                    isMoving = true;
             }
             else if (eventManager.mouseButtonPressed[MB_LEFT] && enableMouseRotation)
             {
@@ -214,6 +222,8 @@ class FreeviewController: EntityController
                 
                 rotation.x += pitch;
                 rotation.y += turn;
+                if (abs(pitch) > 0.0f || abs(turn) > 0.0f)
+                    isMoving = true;
             }
             
             prevMouseX = eventManager.mouseX;
@@ -443,5 +453,6 @@ class FreeviewController: EntityController
             return;
         
         zoom(cast(float)y * mouseZoomSensibility);
+        isMoving = true;
     }
 }
