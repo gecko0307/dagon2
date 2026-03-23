@@ -106,12 +106,13 @@ void main()
     vec3 ndc = vec3(texCoords, depth);
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
+    float depthFactor = clamp(-eyePos.z / 100.0, 0.0, 1.0);
     
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
 
     float occlusion = spiralSSAO(texCoords, eyePos, N, ssaoRadius / -eyePos.z);
     occlusion = pow(clamp(1.0 - occlusion, 0.0, 1.0), ssaoPower);
-    occlusion = mix(occlusion, 1.0, clamp(-eyePos.z / 100.0, 0.0, 1.0));
+    occlusion = mix(occlusion, 1.0, depthFactor);
     
     // Temporal accumulation
     if (ubo.iparams[IPARAM_TEMPORAL_ACCUMULATION] == 1)
@@ -119,7 +120,7 @@ void main()
         vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
         float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
         float velocityLength = length(uvVelocity);
-        float alpha = mix(0.01, 1.0, clamp(velocityLength * 80.0, 0.0, 1.0));
+        float alpha = mix(0.01, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
         occlusion = mix(prevOcclusion, occlusion, alpha);
     }
     

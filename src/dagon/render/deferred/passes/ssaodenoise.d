@@ -133,7 +133,7 @@ class SSAODenoisePass: RenderPass
             enable_blend: false,
             enable_color_write_mask: false
         };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
         colorTargetDescription.blend_state = blendState;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
@@ -159,7 +159,6 @@ class SSAODenoisePass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.occlusionBuffer2;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -176,7 +175,8 @@ class SSAODenoisePass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.occlusionBuffer2;
+        gbuffer.swapOcclusionBuffers();
+        colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
         
         beginPass();
         
@@ -186,7 +186,7 @@ class SSAODenoisePass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.occlusionBuffer = InputBuffer(gbuffer.occlusionBuffer1, gbuffer.colorSampler);
+        state.occlusionBuffer = InputBuffer(gbuffer.previousOcclusionBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
         ssaoDenoiseShader.bindParameters(state);

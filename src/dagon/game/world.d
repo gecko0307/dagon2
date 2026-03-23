@@ -57,27 +57,9 @@ class World: EventListener
     {
         processEvents();
         onUpdate(t);
-        if (recalculateMatrices)
+        foreach(entity; scene.entities)
         {
-            foreach(entity; scene.entities)
-            {
-                if (entity.controller)
-                    entity.controller.update(t);
-                else
-                    entity.update(t);
-            }
-            
-            recalculateMatrices = false;
-        }
-        else
-        {
-            foreach(entity; scene.entities)
-            {
-                if (entity.dynamic)
-                    entity.update(t);
-                else if (entity.controller)
-                    entity.controller.update(t);
-            }
+            entity.update(t);
         }
         onPostUpdate(t);
     }

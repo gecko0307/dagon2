@@ -69,9 +69,13 @@ class TestWorld: World
         eSuzanne.drawable = aOBJSuzanne.mesh;
         eSuzanne.material = matSuzanne;
         eSuzanne.position = Vector3f(0.0f, 1.0f, 0.0f);
+        eSuzanne.scale = Vector3f(2.0f, 2.0f, 2.0f);
         
         //auto ePlane = addEntity();
         //ePlane.drawable = New!ShapePlane(10, 10, 1, assetManager);
+        
+        //game.renderer.ssaoPass.ssaoShader.radius = 0.5f;
+        //game.renderer.ssaoDenoisePass.active = false;
     }
     
     override void onUpdate(Time t) { }

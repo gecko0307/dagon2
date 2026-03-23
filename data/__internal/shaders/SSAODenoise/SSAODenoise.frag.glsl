@@ -12,8 +12,8 @@ layout(location = 0) in vec2 texCoords;
 layout(location = 0) out vec4 outColor;
 
 const float radius = 2.0;
-const float spatialSigma = 1.0;
-const float rangeSigma = 1.0;
+const float spatialSigma = 0.7;
+const float rangeSigma = 0.7;
 const float factor = 1.0;
 
 float bilateral()
@@ -30,10 +30,10 @@ float bilateral()
         {
             float sampleAO = texelFetch(occlusionBuffer, pixelCoord + ivec2(x, y), 0).r;
             
-            float spatialDistSq = float(x*x + y*y);
+            float spatialDistSq = float(x * x + y * y);
             float spatialWeight = exp(-0.5 * spatialDistSq / (spatialSigma * spatialSigma));
             
-            float rDiff = sampleAO - centerAO;
+            float rDiff = abs(sampleAO - centerAO);
             float rangeWeight = exp(-0.5 * (rDiff * rDiff) / (rangeSigma * rangeSigma));
             
             float weight = spatialWeight * rangeWeight;
@@ -47,8 +47,6 @@ float bilateral()
 
 void main()
 {
-    //float res = bilateral();
-    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
-    float res = texelFetch(occlusionBuffer, pixelCoord, 0).r;
+    float res = bilateral();
     outColor = vec4(vec3(res), 1.0); 
 }

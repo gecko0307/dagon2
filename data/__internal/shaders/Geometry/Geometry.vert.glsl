@@ -30,8 +30,6 @@ void main()
     
     currPosition = ubo.projectionMatrix * eyePosHmg;
     prevPosition = ubo.projectionMatrix * (ubo.prevModelViewMatrix * modelPosHmg);
-    //posScreen = (currPosition.xy / currPosition.w) * 0.5 + 0.5;
-    //prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
     
     gl_Position = currPosition;
 }

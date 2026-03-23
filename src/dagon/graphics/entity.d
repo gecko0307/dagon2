@@ -40,6 +40,7 @@ class Entity: Owner, Updateable
     bool visible = true;
     bool castShadow = true;
     bool dynamic = false;
+    bool transformationValid = false;
     
     this(Owner owner)
     {
@@ -60,13 +61,23 @@ class Entity: Owner, Updateable
     
     void update(Time t)
     {
-        transformation = trsMatrix(position, rotation, scaling);
-        invTransformation = transformation.inverse;
-        
-        // TODO: parent-child relation
-        prevModelMatrix = modelMatrix;
-        modelMatrix = transformation;
-        invModelMatrix = invTransformation;
+        if (controller)
+            controller.update(t);
+        else
+        {
+            prevModelMatrix = modelMatrix;
+            if (!transformationValid)
+            {
+                //transformationValid = !dynamic;
+                
+                transformation = trsMatrix(position, rotation, scaling);
+                invTransformation = transformation.inverse;
+                
+                // TODO: parent-child relation
+                modelMatrix = transformation;
+                invModelMatrix = invTransformation;
+            }
+        }
     }
     
     Vector3f positionAbsolute()

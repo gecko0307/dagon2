@@ -47,8 +47,8 @@ class SSAOShader: Shader
    public:
     float radius = 0.07f;
     float power = 6.0f;
-    uint numSamplesMax = 30;
-    uint numSamplesMin = 5;
+    uint numSamplesMax = 40;
+    uint numSamplesMin = 10;
     bool temporalAccumulation = true;
     
     this(GPU gpu, Owner owner)
