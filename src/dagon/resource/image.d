@@ -206,11 +206,11 @@ bool loadImage(InputStream istrm, string extension, TextureBuffer* buffer, Image
     
     if (loaded)
     {
+        logDebug("Input format: ", SDL_GetPixelFormatName(surface.format).to!string);
+        
         if (surface.format != SDL_PIXELFORMAT_RGBA32)
         {
-            logDebug("Original Format: ", SDL_GetPixelFormatName(surface.format).to!string);
-            logDebug("Bits Per Pixel: ", SDL_BITSPERPIXEL(surface.format));
-            
+            logDebug("Converting to SDL_PIXELFORMAT_RGBA32...");
             SDL_Surface* convSurface;
             // SDL_ConvertSurface doesn't work correctly with big-endian 16-bit images
             if (surface.format == SDL_PIXELFORMAT_RGB48 && extension == ".png")
@@ -219,7 +219,7 @@ bool loadImage(InputStream istrm, string extension, TextureBuffer* buffer, Image
                 convSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
             if (convSurface is null)
             {
-                logError("SDL_ConvertSurfaceAndColorspace error: ", SDL_GetError().to!string);
+                logError("SDL_ConvertSurface error: ", SDL_GetError().to!string);
                 SDL_DestroySurface(surface);
                 return false;
             }

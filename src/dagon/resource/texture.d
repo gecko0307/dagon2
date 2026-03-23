@@ -136,7 +136,7 @@ class TextureAsset: Owner
                 if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D &&
                     buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
                 {
-                    logInfo("Compressing ", filename);
+                    logDebug("Compressing ", filename, " to ", conversionOptions.compressionFormat);
                     compressTexture();
                     creationOptions.generateMipmaps = false;
                 }
