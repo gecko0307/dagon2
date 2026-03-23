@@ -1075,6 +1075,15 @@ class Application: EventListener, Updateable
         if ("vsync" in config.props)
             vsync = cast(VSyncMode)config.props["vsync"].toInt;
         
+        // Init SDL_Image and supported image formats table
+        _imageFileFormatSupported[ImageFileFormat.PNG] = true;
+        _imageFileFormatSupported[ImageFileFormat.JPEG] = true;
+        _imageFileFormatSupported[ImageFileFormat.BMP] = true;
+        _imageFileFormatSupported[ImageFileFormat.TGA] = true;
+        _imageFileFormatSupported[ImageFileFormat.HDR] = true;
+        _imageFileFormatSupported[ImageFileFormat.DDS] = true;
+        // TODO: other formats
+        
         // Init GPU
         gpu = New!GPU(this);
         if (gpu.device)

@@ -120,6 +120,43 @@ SDL_Surface* loadImage(InputStream istrm)
     return surface;
 }
 
+SDL_Surface* convertRGB48BEtoRGBA32(SDL_Surface* src)
+{
+    if (src == null || src.format != SDL_PIXELFORMAT_RGB48) return null;
+
+    SDL_Surface* dst = SDL_CreateSurface(src.w, src.h, SDL_PIXELFORMAT_RGBA32);
+    if (dst == null) return null;
+
+    ubyte* srcPixels = cast(ubyte*)src.pixels;
+    uint* dstPixels = cast(uint*)dst.pixels;
+
+    int srcPitch = src.pitch;
+    int dstPitchInElements = dst.pitch / cast(uint)uint.sizeof;
+
+    for (int y = 0; y < src.h; y++)
+    {
+        for (int x = 0; x < src.w; x++)
+        {
+            // PNG stores 16-bit pixels in big-endian format:
+            // R: [0, 1], G: [2, 3], B: [4, 5]
+            // We need only high bytes (0, 2, 4)
+            size_t srcIdx = y * srcPitch + x * 6;
+            
+            ubyte r = srcPixels[srcIdx + 0];
+            ubyte g = srcPixels[srcIdx + 2];
+            ubyte b = srcPixels[srcIdx + 4];
+            ubyte a = 0xFF;
+
+            dstPixels[y * dstPitchInElements + x] = 
+                (cast(uint)a << 24) | 
+                (cast(uint)b << 16) | 
+                (cast(uint)g << 8)  | 
+                 cast(uint)r;
+        }
+    }
+    return dst;
+}
+
 /**
  * Loads an image from an input stream using SDL3_Image and fills a `TextureBuffer`.
  * Handles resizing (for SVG) and pixel format conversion, if needed.
@@ -171,11 +208,18 @@ bool loadImage(InputStream istrm, string extension, TextureBuffer* buffer, Image
     {
         if (surface.format != SDL_PIXELFORMAT_RGBA32)
         {
-            SDL_PixelFormat targetFormat = SDL_PIXELFORMAT_RGBA32;
-            SDL_Surface* convSurface = SDL_ConvertSurface(surface, targetFormat);
+            logDebug("Original Format: ", SDL_GetPixelFormatName(surface.format).to!string);
+            logDebug("Bits Per Pixel: ", SDL_BITSPERPIXEL(surface.format));
+            
+            SDL_Surface* convSurface;
+            // SDL_ConvertSurface doesn't work correctly with big-endian 16-bit images
+            if (surface.format == SDL_PIXELFORMAT_RGB48 && extension == ".png")
+                convSurface = convertRGB48BEtoRGBA32(surface);
+            else
+                convSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
             if (convSurface is null)
             {
-                logError("SDL_ConvertSurface error: ", SDL_GetError().to!string);
+                logError("SDL_ConvertSurfaceAndColorspace error: ", SDL_GetError().to!string);
                 SDL_DestroySurface(surface);
                 return false;
             }
