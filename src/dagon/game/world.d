@@ -3,6 +3,7 @@ module dagon.game.world;
 import dlib.core.memory;
 import dlib.core.ownership;
 
+import dagon.core.logger;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.gpu;
@@ -39,7 +40,10 @@ class World: EventListener
         asset.conversionOptions = *conversionOptions;
         asset.creationOptions = *creationOptions;
         asset.cache = cache;
-        asset.load(filename, baseGame.vfs);
+        if (baseGame.fileExists(filename))
+            asset.load(filename, baseGame.vfs);
+        else
+            logError("Can\'t find file ", filename);
         return asset;
     }
     
@@ -48,7 +52,10 @@ class World: EventListener
     {
         T asset = New!T(gpu, this);
         auto istrm = baseGame.vfs.openForInput(filename);
-        asset.load(filename, istrm, baseGame.vfs);
+        if (baseGame.fileExists(filename))
+            asset.load(filename, istrm, baseGame.vfs);
+        else
+            logError("Can\'t find file ", filename);
         Delete(istrm);
         return asset;
     }

@@ -105,7 +105,7 @@ class TextureAsset: Owner
         }
         else
         {
-            logDebug("Decoding ", name, "...");
+            logDebug("Decoding ", filename, "...");
             
             string extension = filename.extension.toLower;
             
