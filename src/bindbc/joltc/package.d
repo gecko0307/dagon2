@@ -1,7 +1,8 @@
 /*
-Copyright (c) 2019-2026 Timur Gafarov
+Copyright (c) 2026 Timur Gafarov.
 
 Boost Software License - Version 1.0 - August 17th, 2003
+
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute,
@@ -24,11 +25,12 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-
-module dagon.ui;
+module bindbc.joltc;
 
 public
 {
-    import dagon.ui.firstpersonview;
-    import dagon.ui.freeview;
+    import bindbc.joltc.types;
+    import bindbc.joltc.signatures;
+    import bindbc.joltc.funcs;
+    import bindbc.joltc.loader;
 }

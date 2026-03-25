@@ -54,11 +54,35 @@ import dagon.core.logger;
 import dagon.graphics.drawable;
 import dagon.graphics.state;
 
+/**
+ * Enumerates vertex attribute locations for mesh data.
+ */
 enum VertexAttribute
 {
+    /// Positions - array of float[3].
     Position = 0,
+    
+    /// Texture coordinates - array of float[2].
     Texcoord = 1,
+    
+    /// Normals - array of float[3].
     Normal = 2
+}
+
+/**
+ * Interface for objects that provide access to a set of triangles.
+ */
+interface TriangleSet
+{
+    /**
+     * Iterates over all triangles in the set.
+     *
+     * Params:
+     *   dg = Delegate to call for each triangle.
+     * Returns:
+     *   0 if iteration completed, or the value returned by the delegate if nonzero.
+     */
+    int opApply(scope int delegate(Triangle t) dg);
 }
 
 /**

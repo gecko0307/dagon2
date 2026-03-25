@@ -63,7 +63,9 @@ class World: EventListener
     void update(Time t)
     {
         processEvents();
+        
         onUpdate(t);
+        
         if (scene)
         {
             foreach(entity; scene.entities)
@@ -71,7 +73,16 @@ class World: EventListener
                 entity.update(t);
             }
         }
+        
         onPostUpdate(t);
+        
+        if (scene)
+        {
+            foreach(entity; scene.entities)
+            {
+                entity.postUpdate(t);
+            }
+        }
     }
     
     void onUpdate(Time t)

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2026 Timur Gafarov
+Copyright (c) 2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,11 +24,56 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+module dagon.jolt.jolt;
 
-module dagon.ui;
+import std.conv;
 
-public
+import dagon.core.logger;
+
+import bindbc.joltc;
+
+private extern(C) void joltTraceCallback(const(char)* message)
 {
-    import dagon.ui.firstpersonview;
-    import dagon.ui.freeview;
+    logInfo(message.to!string);
+}
+
+private __gshared bool joltInitialized = false;
+
+__gshared JoltSupport joltSupport;
+
+bool joltInit()
+{
+    joltSupport = loadJolt();
+    debug
+    {
+        import loader = bindbc.loader.sharedlib;
+        import std.conv;
+        foreach(info; loader.errors)
+            logError(info.error.to!string, " ", info.message.to!string);
+    }
+    
+    if (joltSupport == JoltSupport.noLibrary)
+    {
+        logError("Jolt library is not found");
+        return false;
+    }
+    
+    if (!JPH_Init())
+    {
+        logError("JPH_Init failed");
+        return false;
+    }
+    
+    joltInitialized = true;
+    JPH_SetTraceHandler(&joltTraceCallback);
+    return true;
+}
+
+void joltShutdown()
+{
+    if (joltInitialized)
+    {
+        JPH_Shutdown();
+        joltInitialized = false;
+    }
 }

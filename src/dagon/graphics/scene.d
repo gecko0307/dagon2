@@ -42,6 +42,8 @@ class Scene: Owner
     {
         Entity e = New!Entity(this);
         entities.append(e);
+        if (parent)
+            parent.addChild(e);
         return e;
     }
     
@@ -49,6 +51,8 @@ class Scene: Owner
     {
         Camera c = New!Camera(this);
         entities.append(c);
+        if (parent)
+            parent.addChild(c);
         return c;
     }
 }

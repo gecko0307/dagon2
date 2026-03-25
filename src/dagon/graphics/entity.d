@@ -8,6 +8,7 @@ import dlib.math.quaternion;
 import dlib.math.utils;
 import dlib.container.array;
 
+import dagon.core.logger;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.updateable;
@@ -23,6 +24,8 @@ enum EntityLayer
 
 class Entity: Owner, Updateable
 {
+    Array!Entity children;
+    Entity parent;
     EntityController controller;
     Matrix4x4f transformation;
     Matrix4x4f invTransformation;
@@ -41,6 +44,7 @@ class Entity: Owner, Updateable
     bool castShadow = true;
     bool dynamic = false;
     bool transformationValid = false;
+    bool modelMatricesValid = false;
     
     this(Owner owner)
     {
@@ -51,7 +55,19 @@ class Entity: Owner, Updateable
         position = Vector3f(0.0f, 0.0f, 0.0f);
         rotation = Quaternionf.identity;
         scaling = Vector3f(1.0f, 1.0f, 1.0f);
-        update(Time(0.0, 0.0));
+    }
+    
+    ~this()
+    {
+        children.free();
+    }
+    
+    void addChild(Entity child)
+    {
+        child.parent = this;
+        child.dynamic = dynamic;
+        child.transformationValid = false;
+        children.append(child);
     }
     
     void update()
@@ -62,28 +78,56 @@ class Entity: Owner, Updateable
     void update(Time t)
     {
         if (controller)
+        {
             controller.update(t);
+            modelMatricesValid = false;
+        }
         else
         {
-            prevModelMatrix = modelMatrix;
-            //if (!transformationValid)
-            //{
-                //transformationValid = !dynamic;
-                
-                transformation =
-                    translationMatrix(position) *
-                    rotation.toMatrix4x4 *
-                    scaleMatrix(scaling);
-                //trsMatrix(position, rotation, scaling);
+            if (!transformationValid)
+            {
+                transformation = trsMatrix(position, rotation, scaling);
                 invTransformation = transformation.inverse;
-                
-                // TODO: parent-child relation
-                modelMatrix = transformation;
-                invModelMatrix = invTransformation;
-            //}
+                transformationValid = true;
+                modelMatricesValid = false;
+            }
         }
     }
     
+    /// Recalculates modelMatrix and invModelMatrix for the entity and its children.
+    void postUpdate(Time t)
+    {
+        if (modelMatricesValid)
+            return;
+        
+        prevModelMatrix = modelMatrix;
+        if (controller)
+        {
+            controller.postUpdate(t);
+        }
+        else if (parent)
+        {
+            modelMatrix = parent.modelMatrix * transformation;
+            invModelMatrix = modelMatrix.inverse;
+        }
+        else
+        {
+            modelMatrix = transformation;
+            invModelMatrix = invTransformation;
+        }
+        
+        foreach(child; children)
+        {
+            child.postUpdate(t);
+        }
+        
+        modelMatricesValid = true;
+        
+        // For dynamic entities transformation is recalculated every frame
+        transformationValid = !dynamic;
+    }
+    
+    /// Returns the absolute position of the entity.
     Vector3f positionAbsolute()
     {
         return modelMatrix.translation;
@@ -92,9 +136,9 @@ class Entity: Owner, Updateable
     /// Returns the absolute rotation of the entity.
     Quaternionf rotationAbsolute()
     {
-        //if (parent)
-        //    return parent.rotationAbsolute * rotation;
-        //else
+        if (parent)
+            return parent.rotationAbsolute * rotation;
+        else
             return rotation;
     }
     
@@ -217,6 +261,11 @@ abstract class EntityController: EventListener, Updateable
     }
     
     void update(Time t)
+    {
+        //
+    }
+    
+    void postUpdate(Time t)
     {
         //
     }

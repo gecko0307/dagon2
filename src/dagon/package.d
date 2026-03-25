@@ -6,6 +6,7 @@ public
     import dagon.core;
     import dagon.game;
     import dagon.graphics;
+    import dagon.jolt;
     import dagon.render;
     import dagon.resource;
     import dagon.ui;
