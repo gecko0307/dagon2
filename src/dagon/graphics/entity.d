@@ -97,10 +97,11 @@ class Entity: Owner, Updateable
     /// Recalculates modelMatrix and invModelMatrix for the entity and its children.
     void postUpdate(Time t)
     {
+        prevModelMatrix = modelMatrix;
+        
         if (modelMatricesValid)
             return;
         
-        prevModelMatrix = modelMatrix;
         if (controller)
         {
             controller.postUpdate(t);

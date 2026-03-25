@@ -64,10 +64,12 @@ class SSAODenoiseShader: Shader
     
     void update(Time t)
     {
+        /*
         if (factor >= 4.0f * t.delta)
             factor -= 4.0f * t.delta;
         else
             factor = 0.0f;
+        */
     }
     
     override void bindParameters(GraphicsState* state)

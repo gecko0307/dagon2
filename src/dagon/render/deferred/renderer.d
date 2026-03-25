@@ -51,7 +51,6 @@ class DeferredRenderer: Renderer
         geometryPass = New!GeometryPass(this, gbuffer);
         ssaoPass = New!SSAOPass(this, gbuffer);
         ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
-        ssaoDenoisePass.active = false;
         ambientPass = New!AmbientPass(this, gbuffer);
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);

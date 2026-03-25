@@ -45,11 +45,11 @@ class SSAOShader: Shader
     bool disableAccumulationForNextFrame = false;
     
    public:
-    float radius = 0.07f;
+    float radius = 0.5f;
     float power = 6.0f;
     uint numSamplesMax = 40;
-    uint numSamplesMin = 10;
-    bool temporalAccumulation = true;
+    uint numSamplesMin = 20;
+    bool temporalAccumulation = false;
     
     this(GPU gpu, Owner owner)
     {
@@ -85,12 +85,17 @@ class SSAOShader: Shader
     
     void update(Time t)
     {
-        time += 4.0f * t.delta;
-        if (time > PI * 2.0f)
-            time = 0.0f;
-        
-        if (numSamples > numSamplesMin)
-            numSamples--;
+        if (temporalAccumulation)
+        {
+            time += 4.0f * t.delta;
+            if (time > PI * 2.0f)
+                time = 0.0f;
+            
+            if (numSamples > numSamplesMin)
+                numSamples--;
+        }
+        else
+            numSamples = numSamplesMin;
     }
     
     override void bindParameters(GraphicsState* state)
