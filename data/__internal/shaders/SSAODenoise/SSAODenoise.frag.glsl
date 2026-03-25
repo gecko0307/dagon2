@@ -13,8 +13,9 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-float factor = ubo.fparams[0];
 const int radius = 2;
+
+// TODO: make uniform
 const bool depthAware = true;
 
 float bilateral()
@@ -48,7 +49,7 @@ float bilateral()
        }
     }
     
-    return mix(centerAO, res / max(total, 0.0001), factor);
+    return mix(centerAO, res / max(total, 0.0001), ubo.fparams[0]);
 }
 
 void main()

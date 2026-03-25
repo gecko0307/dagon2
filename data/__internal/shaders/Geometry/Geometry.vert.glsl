@@ -32,5 +32,7 @@ void main()
     prevPosition = ubo.projectionMatrix * (ubo.prevModelViewMatrix * modelPosHmg);
     
     gl_Position = currPosition;
+    
+    // Adapt to Vulkan
     gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;
 }
