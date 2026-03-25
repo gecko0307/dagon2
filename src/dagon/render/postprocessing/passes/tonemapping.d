@@ -56,6 +56,16 @@ struct AgXLookPreset
             1.0f
         );
     }
+    
+    static AgXLook PunchyLegacy()
+    {
+        return AgXLook(
+            Vector3f(0.0f, 0.0f, 0.0f),
+            Vector3f(1.0f, 1.0f, 1.0f),
+            Vector3f(1.35f, 1.35f, 1.35f),
+            1.4f
+        );
+    }
 }
 
 struct TonemappingShaderVertexUniformBuffer

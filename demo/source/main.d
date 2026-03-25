@@ -49,7 +49,7 @@ class TestWorld: World
         
         aOBJSuzanne = loadAsset!OBJAsset("data/suzanne.obj");
         
-        scene = New!Scene(this);
+        scene = New!Scene(gpu, this);
         scene.sun.pitch(-45.0f);
         scene.sun.energy = 10.0f;
         
@@ -69,13 +69,13 @@ class TestWorld: World
         eSuzanne.drawable = aOBJSuzanne.mesh;
         eSuzanne.material = matSuzanne;
         eSuzanne.position = Vector3f(0.0f, 1.0f, 0.0f);
-        eSuzanne.scale = Vector3f(2.0f, 2.0f, 2.0f);
         
-        //auto ePlane = addEntity();
-        //ePlane.drawable = New!ShapePlane(10, 10, 1, assetManager);
+        auto ePlane = scene.addEntity();
+        ePlane.drawable = New!ShapePlane(10, 10, 1, gpu, this);
         
-        //game.renderer.ssaoPass.ssaoShader.radius = 0.5f;
-        //game.renderer.ssaoDenoisePass.active = false;
+        game.renderer.ssaoPass.ssaoShader.radius = 0.2f;
+        game.renderer.ssaoPass.ssaoShader.power = 5.0f;
+        game.renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy;
     }
     
     override void onUpdate(Time t) { }
