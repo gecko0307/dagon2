@@ -7,9 +7,9 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 New features:
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. As a result, the rendered image is now comparable to Blender's Eevee
-- Experimental HDR (scRGB) output support, which expands the range of colors and luminance that can be displayed.
-- Supersampling support
-- Temporal SSAO
+- Experimental HDR (scRGB) output support
+- 2x supersampling support
+- Temporal SSAO support
 - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
@@ -24,4 +24,4 @@ Major changes from Dagon 0.x/1.x:
 - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
 - The renderer now uses separate irradiance cubemap
-- Jolt Physics is now built in as `dagon.jolt` package.
+- Jolt Physics is now built-in as `dagon.jolt` package.
