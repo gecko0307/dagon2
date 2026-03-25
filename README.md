@@ -6,7 +6,7 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 
 New features:
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
-- Improvements in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. As a result, the rendered image is now comparable to Blender's Eevee, a popular real-time rendering engine
+- Improvements in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. As a result, the rendered image is now comparable to Blender's Eevee
 - Experimental HDR (scRGB) output support, which expands the range of colors and luminance that can be displayed.
 - Supersampling support
 - Temporal SSAO
