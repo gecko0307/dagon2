@@ -135,7 +135,9 @@ class Game: BaseGame
     {
         super.onUpdate(t);
         if (activeWorld)
+        {
             renderer.setScene(activeWorld.scene);
+        }
         renderer.update(t);
     }
     

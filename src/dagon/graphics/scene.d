@@ -5,6 +5,7 @@ import dlib.core.ownership;
 import dlib.container.array;
 import dlib.image.color;
 
+import dagon.core.gpu;
 import dagon.graphics.entity;
 import dagon.graphics.camera;
 import dagon.graphics.light;
@@ -12,6 +13,7 @@ import dagon.graphics.texture;
 
 class Scene: Owner
 {
+    GPU gpu;
     Array!Entity entities;
     Camera activeCamera;
     Light sun;
@@ -22,10 +24,12 @@ class Scene: Owner
     bool brdfLUTEnabled = true;
     float ambientEnergy = 1.0f;
     
-    this(Owner owner)
+    this(GPU gpu, Owner owner)
     {
         super(owner);
-        sun = New!Light(LightType.Sun, this);
+        this.gpu = gpu;
+        sun = New!Light(gpu, LightType.Sun, this);
+        sun.shadowEnabled = true;
         entities.append(sun);
     }
     

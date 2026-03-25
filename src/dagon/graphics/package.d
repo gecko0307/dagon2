@@ -33,6 +33,7 @@ public
     import dagon.graphics.entity;
     import dagon.graphics.material;
     import dagon.graphics.scene;
+    import dagon.graphics.shadowmap;
     import dagon.graphics.shapes;
     import dagon.graphics.state;
     import dagon.graphics.texture;

@@ -66,23 +66,36 @@ class Entity: Owner, Updateable
         else
         {
             prevModelMatrix = modelMatrix;
-            if (!transformationValid)
-            {
+            //if (!transformationValid)
+            //{
                 //transformationValid = !dynamic;
                 
-                transformation = trsMatrix(position, rotation, scaling);
+                transformation =
+                    translationMatrix(position) *
+                    rotation.toMatrix4x4 *
+                    scaleMatrix(scaling);
+                //trsMatrix(position, rotation, scaling);
                 invTransformation = transformation.inverse;
                 
                 // TODO: parent-child relation
                 modelMatrix = transformation;
                 invModelMatrix = invTransformation;
-            }
+            //}
         }
     }
     
     Vector3f positionAbsolute()
     {
         return modelMatrix.translation;
+    }
+    
+    /// Returns the absolute rotation of the entity.
+    Quaternionf rotationAbsolute()
+    {
+        //if (parent)
+        //    return parent.rotationAbsolute * rotation;
+        //else
+            return rotation;
     }
     
     Vector3f direction()

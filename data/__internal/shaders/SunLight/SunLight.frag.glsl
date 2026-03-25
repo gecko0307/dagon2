@@ -57,17 +57,145 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
+layout(set = 2, binding = 4) uniform sampler2DArrayShadow shadowTextureArray;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
+    mat4 invViewMatrix;
     mat4 invProjectionMatrix;
+    mat4 shadowMatrix1;
+    mat4 shadowMatrix2;
+    mat4 shadowMatrix3;
     vec4 lighVector;
     vec4 lightColor;
+    vec4 shadowTextureResolution;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
+
+/*
+float shadowLookup(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in vec2 offset)
+{
+    float texelSize = 1.0 / ubo.shadowTextureResolution.x;
+    vec2 v = offset * texelSize * coord.w;
+    vec4 c = (coord + vec4(v.x, v.y, 0.0, 0.0)) / coord.w;
+    c.w = c.z;
+    c.z = layer;
+    float s = texture(depths, c);
+    return s;
+}
+
+float shadowLookupPCF(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in float radius)
+{
+    float s = 0.0;
+    float x, y;
+    for (y = -radius ; y < radius ; y += 1.0)
+    for (x = -radius ; x < radius ; x += 1.0)
+    {
+        s += shadowLookup(depths, layer, coord, vec2(x, y));
+    }
+    s /= radius * radius * 4.0;
+    return s;
+}
+
+float shadowCascadeWeight(in vec4 tc, in float coef)
+{
+    vec2 proj = vec2(tc.x / tc.w, tc.y / tc.w);
+    proj = (1.0 - abs(proj * 2.0 - 1.0)) * coef;
+    proj = clamp(proj, 0.0, 1.0);
+    return min(proj.x, proj.y);
+}
+*/
+
+/*
+float shadow_mult(int shadow_idx)
+{
+    vec4 pos_light_space = shadow_vps[shadow_idx] * in_world_pos;
+    vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
+    proj_coords = proj_coords * 0.5 + 0.5;
+    vec4 sample_in = vec4(proj_coords.xy, float(shadow_idx), proj_coords.z)
+    float shadow = texture(shadow_sampler, sample_in);
+    bool inBounds = all(greaterThanEqual(proj_coords.xy, vec2(0.0))) &&
+                all(lessThanEqual(proj_coords.xy, vec2(1.0)));
+    return inBounds ? shadow : 1.0;
+}
+*/
+
+/*
+float shadowMap(vec3 pos)
+{
+    vec4 shadowCoord = ubo.shadowMatrix1 * vec4(pos, 1.0);
+    vec4 c = vec4(shadowCoord.xyz / shadowCoord.w, 0.0);
+    c.y = 1.0 - c.y;
+    c.w = c.z;
+    c.z = 0.0;
+    float shadow = texture(shadowTextureArray, c);
+    bool inBounds =
+        all(greaterThanEqual(c.xy, vec2(0.0))) &&
+        all(lessThanEqual(c.xy, vec2(1.0)));
+    return inBounds ? shadow : 1.0;
+}
+*/
+
+float shadowLookup(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in vec2 offset)
+{
+    float texelSize = 1.0 / ubo.shadowTextureResolution.x;
+    vec2 v = offset * texelSize * coord.w;
+    vec4 c = (coord + vec4(v.x, v.y, 0.0, 0.0)) / coord.w;
+    c.y = 1.0 - c.y;
+    c.w = c.z;
+    c.z = layer;
+    float s = texture(depths, c);
+    bool inBounds =
+        all(greaterThanEqual(c.xy, vec2(0.0))) &&
+        all(lessThanEqual(c.xy, vec2(1.0)));
+    return inBounds ? s : 1.0;
+}
+
+float shadowLookupPCF(in sampler2DArrayShadow depths, in float layer, in vec4 coord, in float radius)
+{
+    float s = 0.0;
+    float x, y;
+    for (y = -radius ; y < radius ; y += 1.0)
+    for (x = -radius ; x < radius ; x += 1.0)
+    {
+        s += shadowLookup(depths, layer, coord, vec2(x, y));
+    }
+    s /= radius * radius * 4.0;
+    return s;
+}
+
+float shadowCascadeWeight(in vec4 tc, in float coef)
+{
+    vec2 proj = vec2(tc.x / tc.w, tc.y / tc.w);
+    proj = (1.0 - abs(proj * 2.0 - 1.0)) * coef;
+    proj = clamp(proj, 0.0, 1.0);
+    return min(proj.x, proj.y);
+}
+
+const float eyeSpaceNormalShift = 0.008;
+float shadowMapCascaded(in vec3 pos, in vec3 N)
+{
+    vec3 posShifted = pos + N * eyeSpaceNormalShift;
+    vec4 shadowCoord1 = ubo.shadowMatrix1 * vec4(posShifted, 1.0);
+    vec4 shadowCoord2 = ubo.shadowMatrix2 * vec4(posShifted, 1.0);
+    vec4 shadowCoord3 = ubo.shadowMatrix3 * vec4(posShifted, 1.0);
+    
+    float s1 = shadowLookupPCF(shadowTextureArray, 0.0, shadowCoord1, 2.0);
+    float s2 = shadowLookup(shadowTextureArray, 1.0, shadowCoord2, vec2(0.0, 0.0));
+    float s3 = shadowLookup(shadowTextureArray, 2.0, shadowCoord3, vec2(0.0, 0.0));
+    
+    float w1 = shadowCascadeWeight(shadowCoord1, 8.0);
+    float w2 = shadowCascadeWeight(shadowCoord2, 8.0);
+    float w3 = shadowCascadeWeight(shadowCoord3, 8.0);
+    s3 = mix(1.0, s3, w3); 
+    s2 = mix(s3, s2, w2);
+    s1 = mix(s2, s1, w1);
+    
+    return s1;
+}
 
 void main()
 {
@@ -75,6 +203,7 @@ void main()
     vec3 ndc = vec3(texCoords, depth);
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
+    vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(-eyePos);
@@ -103,8 +232,8 @@ void main()
     
     vec3 incomingLight = toLinear(ubo.lightColor.rgb) * ubo.lightColor.a;
     
-    const float shadow = 1.0;
-    const float occlusion = shadow * 1.0;
+    float shadow = shadowMapCascaded(eyePos, N);
+    float occlusion = shadow * 1.0;
     vec3 diffuse = INVPI * baseColor * (kD * NL * occlusion) * (1.0 - metallic);
     
     vec3 radiance = (diffuse + (specular * shadow * NL)) * incomingLight;

@@ -32,4 +32,5 @@ void main()
     prevPosition = ubo.projectionMatrix * (ubo.prevModelViewMatrix * modelPosHmg);
     
     gl_Position = currPosition;
+    gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;
 }

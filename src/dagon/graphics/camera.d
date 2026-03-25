@@ -111,6 +111,6 @@ class Camera: Entity
      */
     Matrix4x4f projectionMatrix(float aspectRatio)
     {
-         return perspectiveMatrix(fov, aspectRatio, zNear, zFar);
+        return perspectiveMatrix(fov, aspectRatio, zNear, zFar);
     }
 }

@@ -41,9 +41,6 @@ abstract class RenderPass: Owner
     
     protected void beginPass()
     {
-        if (numColorTargets == 0)
-            return;
-        
         renderPass = SDL_BeginGPURenderPass(
             renderer.commandBuffer,
             colorTargetsInfo,

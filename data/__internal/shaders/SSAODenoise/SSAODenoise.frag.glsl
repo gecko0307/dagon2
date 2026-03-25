@@ -21,6 +21,7 @@ float bilateral()
 {
     ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
     float centerAO = texelFetch(occlusionBuffer, pixelCoord, 0).r;
+    float centerDepth = texelFetch(depthBuffer, pixelCoord, 0).r;
     
     float res = 0.0;
     float total = 0.0;
@@ -31,7 +32,17 @@ float bilateral()
         {
             ivec2 offset = ivec2(x, y);
             float sampleAO = texelFetch(occlusionBuffer, pixelCoord + offset, 0).r;
-            float weight = max(0.0, 1.0 - abs(sampleAO - centerAO) * 0.25);
+            float weight;
+            if (depthAware)
+            {
+                float sampleDepth = texelFetch(depthBuffer, pixelCoord + offset, 0).r;
+                float depthDiff = abs(sampleDepth - centerDepth);
+                weight = max(0.0, 1.0 - pow(depthDiff, 0.1));
+            }
+            else
+            {
+                weight = max(0.0, 1.0 - abs(sampleAO - centerAO) * 0.25);
+            }
             res += sampleAO * weight;
             total += weight;
        }

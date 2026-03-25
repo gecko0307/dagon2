@@ -64,9 +64,12 @@ class World: EventListener
     {
         processEvents();
         onUpdate(t);
-        foreach(entity; scene.entities)
+        if (scene)
         {
-            entity.update(t);
+            foreach(entity; scene.entities)
+            {
+                entity.update(t);
+            }
         }
         onPostUpdate(t);
     }

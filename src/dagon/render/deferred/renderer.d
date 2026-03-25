@@ -12,6 +12,7 @@ import dagon.graphics.texture;
 import dagon.resource.texture;
 import dagon.render.renderer;
 import dagon.render.deferred.gbuffer;
+import dagon.render.deferred.passes.csm;
 import dagon.render.deferred.passes.geometry;
 import dagon.render.deferred.passes.ssao;
 import dagon.render.deferred.passes.ssaodenoise;
@@ -28,6 +29,7 @@ class DeferredRenderer: Renderer
 {
     GBuffer gbuffer;
     PostProcessingContext ppContext;
+    CSMPass csmPass;
     GeometryPass geometryPass;
     SSAOPass ssaoPass;
     SSAODenoisePass ssaoDenoisePass;
@@ -45,7 +47,7 @@ class DeferredRenderer: Renderer
         gbuffer = New!GBuffer(gpu, this);
         ppContext = New!PostProcessingContext(gpu, gbuffer, this);
         
-        // TODO: shadow pass
+        csmPass = New!CSMPass(this, gbuffer);
         geometryPass = New!GeometryPass(this, gbuffer);
         ssaoPass = New!SSAOPass(this, gbuffer);
         ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);

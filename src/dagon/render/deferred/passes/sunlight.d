@@ -12,6 +12,7 @@ import dagon.core.crashhandler;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
+import dagon.graphics.csm;
 import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
@@ -25,9 +26,14 @@ struct SunLightShaderVertexUniformBuffer
 
 struct SunLightShaderFragmentUniformBuffer
 {
+    Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
+    Matrix4x4f shadowMatrix1;
+    Matrix4x4f shadowMatrix2;
+    Matrix4x4f shadowMatrix3;
     Vector4f lighVector;
     Color4f lightColor;
+    Vector4f shadowTextureResolution;
 }
 
 class SunLightShader: Shader
@@ -54,9 +60,14 @@ class SunLightShader: Shader
             exitWithError("Failed to create SunLightShader");
         }
         
+        fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.lighVector = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
         fsUBO.lightColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        fsUBO.shadowTextureResolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.shadowMatrix1 = Matrix4x4f.identity;
+        fsUBO.shadowMatrix2 = Matrix4x4f.identity;
+        fsUBO.shadowMatrix3 = Matrix4x4f.identity;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -66,6 +77,7 @@ class SunLightShader: Shader
         auto scene = state.scene;
         auto sun = scene.sun;
         
+        fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.lighVector = Vector4f(sun.directionAbsolute);
         fsUBO.lighVector.w = 0.0;
@@ -73,10 +85,31 @@ class SunLightShader: Shader
         fsUBO.lightColor = sun.color;
         fsUBO.lightColor.a = sun.energy;
         
+        CascadedShadowMap shadowMap = cast(CascadedShadowMap)sun.shadowMap;
+        //if (shadowMap)
+        {
+            fsUBO.shadowTextureResolution.x = shadowMap.resolution;
+            fsUBO.shadowTextureResolution.y = shadowMap.resolution;
+            fsUBO.shadowMatrix1 = shadowMap.area[0].shadowMatrix;
+            fsUBO.shadowMatrix2 = shadowMap.area[1].shadowMatrix;
+            fsUBO.shadowMatrix3 = shadowMap.area[2].shadowMatrix;
+        }
+        /*
+        else
+        {
+            fsUBO.shadowTextureResolution.x = 0.0f;
+            fsUBO.shadowTextureResolution.y = 0.0f;
+            fsUBO.shadowMatrix1 = Matrix4x4f.identity;
+            fsUBO.shadowMatrix2 = Matrix4x4f.identity;
+            fsUBO.shadowMatrix3 = Matrix4x4f.identity;
+        }
+        */
+        
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
+        pass.bindTexture(PipelineStage.Fragment, 4, shadowMap.depthTexture, shadowMap.depthSampler);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -188,6 +221,7 @@ class SunLightPass: RenderPass
         
         colorTargetInfo.texture = gbuffer.radianceBuffer;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SUN_LIGHT");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -203,5 +237,6 @@ class SunLightPass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }
