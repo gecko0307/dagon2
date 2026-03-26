@@ -636,6 +636,7 @@ class EventManager: Owner
             SDL_PropertiesID gamepadProps = SDL_GetGamepadProperties(device.gamepad);
             device.hasRumble = SDL_GetBooleanProperty(gamepadProps, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false);
             
+            // TODO:
             //device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
         }
         else
@@ -654,7 +655,9 @@ class EventManager: Owner
             device.axisThreshold = gamepadAxisThreshold;
             device.mappingPresent = false;
             device.hasRumble = false;
+            
             /*
+            // TODO:
             device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
             if (device.haptic)
                 device.hasRumble = (SDL_HapticRumbleInit(device.haptic) != 0);
@@ -881,13 +884,11 @@ class EventManager: Owner
                 
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     mouseButtonPressed[event.button.button] = true;
-                    
                     if (trackUpDownState)
                     {
                         mouseButtonDown[event.button.button] = true;
                         needToResetMouseDown = true;
                     }
-                    
                     e = Event(EventType.MouseButtonDown);
                     e.button = event.button.button;
                     addEvent(e);
@@ -895,13 +896,11 @@ class EventManager: Owner
                 
                 case SDL_EVENT_MOUSE_BUTTON_UP:
                     mouseButtonPressed[event.button.button] = false;
-                    
                     if (trackUpDownState)
                     {
                         mouseButtonUp[event.button.button] = true;
                         needToResetMouseUp = true;
                     }
-                    
                     e = Event(EventType.MouseButtonUp);
                     e.button = event.button.button;
                     addEvent(e);
@@ -914,13 +913,12 @@ class EventManager: Owner
                     addEvent(e);
                     break;
                 
-                /*
                 case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
-                    uint deviceIndex = event.cdevice.which;
-                    if (event.jbutton.state == SDL_PRESSED)
+                    uint deviceIndex = event.jdevice.which;
+                    if (event.jbutton.down)
                     {
                         e = Event(EventType.JoystickButtonDown);
-                        if (deviceIndex < MAX_CONTROLLERS)
+                        if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                         {
                             joystickButtonPressed[deviceIndex][event.jbutton.button] = true;
                             if (trackUpDownState)
@@ -930,10 +928,10 @@ class EventManager: Owner
                             }
                         }
                     }
-                    else if (event.jbutton.state == SDL_RELEASED)
+                    else
                     {
                         e = Event(EventType.JoystickButtonUp);
-                        if (deviceIndex < MAX_CONTROLLERS)
+                        if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                         {
                             joystickButtonPressed[deviceIndex][event.jbutton.button] = false;
                             if (trackUpDownState)
@@ -947,15 +945,13 @@ class EventManager: Owner
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
-                */
                 
-                /*
                 case SDL_EVENT_JOYSTICK_BUTTON_UP:
-                    uint deviceIndex = event.cdevice.which;
-                    if (event.jbutton.state == SDL_PRESSED)
+                    uint deviceIndex = event.jdevice.which;
+                    if (event.jbutton.down)
                     {
                         e = Event(EventType.JoystickButtonDown);
-                        if (deviceIndex < MAX_CONTROLLERS)
+                        if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                         {
                             joystickButtonPressed[deviceIndex][event.jbutton.button] = true;
                             if (trackUpDownState)
@@ -965,10 +961,10 @@ class EventManager: Owner
                             }
                         }
                     }
-                    else if (event.jbutton.state == SDL_RELEASED)
+                    else
                     {
                         e = Event(EventType.JoystickButtonUp);
-                        if (deviceIndex < MAX_CONTROLLERS)
+                        if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                         {
                             joystickButtonPressed[deviceIndex][event.jbutton.button] = false;
                             if (trackUpDownState)
@@ -982,47 +978,42 @@ class EventManager: Owner
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
-                */
                 
-                /*
                 case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-                    uint deviceIndex = event.cdevice.which;
-                    if (deviceIndex < MAX_CONTROLLERS)
+                    uint deviceIndex = event.jdevice.which;
+                    if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        controllerButtonPressed[deviceIndex][event.cbutton.button] = true;
+                        gamepadButtonPressed[deviceIndex][event.jbutton.button] = true;
                         if (trackUpDownState)
                         {
-                            controllerButtonDown[deviceIndex][event.cbutton.button] = true;
-                            needToResetControllerDown[deviceIndex] = true;
+                            gamepadButtonDown[deviceIndex][event.jbutton.button] = true;
+                            needToResetGamepadDown[deviceIndex] = true;
                         }
                     }
                     
-                    e = Event(EventType.ControllerButtonDown);
-                    e.controllerButton = event.cbutton.button;
+                    e = Event(EventType.GamepadButtonDown);
+                    e.gamepadButton = event.jbutton.button;
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
-                */
                 
-                /*
                 case SDL_EVENT_GAMEPAD_BUTTON_UP:
                     uint deviceIndex = event.cdevice.which;
-                    if (deviceIndex < MAX_CONTROLLERS)
+                    if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        controllerButtonPressed[deviceIndex][event.cbutton.button] = false;
+                        gamepadButtonPressed[deviceIndex][event.jbutton.button] = false;
                         if (trackUpDownState)
                         {
-                            controllerButtonUp[deviceIndex][event.cbutton.button] = true;
-                            needToResetControllerUp[deviceIndex] = true;
+                            gamepadButtonUp[deviceIndex][event.jbutton.button] = true;
+                            needToResetGamepadUp[deviceIndex] = true;
                         }
                     }
                     
-                    e = Event(EventType.ControllerButtonUp);
-                    e.controllerButton = event.cbutton.button;
+                    e = Event(EventType.GamepadButtonUp);
+                    e.gamepadButton = event.jbutton.button;
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
-                */
                 
                 /*
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
