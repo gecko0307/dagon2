@@ -30,6 +30,7 @@ import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.transformation;
 import dlib.image.color;
 
 import dagon.core.sdl3;
@@ -64,6 +65,7 @@ struct DecalShaderFragmentUniformBuffer
     uint[4] flags;
     float[4] fparams;
     Vector4f resolution;
+    Vector4f decalDirection;
 }
 
 enum DecalFlags
@@ -120,6 +122,7 @@ class DecalShader: Shader
         fsUBO.fparams[2] = 0.0f;
         fsUBO.fparams[3] = 0.0f;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.decalDirection = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -156,6 +159,9 @@ class DecalShader: Shader
         
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
+        
+        Vector4f decalDirectionModel = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
+        fsUBO.decalDirection = decalDirectionModel * vsUBO.normalMatrix;
         
         if (material.baseColorTexture)
         {

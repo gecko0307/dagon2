@@ -54,6 +54,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     uvec4 flags;
     vec4 fparams;
     vec4 resolution;
+    vec4 decalDirection;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -81,9 +82,7 @@ void main()
     vec3 objPos = (ubo.invModelMatrix * vec4(worldPos, 1.0)).xyz;
     
     // Perform bounds check to discard fragments outside the decal box
-    if (abs(objPos.x) > 1.0) discard;
-    if (abs(objPos.y) > 1.0) discard;
-    if (abs(objPos.z) > 1.0) discard;
+    if (abs(objPos.x) > 1.0 || abs(objPos.y) > 1.0 || abs(objPos.z) > 1.0) discard;
     
     // Normal
     vec3 fdx = dFdx(eyePos);
@@ -121,7 +120,9 @@ void main()
     const float colorAlpha = 1.0;
     vec4 baseColor = ubo.baseColor;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BASECOLOR_TEXTURE) != 0)
+    {
         baseColor *= texture(baseColorTexture, uv);
+    }
     
     float f0 = ubo.fparams[FPARAM_F0];
     
