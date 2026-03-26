@@ -80,6 +80,7 @@ class Entity: Owner, Updateable
     float motionBlurMask = 1.0f;
     bool visible = true;
     bool castShadow = true;
+    bool receiveDecals = true;
     bool dynamic = false;
     bool transformationValid = false;
     bool modelMatricesValid = false;

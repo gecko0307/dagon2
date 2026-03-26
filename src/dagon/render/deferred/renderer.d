@@ -75,6 +75,7 @@ class DeferredRenderer: Renderer
         
         csmPass = New!CSMPass(this, gbuffer);
         geometryPass = New!GeometryPass(this, gbuffer);
+        // TODO: decal pass
         ssaoPass = New!SSAOPass(this, gbuffer);
         ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);

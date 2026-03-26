@@ -26,6 +26,7 @@ layout(location = 5) in vec4 prevPosition;
 
 #define FLAGS_TEXTURE 0
 #define FLAGS_OUTPUT 1
+#define FLAGS_ENTITY 2
 
 #define TEXFLAG_HAS_BASECOLOR_TEXTURE 1 << 0
 #define TEXFLAG_HAS_NORMAL_TEXTURE 1 << 1
@@ -35,6 +36,8 @@ layout(location = 5) in vec4 prevPosition;
 #define TEXFLAG_HAS_SKYBOX_TEXTURE 1 << 5
 
 #define OUTFLAG_DEPTH 1 << 0
+
+#define ENTFLAG_STATIC 1 << 0
 
 #define FPARAM_F0 0
 #define FPARAM_SKYBOX_MIP_LEVEL 1
@@ -129,11 +132,13 @@ void main()
     prevPosScreen.y = 1.0 - prevPosScreen.y;
     vec2 velocity = posScreen - prevPosScreen;
     
+    float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
+    
     outColor = vec4(baseColor.rgb, 1.0);
     outNormal = vec4(N, 1.0);
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
-    outVelocity = vec4(velocity, motionBlurMask, 1.0);
+    outVelocity = vec4(velocity, motionBlurMask, staticMask);
     outRadiance = vec4(0.0, 0.0, 0.0, 1.0);
     
     if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)

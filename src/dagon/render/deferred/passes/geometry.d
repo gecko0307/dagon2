@@ -67,7 +67,8 @@ struct GeometryShaderFragmentUniformBuffer
 enum GeometryFlags
 {
     Texture = 0,
-    Output = 1
+    Output = 1,
+    Entity = 2
 }
 
 enum GeometryTextureFlags: uint
@@ -83,6 +84,11 @@ enum GeometryTextureFlags: uint
 enum GeometryOutputFlags: uint
 {
     Depth = 1 << 0
+}
+
+enum GeometryEntityFlags: uint
+{
+    Static = 1 << 0
 }
 
 class GeometryShader: Shader
@@ -140,12 +146,15 @@ class GeometryShader: Shader
         
         fsUBO.flags[GeometryFlags.Texture] = 0;
         fsUBO.flags[GeometryFlags.Output] = 0;
-        fsUBO.flags[2] = 0;
+        fsUBO.flags[GeometryFlags.Entity] = 0;
         fsUBO.flags[3] = 0;
         fsUBO.baseColor = material.baseColor;
         
         if (material.outputDepth)
             fsUBO.flags[GeometryFlags.Output] |= GeometryOutputFlags.Depth;
+        
+        if (!entity.dynamic && entity.receiveDecals)
+            fsUBO.flags[GeometryFlags.Entity] |= GeometryEntityFlags.Static;
         
         fsUBO.roughnessMetallic.g = material.roughness;
         fsUBO.roughnessMetallic.b = material.metallic;
