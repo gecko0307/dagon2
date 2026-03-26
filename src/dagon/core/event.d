@@ -707,7 +707,7 @@ class EventManager: Owner
     }
     
     /**
-     * Gets the normalized value of a game controller axis.
+     * Gets the normalized value of a gamepad axis.
      *
      * Params:
      *   deviceIndex = Game input device index.
@@ -715,21 +715,19 @@ class EventManager: Owner
      * Returns:
      *   Normalized axis value in [-1, 1].
      */
-    /*
-    float gameControllerAxis(uint deviceIndex, int axis)
+    float gamepadAxis(uint deviceIndex, int axis)
     {
         if (deviceIndex >= gameInputDevices.length)
             return 0.0f;
 
-        auto contr = gameInputDevices[deviceIndex].controller;
-        if (contr is null)
+        auto gp = gameInputDevices[deviceIndex].gamepad;
+        if (gp is null)
             return 0.0f;
         
-        int axisVal = SDL_GameControllerGetAxis(contr, cast(SDL_GameControllerAxis)axis);
-        return cast(float)clamp(axisVal, -controllerAxisThreshold, controllerAxisThreshold) / 
-               cast(float)controllerAxisThreshold;
+        int axisVal = SDL_GetGamepadAxis(gp, cast(SDL_GamepadAxis)axis);
+        return cast(float)clamp(axisVal, -gamepadAxisThreshold, gamepadAxisThreshold) / 
+               cast(float)gamepadAxisThreshold;
     }
-    */
     
     /**
      * Gets the normalized value of a joystick axis.
@@ -740,7 +738,6 @@ class EventManager: Owner
      * Returns:
      *   Normalized axis value in [-1, 1].
      */
-    /*
     float joystickAxis(uint deviceIndex, int axis)
     {
         if (deviceIndex >= gameInputDevices.length)
@@ -748,19 +745,18 @@ class EventManager: Owner
         auto device = gameInputDevices[deviceIndex];
         int axisVal = 0;
         auto joy = device.joystick;
-        auto contr = device.controller;
+        auto gp = device.gamepad;
         if (joy)
-            axisVal = SDL_JoystickGetAxis(joy, axis);
-        else if (contr)
-            axisVal = SDL_GameControllerGetAxis(contr, cast(SDL_GameControllerAxis)axis);
+            axisVal = SDL_GetJoystickAxis(joy, axis);
+        else if (gp)
+            axisVal = SDL_GetGamepadAxis(gp, cast(SDL_GamepadAxis)axis);
         
-        return cast(float)clamp(axisVal, -controllerAxisThreshold, controllerAxisThreshold) / 
-               cast(float)controllerAxisThreshold;
+        return cast(float)clamp(axisVal, -gamepadAxisThreshold, gamepadAxisThreshold) / 
+               cast(float)gamepadAxisThreshold;
     }
-    */
     
     /**
-     * Triggers controller rumble (vibration) if supported.
+     * Triggers gamepad rumble (vibration) if supported.
      *
      * Params:
      *   deviceIndex = Game input device index.
@@ -768,21 +764,19 @@ class EventManager: Owner
      *   hiFreg = High frequency rumble intensity.
      *   duration = Duration in seconds.
      */
-    /*
     void gameControllerRumble(uint deviceIndex, uint lowFreq, uint hiFreg, float duration)
     {
         if (deviceIndex >= gameInputDevices.length)
             return;
         auto device = gameInputDevices[deviceIndex];
-        if (device.controller && device.hasRumble)
+        if (device.gamepad && device.hasRumble)
         {
-            SDL_GameControllerRumble(device.controller,
+            SDL_RumbleGamepad(device.gamepad,
                 cast(ushort)clamp(lowFreq, 0, ushort.max),
                 cast(ushort)clamp(hiFreg, 0, ushort.max),
                 cast(uint)(duration * 1000.0f));
         }
     }
-    */
     
     /// Polls and processes all pending events.
     void update()
@@ -980,81 +974,77 @@ class EventManager: Owner
                     break;
                 
                 case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-                    uint deviceIndex = event.jdevice.which;
+                    uint deviceIndex = event.gdevice.which;
                     if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        gamepadButtonPressed[deviceIndex][event.jbutton.button] = true;
+                        gamepadButtonPressed[deviceIndex][event.gbutton.button] = true;
                         if (trackUpDownState)
                         {
-                            gamepadButtonDown[deviceIndex][event.jbutton.button] = true;
+                            gamepadButtonDown[deviceIndex][event.gbutton.button] = true;
                             needToResetGamepadDown[deviceIndex] = true;
                         }
                     }
                     
                     e = Event(EventType.GamepadButtonDown);
-                    e.gamepadButton = event.jbutton.button;
+                    e.gamepadButton = event.gbutton.button;
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
                 
                 case SDL_EVENT_GAMEPAD_BUTTON_UP:
-                    uint deviceIndex = event.cdevice.which;
+                    uint deviceIndex = event.gdevice.which;
                     if (deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        gamepadButtonPressed[deviceIndex][event.jbutton.button] = false;
+                        gamepadButtonPressed[deviceIndex][event.gbutton.button] = false;
                         if (trackUpDownState)
                         {
-                            gamepadButtonUp[deviceIndex][event.jbutton.button] = true;
+                            gamepadButtonUp[deviceIndex][event.gbutton.button] = true;
                             needToResetGamepadUp[deviceIndex] = true;
                         }
                     }
                     
                     e = Event(EventType.GamepadButtonUp);
-                    e.gamepadButton = event.jbutton.button;
+                    e.gamepadButton = event.gbutton.button;
                     e.deviceIndex = deviceIndex;
                     addEvent(e);
                     break;
                 
-                /*
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
                     // TODO: add state modification
                     e = Event(EventType.JoystickAxisMotion);
-                    e.joystickAxis = event.caxis.axis;
-                    int axisValue = event.caxis.value;
-                    auto joy = joystick(event.cdevice.which);
+                    e.joystickAxis = event.jaxis.axis;
+                    int axisValue = event.jaxis.value;
+                    auto joy = joystick(event.jdevice.which);
                     if (joy)
                     {
-                        axisValue = SDL_JoystickGetAxis(joy, e.joystickAxis);
+                        axisValue = SDL_GetJoystickAxis(joy, e.joystickAxis);
                     }
                     e.joystickAxisValue =
-                        cast(float)clamp(axisValue, -controllerAxisThreshold, controllerAxisThreshold) / 
-                        cast(float)controllerAxisThreshold;
-                    e.deviceIndex = event.cdevice.which;
+                        cast(float)clamp(axisValue, -gamepadAxisThreshold, gamepadAxisThreshold) / 
+                        cast(float)gamepadAxisThreshold;
+                    e.deviceIndex = event.jdevice.which;
                     addEvent(e);
                     break;
-                */
                 
-                /*
                 case SDL_EVENT_GAMEPAD_AXIS_MOTION:
                     // TODO: add state modification
-                    e = Event(EventType.ControllerAxisMotion);
-                    e.controllerAxis = event.caxis.axis;
-                    int axisValue = event.caxis.value;
-                    auto contr = controller(event.cdevice.which);
-                    if (contr)
+                    e = Event(EventType.GamepadAxisMotion);
+                    e.gamepadAxis = event.gaxis.axis;
+                    int axisValue = event.gaxis.value;
+                    auto gp = gamepad(event.gdevice.which);
+                    if (gp)
                     {
-                        if (e.controllerAxis == 0)
-                            axisValue = SDL_GameControllerGetAxis(contr, SDL_CONTROLLER_AXIS_LEFTY);
-                        if (e.controllerAxis == 1)
-                            axisValue = SDL_GameControllerGetAxis(contr, SDL_CONTROLLER_AXIS_LEFTX);
+                        if (e.gamepadAxis == 0)
+                            axisValue = SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFTY);
+                        if (e.gamepadAxis == 1)
+                            axisValue = SDL_GetGamepadAxis(gp, SDL_GAMEPAD_AXIS_LEFTX);
                     }
-                    e.controllerAxisValue =
-                        cast(float)clamp(axisValue, -controllerAxisThreshold, controllerAxisThreshold) / 
-                        cast(float)controllerAxisThreshold;
-                    e.deviceIndex = event.cdevice.which;
+                    e.gamepadAxisValue =
+                        cast(float)clamp(axisValue, -gamepadAxisThreshold, gamepadAxisThreshold) / 
+                        cast(float)gamepadAxisThreshold;
+                    e.deviceIndex = event.gdevice.which;
                     addEvent(e);
                     break;
-                */
                 
                 case SDL_EVENT_GAMEPAD_ADDED:
                     e = Event(EventType.GamepadAdd);
