@@ -204,6 +204,7 @@ class DecalShader: Shader
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
         
         pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.depthBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 6, &state.velocityBuffer);
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -363,6 +364,7 @@ class DecalPass: RenderPass
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         
         foreach(entity; state.scene.entities)
         {

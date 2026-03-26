@@ -41,6 +41,7 @@ layout(set = 2, binding = 2) uniform sampler2D heightTexture;
 layout(set = 2, binding = 3) uniform sampler2D roughnessMetallicTexture;
 layout(set = 2, binding = 4) uniform sampler2D emissionTexture;
 layout(set = 2, binding = 5) uniform sampler2D depthBuffer;
+layout(set = 2, binding = 6) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -70,6 +71,10 @@ const float parallaxBias = -0.01;
 void main()
 {
     vec2 gbufTexCoord = gl_FragCoord.xy / ubo.resolution.xy;
+    
+    bool isStaticSurface = texture(velocityBuffer, gbufTexCoord).a > 0.0;
+    if (!isStaticSurface)
+        discard;
 
     float depth = texture(depthBuffer, gbufTexCoord).x;
     vec3 ndc = vec3(gbufTexCoord, depth);
