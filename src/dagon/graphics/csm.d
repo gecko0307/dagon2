@@ -319,14 +319,6 @@ class CascadedShadowMap: ShadowMap
             area[i].position = snapTo(cam.positionAbsolute + cameraDirection * projectionSize[i] * 0.5f, res);
             area[i].update(light, cam);
         }
-        
-        /*
-        foreach(a; area)
-        {
-            a.position = cam.positionAbsolute;
-            a.update(light, cam);
-        }
-        */
     }
 }
 

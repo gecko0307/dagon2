@@ -31,7 +31,7 @@ import dlib.core.ownership;
 import dlib.core.stream;
 
 import dagon.core.sdl3;
-//import dagon.resource.sdlimage;
+import dagon.resource.image;
 
 /// Supported system cursor types.
 enum SystemCursor: uint

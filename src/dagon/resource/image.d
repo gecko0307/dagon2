@@ -32,7 +32,8 @@ DEALINGS IN THE SOFTWARE.
  * The `dagon.resource.image` module defines functionality for loading
  * images via SDL3_Image, and converting SDL surfaces to GPU-ready texture buffers.
  * The loader supports a wide range of formats (BMP, GIF, JPEG, PNG, QOI, TGA,
- * TIFF, WEBP, AVIF, JXL, SVG, and more), and can handle pixel format conversion.
+ * TIFF, WEBP, AVIF, JXL, SVG, and more), and handles pixel format conversion,
+ * ensuring consistent RGBA output across different formats.
  *
  * Copyright: Timur Gafarov 2025-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).

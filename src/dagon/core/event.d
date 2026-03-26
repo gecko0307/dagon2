@@ -92,7 +92,7 @@ struct GameInputDevice
     /// Opened haptic (force feedback) device, if any.
     SDL_Haptic* haptic = null;
     
-    ///
+    /// Is input mapping present in gamecontrollerdb.txt
     bool mappingPresent = false;
     
     /// A maximum that a device axis value is clamped to (for normalization in 0..1 range).
@@ -389,7 +389,7 @@ class EventManager: Owner
     GameInputDevice[MAX_GAME_INPUT_DEVICES] gameInputDevices;
     
     /// Number of recognized gamepads/joysticks.
-    //uint numGameInputDevices = 0;
+    uint numGameInputDevices = 0;
     
     /// Get currently opened SDL gamepad by device index.
     SDL_Gamepad* gamepad(uint deviceIndex)

@@ -121,7 +121,7 @@ enum DagonEvent
     Exit = -1
 }
 
-///
+/// Supported window systems enumeration.
 enum WindowSystem
 {
     WindowsDWM,
@@ -183,6 +183,7 @@ __gshared private
     ResourceCache _resourceCache;
 }
 
+/// Returns global resorce cache object.
 ResourceCache globalResourceCache()
 {
     return _resourceCache;
@@ -436,7 +437,7 @@ class Application: EventListener, Updateable
     /// Actual drawable area height of the window.
     int drawableHeight;
     
-    ///
+    /// Internal resolution multiplier, 1 or 2.
     uint supersampling = 1;
     
     /// Ratio of the resolution in physical pixels to the resolution in logical pixels.
@@ -508,22 +509,22 @@ class Application: EventListener, Updateable
     /// Main loop runner. Calls `Application.update` with a given fixed frequency (60 Hz by default).
     Cadencer cadencer;
     
-    ///
+    /// True if application uses HDR swapchain.
     bool hdrOutput = false;
     
-    ///
+    /// True if HDR output is supported on the system.
     bool hdrOutputSupport = false;
     
-    ///
+    /// Ratio of HDR white to SDR white.
     float hdrHeadroom = 1.0f;
     
-    ///
+    /// SDR white level.
     float whileLevel = 1.0f;
     
     /// Color space used for back buffer output.
     ColorProfile outputColorProfile = ColorProfile.Gamma22;
     
-    ///
+    /// Enable SDL GPU debug messages.
     bool gpuDebug = false;
     
     /**
@@ -562,28 +563,28 @@ class Application: EventListener, Updateable
     /// Object that loads and registers fonts.
     //FontManager fontManager;
     
-    ///
+    /// Resource cache object.
     ResourceCache resourceCache;
     
     /// Shader cache path.
     string shaderCachePath = "data/__internal/shader_cache";
     
-    ///
+    /// Shader cache storage.
     ResourceCacheStorage shaderCacheStorage;
     
     /// Texture cache path.
     string textureCachePath = "data/__internal/texture_cache";
     
-    ///
+    /// Texture cache storage.
     ResourceCacheStorage textureCacheStorage;
     
-    ///
+    /// Application's event manager.
     EventManager eventManager;
     
-    ///
+    /// Initialized SDL feature flags.
     SDL_InitFlags sdlSubsystems;
     
-    ///
+    /// GPU object encapsulating SDL GPU device and its settings.
     GPU gpu;
     
     protected
@@ -1284,8 +1285,6 @@ class Application: EventListener, Updateable
     {
         clearOwnedObjects();
         
-        //releaseCompressedTextureFormats();
-        
         /*
         foreach(i, cur; cursors)
         {
@@ -1457,6 +1456,7 @@ class Application: EventListener, Updateable
     
     ///
     /*
+    // TODO
     bool isWindowFocused()
     {
         uint flags = SDL_GetWindowFlags(window);
@@ -1629,6 +1629,8 @@ class Application: EventListener, Updateable
     }
     
     /*
+    // TODO
+    
     /// Creates a new timer and returns it's ID.
     int setTimer(double duration, int userCode, bool periodic = false)
     {
