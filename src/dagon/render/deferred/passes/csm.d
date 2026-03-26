@@ -244,7 +244,7 @@ class CSMPass: RenderPass
             
             foreach(entity; state.scene.entities)
             {
-                if (entity.layer == EntityLayer.Scene && entity.drawable)
+                if (entity.layer == EntityLayer.Scene && !entity.isDecal && entity.drawable)
                 {
                     state.entity = entity;
                     if (entity.material)

@@ -47,11 +47,23 @@ class World: EventListener
     Scene scene;
     bool recalculateMatrices = true;
     
+    ImageConversionOptions defaultImageConversionOptions = {
+        compressionFormat: TextureCompressionFormat.None
+    };
+    
+    TextureCreationOptions defaultTextureCreationOptions = {
+        generateMipmaps: true,
+        repeatUV: true,
+        anisotropicFiltering: true
+    };
+    
     this(BaseGame baseGame)
     {
         super(baseGame.eventManager, baseGame);
         this.baseGame = baseGame;
         this.gpu = baseGame.gpu;
+        
+        // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
     }
     
     void activate()
@@ -71,6 +83,11 @@ class World: EventListener
         else
             logError("Can\'t find file ", filename);
         return asset;
+    }
+    
+    TextureAsset loadTexture(string filename, bool cache = true)
+    {
+        return loadTexture(filename, &defaultImageConversionOptions, &defaultTextureCreationOptions, cache);
     }
     
     // TODO: move to AssetManager

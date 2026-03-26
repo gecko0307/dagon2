@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.deferred.passes.geometry;
+module dagon.render.deferred.passes.decal;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -45,16 +45,18 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
-struct GeometryShaderVertexUniformBuffer
+struct DecalShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
     Matrix4x4f projectionMatrix;
-    Matrix4x4f prevModelViewMatrix;
 }
 
-struct GeometryShaderFragmentUniformBuffer
+struct DecalShaderFragmentUniformBuffer
 {
+    Matrix4x4f invViewMatrix;
+    Matrix4x4f invModelMatrix;
+    Matrix4x4f invProjectionMatrix;
     Color4f baseColor;
     Vector4f roughnessMetallic;
     Color4f emission;
@@ -64,38 +66,25 @@ struct GeometryShaderFragmentUniformBuffer
     Vector4f resolution;
 }
 
-enum GeometryFlags
+enum DecalFlags
 {
     Texture = 0,
-    Output = 1,
-    Entity = 2
 }
 
-enum GeometryTextureFlags: uint
+enum DecalTextureFlags: uint
 {
     HasBaseColorTexture = 1 << 0,
     HasNormalTexture = 1 << 1,
     HasHeightTexture = 1 << 2,
     HasRoughnessMetallicTexture = 1 << 3,
-    HasEmissionTexture = 1 << 4,
-    HasSkyboxTexture = 1 << 5
+    HasEmissionTexture = 1 << 4
 }
 
-enum GeometryOutputFlags: uint
-{
-    Depth = 1 << 0
-}
-
-enum GeometryEntityFlags: uint
-{
-    Static = 1 << 0
-}
-
-class GeometryShader: Shader
+class DecalShader: Shader
 {
    protected:
-    GeometryShaderVertexUniformBuffer vsUBO;
-    GeometryShaderFragmentUniformBuffer fsUBO;
+    DecalShaderVertexUniformBuffer vsUBO;
+    DecalShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -103,33 +92,33 @@ class GeometryShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Geometry.vert.glsl", "data/__internal/shaders/Geometry/Geometry.vert.glsl",
+        vertexModule.create("Decal.vert.glsl", "data/__internal/shaders/Decal/Decal.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Geometry.frag.glsl", "data/__internal/shaders/Geometry/Geometry.frag.glsl",
+        fragmentModule.create("Decal.frag.glsl", "data/__internal/shaders/Decal/Decal.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create GeometryShader");
+            exitWithError("Failed to create DecalShader");
         }
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
         vsUBO.normalMatrix = Matrix4x4f.identity;
         vsUBO.projectionMatrix = Matrix4x4f.identity;
-        vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
         
+        fsUBO.invViewMatrix = Matrix4x4f.identity;
+        fsUBO.invModelMatrix = Matrix4x4f.identity;
+        fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
-        
         fsUBO.fparams[0] = 0.0f;
         fsUBO.fparams[1] = 0.0f;
         fsUBO.fparams[2] = 0.0f;
         fsUBO.fparams[3] = 0.0f;
-        
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
@@ -142,19 +131,16 @@ class GeometryShader: Shader
         vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
-        vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
         
-        fsUBO.flags[GeometryFlags.Texture] = 0;
-        fsUBO.flags[GeometryFlags.Output] = 0;
-        fsUBO.flags[GeometryFlags.Entity] = 0;
+        fsUBO.invViewMatrix = pass.view.invViewMatrix;
+        fsUBO.invModelMatrix = entity.invModelMatrix;
+        fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
+        
+        fsUBO.flags[DecalFlags.Texture] = 0;
+        fsUBO.flags[1] = 0;
+        fsUBO.flags[2] = 0;
         fsUBO.flags[3] = 0;
         fsUBO.baseColor = material.baseColor;
-        
-        if (material.outputDepth)
-            fsUBO.flags[GeometryFlags.Output] |= GeometryOutputFlags.Depth;
-        
-        if (!entity.dynamic && entity.receiveDecals)
-            fsUBO.flags[GeometryFlags.Entity] |= GeometryEntityFlags.Static;
         
         fsUBO.roughnessMetallic.g = material.roughness;
         fsUBO.roughnessMetallic.b = material.metallic;
@@ -167,7 +153,6 @@ class GeometryShader: Shader
         fsUBO.alphaOptions.w = entity.opacity * material.opacity;
         
         fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
-        fsUBO.fparams[1] = material.skyboxTextureMipLevel;
         
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
@@ -175,7 +160,7 @@ class GeometryShader: Shader
         if (material.baseColorTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasBaseColorTexture;
+            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasBaseColorTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 0);
@@ -183,7 +168,7 @@ class GeometryShader: Shader
         if (material.normalTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, material.normalTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasNormalTexture;
+            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasNormalTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
@@ -191,7 +176,7 @@ class GeometryShader: Shader
         if (material.heightTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 2, material.heightTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasHeightTexture;
+            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasHeightTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 2);
@@ -199,7 +184,7 @@ class GeometryShader: Shader
         if (material.roughnessMetallicTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 3, material.roughnessMetallicTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasRoughnessMetallicTexture;
+            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasRoughnessMetallicTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 3);
@@ -207,30 +192,27 @@ class GeometryShader: Shader
         if (material.emissionTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 4, material.emissionTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasEmissionTexture;
+            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasEmissionTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
         
-        if (material.skyboxTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 5, material.skyboxTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasSkyboxTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 5);
+        pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.depthBuffer);
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class GeometryPass: RenderPass
+class DecalPass: RenderPass
 {
    protected:
     GPU gpu;
     GBuffer gbuffer;
-    GeometryShader geometryShader;
+    DecalShader decalShader;
+    SDL_GPUColorTargetDescription[4] colorTargetsDescription;
+    SDL_GPUColorTargetInfo[4] colorTargets;
+    SDL_GPUDepthStencilTargetInfo depthStencilTarget;
     
    public:
     this(Renderer renderer, GBuffer gbuffer)
@@ -238,11 +220,11 @@ class GeometryPass: RenderPass
         super(renderer);
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
-        geometryShader = New!GeometryShader(gpu, this);
+        decalShader = New!DecalShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = geometryShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = geometryShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = decalShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = decalShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[3] vbDescriptions;
@@ -288,13 +270,65 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
-        pipelineCreateInfo.target_info.num_color_targets = gbuffer.colorTargetsDescription.length;
-        pipelineCreateInfo.target_info.color_target_descriptions = gbuffer.colorTargetsDescription.ptr;
+        SDL_GPUColorTargetBlendState blendState = {
+            src_color_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            color_blend_op: SDL_GPU_BLENDOP_ADD,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            alpha_blend_op: SDL_GPU_BLENDOP_ADD,
+            color_write_mask: 0,
+            enable_blend: true,
+            enable_color_write_mask: false
+        };
+        
+        // Color target 0 - color buffer
+        colorTargetsDescription[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[0].blend_state = blendState;
+        colorTargets[0].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargets[0].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargets[0].texture = gbuffer.colorBuffer;
+        
+        // Target 1 - normal buffer
+        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[1].blend_state = blendState;
+        colorTargets[1].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargets[1].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargets[1].texture = gbuffer.normalBuffer;
+        
+        // Target 2 - roughness/metallic buffer
+        colorTargetsDescription[2].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[2].blend_state = blendState;
+        colorTargets[2].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargets[2].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
+        
+        // Target 3 - emission buffer
+        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[3].blend_state = blendState;
+        colorTargets[3].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargets[3].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargets[3].texture = gbuffer.emissionBuffer;
+        
+        // Depth/stencil target
+        depthStencilTarget.clear_depth = 1.0f;
+        depthStencilTarget.load_op = SDL_GPU_LOADOP_LOAD;
+        depthStencilTarget.store_op = SDL_GPU_STOREOP_STORE;
+        depthStencilTarget.stencil_load_op = SDL_GPU_LOADOP_LOAD;
+        depthStencilTarget.stencil_store_op = SDL_GPU_STOREOP_STORE;
+        depthStencilTarget.cycle = false;
+        depthStencilTarget.clear_stencil = 0;
+        depthStencilTarget.mip_level = 0;
+        depthStencilTarget.layer = 0;
+        depthStencilTarget.texture = gbuffer.depthBuffer;
+        
+        pipelineCreateInfo.target_info.num_color_targets = colorTargetsDescription.length;
+        pipelineCreateInfo.target_info.color_target_descriptions = colorTargetsDescription.ptr;
         pipelineCreateInfo.target_info.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         pipelineCreateInfo.target_info.has_depth_stencil_target = true;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_BACK;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
         pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
         pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
         pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
@@ -303,15 +337,15 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
         
         pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
-        pipelineCreateInfo.depth_stencil_state.enable_depth_test = true;
-        pipelineCreateInfo.depth_stencil_state.enable_depth_write = true;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
         pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetsInfo = gbuffer.colorTargetsInfo.ptr;
-        numColorTargets = cast(uint)gbuffer.colorTargetsInfo.length;
-        depthStencilTargetInfo = &gbuffer.depthStencilTargetInfo;
+        colorTargetsInfo = colorTargets.ptr;
+        numColorTargets = colorTargets.length; // color, normal, roughness-metallic, emission
+        depthStencilTargetInfo = &depthStencilTarget;
         enableDepthTarget = true;
     }
     
@@ -322,16 +356,18 @@ class GeometryPass: RenderPass
         
         beginPass();
         
+        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        
         foreach(entity; state.scene.entities)
         {
-            if (!entity.isDecal && entity.drawable)
+            if (entity.isDecal && entity.drawable)
             {
                 state.entity = entity;
                 if (entity.material)
                     state.material = entity.material;
                 else
                     state.material = renderer.defaultMaterial;
-                geometryShader.bindParameters(state);
+                decalShader.bindParameters(state);
                 entity.drawable.render(state);
             }
         }

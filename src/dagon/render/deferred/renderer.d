@@ -40,6 +40,7 @@ import dagon.render.renderer;
 import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.csm;
 import dagon.render.deferred.passes.geometry;
+import dagon.render.deferred.passes.decal;
 import dagon.render.deferred.passes.ssao;
 import dagon.render.deferred.passes.ssaodenoise;
 import dagon.render.deferred.passes.ambient;
@@ -57,6 +58,7 @@ class DeferredRenderer: Renderer
     PostProcessingContext ppContext;
     CSMPass csmPass;
     GeometryPass geometryPass;
+    DecalPass decalPass;
     SSAOPass ssaoPass;
     SSAODenoisePass ssaoDenoisePass;
     AmbientPass ambientPass;
@@ -75,7 +77,7 @@ class DeferredRenderer: Renderer
         
         csmPass = New!CSMPass(this, gbuffer);
         geometryPass = New!GeometryPass(this, gbuffer);
-        // TODO: decal pass
+        decalPass = New!DecalPass(this, gbuffer);
         ssaoPass = New!SSAOPass(this, gbuffer);
         ssaoDenoisePass = New!SSAODenoisePass(this, gbuffer);
         ambientPass = New!AmbientPass(this, gbuffer);

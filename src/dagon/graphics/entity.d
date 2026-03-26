@@ -82,6 +82,7 @@ class Entity: Owner, Updateable
     bool castShadow = true;
     bool receiveDecals = true;
     bool dynamic = false;
+    bool isDecal = false;
     bool transformationValid = false;
     bool modelMatricesValid = false;
     
