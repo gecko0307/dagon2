@@ -389,7 +389,7 @@ class EventManager: Owner
     GameInputDevice[MAX_GAME_INPUT_DEVICES] gameInputDevices;
     
     /// Number of recognized gamepads/joysticks.
-    uint numGameInputDevices = 0;
+    //uint numGameInputDevices = 0;
     
     /// Get currently opened SDL gamepad by device index.
     SDL_Gamepad* gamepad(uint deviceIndex)
@@ -485,8 +485,6 @@ class EventManager: Owner
         if (exists("gamecontrollerdb.txt"))
             SDL_AddGamepadMappingsFromFile("gamecontrollerdb.txt");
         
-        //numGameInputDevices = SDL_NumJoysticks();
-        
         //inputManager = New!InputManager(this);
         
         messageBroker = New!MessageBroker(this);
@@ -500,6 +498,8 @@ class EventManager: Owner
         */
         
         //tmpHeap = New!Arena(4 * 1024, this);
+        
+        SDL_SetGamepadEventsEnabled(true);
         
         lastTime = SDL_GetTicks();
     }
@@ -604,66 +604,71 @@ class EventManager: Owner
      * Params:
      *   deviceIndex = The device index to open.
      */
-    /*
     GameInputDevice* gameInputDeviceOpen(uint deviceIndex)
     {
         gameInputDeviceClose(deviceIndex);
         GameInputDevice* device = &gameInputDevices[deviceIndex];
         device.index = deviceIndex;
         
-        if (SDL_IsGameController(deviceIndex))
+        if (SDL_IsGamepad(deviceIndex))
         {
-            device.type = GameInputDeviceType.Controller;
-            device.controller = SDL_GameControllerOpen(deviceIndex);
-            auto name = SDL_GameControllerName(device.controller);
+            device.type = GameInputDeviceType.Gamepad;
+            device.gamepad = SDL_OpenGamepad(deviceIndex);
+            
+            auto name = SDL_GetGamepadName(device.gamepad);
             if (name)
             {
                 device.name = name.to!string;
-                logInfo("Game controller: ", device.name);
+                logInfo("Gamepad: ", device.name);
             }
             
-            if (SDL_GameControllerMapping(device.controller))
+            if (SDL_GetGamepadMapping(device.gamepad))
                 device.mappingPresent = true;
             else
             {
                 device.mappingPresent = false;
-                logWarning("No mapping found for controller!");
+                logWarning("No mapping found for gamepad ", deviceIndex);
             }
             
-            SDL_GameControllerEventState(SDL_ENABLE);
-            device.joystick = SDL_GameControllerGetJoystick(device.controller);
-            device.axisThreshold = controllerAxisThreshold;
-            device.hasRumble = cast(bool)SDL_GameControllerHasRumble(device.controller);
-            device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
+            device.joystick = SDL_GetGamepadJoystick(device.gamepad);
+            device.axisThreshold = gamepadAxisThreshold;
+            
+            SDL_PropertiesID gamepadProps = SDL_GetGamepadProperties(device.gamepad);
+            device.hasRumble = SDL_GetBooleanProperty(gamepadProps, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false);
+            
+            //device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
         }
         else
         {
             device.type = GameInputDeviceType.Joystick;
-            device.joystick = SDL_JoystickOpen(deviceIndex);
-            auto name = SDL_JoystickName(device.joystick);
+            device.joystick = SDL_OpenJoystick(deviceIndex);
+
+            auto name = SDL_GetJoystickName(device.joystick);
             if (name)
             {
                 device.name = name.to!string;
                 logInfo("Joystick: ", device.name);
             }
-            device.controller = null;
-            device.axisThreshold = controllerAxisThreshold;
+            
+            device.gamepad = null;
+            device.axisThreshold = gamepadAxisThreshold;
             device.mappingPresent = false;
+            device.hasRumble = false;
+            /*
             device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
             if (device.haptic)
                 device.hasRumble = (SDL_HapticRumbleInit(device.haptic) != 0);
             else
                 device.hasRumble = false;
+            */
         }
         
         return device;
     }
-    */
     
     /**
      * Closes the game controller or joystick.
      */
-    /*
     void gameInputDeviceClose(uint deviceIndex)
     {
         GameInputDevice* device = &gameInputDevices[deviceIndex];
@@ -671,29 +676,25 @@ class EventManager: Owner
         if (device.type == GameInputDeviceType.Joystick)
         {
             if (device.joystick)
-                SDL_JoystickClose(device.joystick);
+                SDL_CloseJoystick(device.joystick);
         }
-        else if (device.type == GameInputDeviceType.Controller)
+        else if (device.type == GameInputDeviceType.Gamepad)
         {
-            if (device.controller)
-                SDL_GameControllerClose(device.controller);
+            if (device.gamepad)
+                SDL_CloseGamepad(device.gamepad);
         }
     }
-    */
     
     /// Returns true if a game controller is available.
-    /*
-    bool gameControllerAvailable()
+    bool gamepadAvailable()
     {
         foreach(ref device; gameInputDevices)
-            if (device.controller !is null)
+            if (device.gamepad !is null)
                 return true;
         return false;
     }
-    */
     
     /// Returns true if a joystick is available.
-    /*
     bool joystickAvailable()
     {
         foreach(ref device; gameInputDevices)
@@ -701,7 +702,6 @@ class EventManager: Owner
                 return true;
         return false;
     }
-    */
     
     /**
      * Gets the normalized value of a game controller axis.
@@ -1065,32 +1065,26 @@ class EventManager: Owner
                     break;
                 */
                 
-                /*
                 case SDL_EVENT_GAMEPAD_ADDED:
-                    e = Event(EventType.ControllerAdd);
-                    e.deviceIndex = event.cdevice.which;
-                    if (event.cdevice.which < MAX_CONTROLLERS)
+                    e = Event(EventType.GamepadAdd);
+                    e.deviceIndex = event.jdevice.which;
+                    if (e.deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        auto device = gameInputDeviceOpen(event.cdevice.which);
+                        auto device = gameInputDeviceOpen(e.deviceIndex);
                         e.deviceType = device.type;
                     }
                     addEvent(e);
-                    numGameInputDevices = SDL_NumJoysticks();
                     break;
-                */
                 
-                /*
                 case SDL_EVENT_GAMEPAD_REMOVED:
-                    e = Event(EventType.ControllerRemove);
-                    e.deviceIndex = event.cdevice.which;
-                    if (event.cdevice.which < MAX_CONTROLLERS)
+                    e = Event(EventType.GamepadRemove);
+                    e.deviceIndex = event.jdevice.which;
+                    if (e.deviceIndex < MAX_GAME_INPUT_DEVICES)
                     {
-                        gameInputDeviceClose(event.cdevice.which);
+                        gameInputDeviceClose(e.deviceIndex);
                     }
                     addEvent(e);
-                    numGameInputDevices = SDL_NumJoysticks();
                     break;
-                */
                 
                 case SDL_EVENT_WINDOW_RESIZED:
                     windowWidth = event.window.data1;
