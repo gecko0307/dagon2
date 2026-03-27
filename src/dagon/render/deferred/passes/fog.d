@@ -54,6 +54,8 @@ struct FogShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
+    Color4f fogColor;
+    Vector4f fogParams;
 }
 
 class FogShader: Shader
@@ -82,6 +84,8 @@ class FogShader: Shader
         
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
+        fsUBO.fogColor = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.fogParams = Vector4f(0.0f, 100.0f, 0.0f, 1.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -93,9 +97,13 @@ class FogShader: Shader
         
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
+        fsUBO.fogColor = scene.fogColor;
+        fsUBO.fogColor.a = scene.fogDensity;
+        fsUBO.fogParams = Vector4f(scene.fogStart, scene.fogEnd, scene.groundFogDensity, scene.fogEnergy);
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.roughnessMetallicBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

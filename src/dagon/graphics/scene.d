@@ -50,6 +50,13 @@ class Scene: Owner
     bool brdfLUTEnabled = true;
     float ambientEnergy = 1.0f;
     
+    Color4f fogColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+    float fogEnergy = 1.0f;
+    float fogStart = 0.0f;
+    float fogEnd = 100.0f;
+    float fogDensity = 1.0f;
+    float groundFogDensity = 0.0f;
+    
     this(GPU gpu, Owner owner)
     {
         super(owner);

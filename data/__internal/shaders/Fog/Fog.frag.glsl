@@ -12,13 +12,21 @@ vec3 unproject(mat4 invProjMatrix, vec3 ndc)
     return res.xyz / res.w;
 }
 
+vec3 toLinear(vec3 v)
+{
+    return pow(v, vec3(2.2));
+}
+
 layout(set = 2, binding = 0) uniform sampler2D depthBuffer;
-layout(set = 2, binding = 1) uniform sampler2D roughnessMetallicBuffer;
+layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
+layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;
+    vec4 fogColor;
+    vec4 fogParams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -32,22 +40,21 @@ void main()
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
+    float linearDepth = abs(eyePos.z);
+    
+    float fogStart = ubo.fogParams.x;
+    float fogEnd = ubo.fogParams.y;
+    float groundFogDensity = ubo.fogParams.z;
+    float fogEnergy = ubo.fogParams.w;
     
     float shadingMask = texture(roughnessMetallicBuffer, texCoords).a;
     
-    const float fogStart = 0.0;
-    const float fogEnd = 100.0;
-    
-    const float fogEnergy = 2.0;
-    const float fogDensity = 0.5;
-    const vec3 fogColor = vec3(1.0, 1.0, 1.0);
-    
     float groundFog = 1.0 - clamp(worldPos.y, 0.0, 1.0);
-    groundFog = groundFog * groundFog * fogDensity;
+    groundFog = groundFog * groundFog;
     
-    float linearDepth = abs(eyePos.z);
+    float atmosphericFogDensity = ubo.fogColor.a;
     float atmosphericFog = clamp((linearDepth - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-    //radiance = mix(toLinear(fogColor.rgb), radiance, fogFactor);
     
-    outColor = vec4(fogColor, shadingMask * clamp(groundFog + atmosphericFog, 0.0, 1.0));
+    float alpha = shadingMask * clamp(groundFog * groundFogDensity + atmosphericFog * atmosphericFogDensity, 0.0, 1.0);
+    outColor = vec4(toLinear(ubo.fogColor.rgb) * fogEnergy, alpha);
 }

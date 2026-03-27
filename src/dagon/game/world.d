@@ -47,21 +47,19 @@ class World: EventListener
     Scene scene;
     bool recalculateMatrices = true;
     
-    ImageConversionOptions defaultImageConversionOptions = {
-        compressionFormat: TextureCompressionFormat.None
-    };
-    
-    TextureCreationOptions defaultTextureCreationOptions = {
-        generateMipmaps: true,
-        repeatUV: true,
-        anisotropicFiltering: true
-    };
+    ImageConversionOptions defaultImageConversionOptions;
+    TextureCreationOptions defaultTextureCreationOptions;
     
     this(BaseGame baseGame)
     {
         super(baseGame.eventManager, baseGame);
         this.baseGame = baseGame;
         this.gpu = baseGame.gpu;
+        
+        defaultImageConversionOptions.compressionFormat = TextureCompressionFormat.None;
+        defaultTextureCreationOptions.generateMipmaps = true;
+        defaultTextureCreationOptions.repeatUV = true;
+        defaultTextureCreationOptions.anisotropicFiltering = true;
         
         // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
     }
