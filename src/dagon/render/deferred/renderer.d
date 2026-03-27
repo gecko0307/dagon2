@@ -87,6 +87,8 @@ class DeferredRenderer: Renderer
         sunLightPass = New!SunLightPass(this, gbuffer);
         // TODO: light volume pass
         fogPass = New!FogPass(this, gbuffer);
+        // TODO: forward pass
+        // TODO: particles pass
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
