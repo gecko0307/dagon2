@@ -58,6 +58,15 @@ class JoltCharacterController: EntityController
     
     float gravity = -30.0f;
     
+    JPH_ExtendedUpdateSettings extendedUpdateSettings = {
+        stickToFloorStepDown: Vector3f(0.0f, -0.1f, 0.0f), //-0.01f
+        walkStairsStepUp: Vector3f(0.0f, 0.4f, 0.0f),
+        walkStairsMinStepForward: 0.02f,
+        walkStairsStepForwardTest: 0.15f,
+        walkStairsCosAngleForwardContact: cos(degtorad(75.0f)),
+        walkStairsStepDownExtra: Vector3f(0.0f, 0.0f, 0.0f)
+    };
+    
    protected:
     Vector3f movementVelocity = Vector3f(0.0f, 0.0f, 0.0f);
     float jumpSpeed = 10.0f;
@@ -167,14 +176,6 @@ class JoltCharacterController: EntityController
         
         JPH_CharacterVirtual_SetLinearVelocity(characterVirtual, &velocity);
         
-        JPH_ExtendedUpdateSettings extendedUpdateSettings = {
-            stickToFloorStepDown: Vector3f(0.0f, -0.01f, 0.0f),
-            walkStairsStepUp: Vector3f(0.0f, 0.4f, 0.0f),
-            walkStairsMinStepForward: 0.02f,
-            walkStairsStepForwardTest: 0.15f,
-            walkStairsCosAngleForwardContact: cos(degtorad(75.0f)),
-            walkStairsStepDownExtra: Vector3f(0.0f, 0.0f, 0.0f)
-        };
         JPH_CharacterVirtual_ExtendedUpdate(
             characterVirtual,
             t.delta,
@@ -189,8 +190,10 @@ class JoltCharacterController: EntityController
             translationMatrix(entity.position) *
             entity.rotation.toMatrix4x4;
         entity.invTransformation = entity.transformation.inverse;
-        
-        //entity.prevModelMatrix = entity.modelMatrix;
+    }
+    
+    override void postUpdate(Time t)
+    {
         entity.modelMatrix = entity.transformation;
         entity.invModelMatrix = entity.invTransformation;
     }
