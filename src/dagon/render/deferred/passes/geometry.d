@@ -320,6 +320,7 @@ class GeometryPass: RenderPass
         if (state.scene is null)
             return;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "GEOMETRY");
         beginPass();
         
         foreach(entity; state.scene.entities)
@@ -337,5 +338,6 @@ class GeometryPass: RenderPass
         }
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }

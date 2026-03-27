@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.deferred.passes.selfillumination;
+module dagon.render.deferred.passes.fog;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -38,27 +38,29 @@ import dagon.core.crashhandler;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
+import dagon.graphics.csm;
 import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
-struct SelfIlluminationShaderVertexUniformBuffer
+struct FogShaderVertexUniformBuffer
 {
     // TODO
 }
 
-struct SelfIlluminationShaderFragmentUniformBuffer
+struct FogShaderFragmentUniformBuffer
 {
-    // TODO
+    Matrix4x4f invViewMatrix;
+    Matrix4x4f invProjectionMatrix;
 }
 
-class SelfIlluminationShader: Shader
+class FogShader: Shader
 {
    protected:
-    SelfIlluminationShaderVertexUniformBuffer vsUBO;
-    SelfIlluminationShaderFragmentUniformBuffer fsUBO;
+    FogShaderVertexUniformBuffer vsUBO;
+    FogShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -66,17 +68,20 @@ class SelfIlluminationShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("SelfIllumination.vert.glsl", "data/__internal/shaders/SelfIllumination/SelfIllumination.vert.glsl",
+        vertexModule.create("Fog.vert.glsl", "data/__internal/shaders/Fog/Fog.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("SelfIllumination.frag.glsl", "data/__internal/shaders/SelfIllumination/SelfIllumination.frag.glsl",
+        fragmentModule.create("Fog.frag.glsl", "data/__internal/shaders/Fog/Fog.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create SelfIlluminationShader");
+            exitWithError("Failed to create FogShader");
         }
+        
+        fsUBO.invViewMatrix = Matrix4x4f.identity;
+        fsUBO.invProjectionMatrix = Matrix4x4f.identity;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -86,18 +91,22 @@ class SelfIlluminationShader: Shader
         auto scene = state.scene;
         auto sun = scene.sun;
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.emissionBuffer);
+        fsUBO.invViewMatrix = view.invViewMatrix;
+        fsUBO.invProjectionMatrix = view.invProjectionMatrix;
+        
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.roughnessMetallicBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
-        //pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class SelfIlluminationPass: RenderPass
+class FogPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    SelfIlluminationShader selfIlluminationShader;
+    FogShader fogShader;
     
     SDL_GPUColorTargetDescription colorTargetDescription;
     SDL_GPUColorTargetInfo colorTargetInfo;
@@ -107,11 +116,11 @@ class SelfIlluminationPass: RenderPass
         super(renderer);
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
-        selfIlluminationShader = New!SelfIlluminationShader(gpu, this);
+        fogShader = New!FogShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = selfIlluminationShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = selfIlluminationShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = fogShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = fogShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -147,11 +156,11 @@ class SelfIlluminationPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetBlendState blendState = {
-            src_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            src_color_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
             color_write_mask: 0,
             enable_blend: true,
@@ -191,10 +200,6 @@ class SelfIlluminationPass: RenderPass
         enableDepthTarget = false;
     }
     
-    ~this()
-    {
-    }
-    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
@@ -202,7 +207,7 @@ class SelfIlluminationPass: RenderPass
         
         colorTargetInfo.texture = gbuffer.radianceBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SELF-ILLUMINATION");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "FOG");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -213,7 +218,7 @@ class SelfIlluminationPass: RenderPass
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(null, null);
         state.entity = null;
-        selfIlluminationShader.bindParameters(state);
+        fogShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         

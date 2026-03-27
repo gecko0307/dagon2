@@ -361,6 +361,7 @@ class DecalPass: RenderPass
         if (state.scene is null)
             return;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "DECAL");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -381,5 +382,6 @@ class DecalPass: RenderPass
         }
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }

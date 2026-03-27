@@ -266,6 +266,7 @@ class AmbientPass: RenderPass
         
         colorTargetInfo.texture = gbuffer.radianceBuffer;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "AMBIENT");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -282,5 +283,6 @@ class AmbientPass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }
