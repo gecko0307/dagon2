@@ -219,7 +219,7 @@ class DecalPass: RenderPass
     DecalShader decalShader;
     SDL_GPUColorTargetDescription[4] colorTargetsDescription;
     SDL_GPUColorTargetInfo[4] colorTargets;
-    SDL_GPUDepthStencilTargetInfo depthStencilTarget;
+    //SDL_GPUDepthStencilTargetInfo depthStencilTarget;
     
    public:
     this(Renderer renderer, GBuffer gbuffer)
@@ -317,22 +317,9 @@ class DecalPass: RenderPass
         colorTargets[3].store_op = SDL_GPU_STOREOP_STORE;
         colorTargets[3].texture = gbuffer.emissionBuffer;
         
-        // Depth/stencil target
-        depthStencilTarget.clear_depth = 1.0f;
-        depthStencilTarget.load_op = SDL_GPU_LOADOP_LOAD;
-        depthStencilTarget.store_op = SDL_GPU_STOREOP_STORE;
-        depthStencilTarget.stencil_load_op = SDL_GPU_LOADOP_LOAD;
-        depthStencilTarget.stencil_store_op = SDL_GPU_STOREOP_STORE;
-        depthStencilTarget.cycle = false;
-        depthStencilTarget.clear_stencil = 0;
-        depthStencilTarget.mip_level = 0;
-        depthStencilTarget.layer = 0;
-        depthStencilTarget.texture = gbuffer.depthBuffer;
-        
         pipelineCreateInfo.target_info.num_color_targets = colorTargetsDescription.length;
         pipelineCreateInfo.target_info.color_target_descriptions = colorTargetsDescription.ptr;
-        pipelineCreateInfo.target_info.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
-        pipelineCreateInfo.target_info.has_depth_stencil_target = true;
+        pipelineCreateInfo.target_info.has_depth_stencil_target = false;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
         pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
@@ -352,14 +339,19 @@ class DecalPass: RenderPass
         
         colorTargetsInfo = colorTargets.ptr;
         numColorTargets = colorTargets.length; // color, normal, roughness-metallic, emission
-        depthStencilTargetInfo = &depthStencilTarget;
-        enableDepthTarget = true;
+        depthStencilTargetInfo = null; //&depthStencilTarget;
+        enableDepthTarget = false;
     }
     
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
             return;
+        
+        colorTargets[0].texture = gbuffer.colorBuffer;
+        colorTargets[1].texture = gbuffer.normalBuffer;
+        colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
+        colorTargets[3].texture = gbuffer.emissionBuffer;
         
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "DECAL");
         beginPass();
