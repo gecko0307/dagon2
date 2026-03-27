@@ -92,7 +92,7 @@ void main()
     // Normal
     vec3 fdx = dFdx(eyePos);
     vec3 fdy = dFdy(eyePos);
-    vec3 N = normalize(cross(fdx, fdy));
+    vec3 N = -normalize(cross(fdx, fdy));
     
     // Texcoord (go from -1..1 to 0..1)
     vec2 texCoords = objPos.xz * 0.5 + 0.5;
