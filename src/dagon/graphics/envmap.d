@@ -125,7 +125,7 @@ class CubemapGeneratorShader: Shader
     }
     
     /**
-     * Binds shader parameters and input textures for rendering.
+     * Binds shader parameters to the GPU pipeline.
      *
      * Params:
      *   state = Pointer to the current graphics state.

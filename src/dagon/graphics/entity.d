@@ -53,42 +53,101 @@ import dagon.core.updateable;
 import dagon.graphics.drawable;
 import dagon.graphics.material;
 
+/// Layer categorization for entities in the scene stack.
 enum EntityLayer
 {
+    /// Standard scene objects.
     Scene = 0,
+    /// Background objects rendered first.
     Background = 1,
+    /// Foreground objects rendered last.
     Foreground = 2
 }
 
+/**
+ * Scene graph node with local and world transformations.
+ *
+ * Entities can have parent-child relationships and optionally a controller.
+ * This class tracks world/model matrices for rendering and supports movement,
+ * rotation, scaling, and hierarchical transformation updates.
+ */
 class Entity: Owner, Updateable
 {
+    /// Array of child entities.
     Array!Entity children;
+
+    /// Parent entity (null for root).
     Entity parent;
+
+    /// Optional controller that drives transformations.
     EntityController controller;
+
+    /// Local transformation matrix from position/rotation/scale.
     Matrix4x4f transformation;
+
+    /// Inverse of local transformation.
     Matrix4x4f invTransformation;
+
+    /// Local-to-world matrix (local combined with parent chains).
     Matrix4x4f modelMatrix;
+
+    /// Inverse of `modelMatrix`.
     Matrix4x4f invModelMatrix;
+
+    /// Previous frame `modelMatrix`, for temporal effects like motion blur.
     Matrix4x4f prevModelMatrix;
+
+    /// Local position.
     Vector3f position;
+
+    /// Local orientation.
     Quaternionf rotation;
+
+    /// Local scale.
     Vector3f scaling;
+
+    /// Optional drawable object for rendering.
     Drawable drawable;
+
+    /// Optional material for rendering.
     Material material;
+
+    /// Render layer assignment.
     EntityLayer layer;
+
+    /// Base visibility alpha.
     float opacity = 1.0f;
+
+    /// Motion blur factor in [0, 1].
     float motionBlurMask = 1.0f;
+
+    /// Visibility flag.
     bool visible = true;
+
+    /// Cast shadows flag.
     bool castShadow = true;
+
+    /// Receive deferred decals.
     bool receiveDecals = true;
+
+    /// If true, transforms are recomputed each frame.
     bool dynamic = false;
+
+    /// Mark entity as decal object.
     bool isDecal = false;
+
+    /// Indicates local transform matrix is fresh and does not need recompute.
     bool transformationValid = false;
+
+    /// Indicates modelMatrix and invModelMatrix are up to date.
     bool modelMatricesValid = false;
-    
+
+    /// Create a new entity owned by `owner`.
     this(Owner owner)
     {
         super(owner);
+        transformation = Matrix4x4f.identity;
+        invTransformation = Matrix4x4f.identity;
         modelMatrix = Matrix4x4f.identity;
         invModelMatrix = Matrix4x4f.identity;
         prevModelMatrix = Matrix4x4f.identity;
@@ -97,11 +156,16 @@ class Entity: Owner, Updateable
         scaling = Vector3f(1.0f, 1.0f, 1.0f);
     }
     
+    /// Release child entity array and other resources.
     ~this()
     {
         children.free();
     }
     
+    /**
+     * Attach a child entity to this node.
+     * The child inherits dynamic state and will be updated in `postUpdate``.
+     */
     void addChild(Entity child)
     {
         child.parent = this;
@@ -110,11 +174,13 @@ class Entity: Owner, Updateable
         children.append(child);
     }
     
+    /// Updates transformation using initial time.
     void update()
     {
         update(Time(0.0, 0.0));
     }
     
+    /// Updates entity state with a given time.
     void update(Time t)
     {
         if (controller)
@@ -134,14 +200,14 @@ class Entity: Owner, Updateable
         }
     }
     
-    /// Recalculates modelMatrix and invModelMatrix for the entity and its children.
+    /// Recalculates `modelMatrix` and `invModelMatrix` for the entity and its children. Should be called after `update`.
     void postUpdate(Time t)
     {
-        prevModelMatrix = modelMatrix;
-        
         if (modelMatricesValid)
             return;
         
+        prevModelMatrix = modelMatrix;
+
         if (controller)
         {
             controller.postUpdate(t);
@@ -168,13 +234,13 @@ class Entity: Owner, Updateable
         transformationValid = !dynamic;
     }
     
-    /// Returns the absolute position of the entity.
+    /// Returns the world-space position of the entity.
     Vector3f positionAbsolute()
     {
         return modelMatrix.translation;
     }
     
-    /// Returns the absolute rotation of the entity.
+    /// Returns the world-space rotation of the entity.
     Quaternionf rotationAbsolute()
     {
         if (parent)
@@ -183,43 +249,49 @@ class Entity: Owner, Updateable
             return rotation;
     }
     
+    /// Local forward vector.
     Vector3f direction()
     {
         return transformation.forward;
     }
     
+    /// World-space forward vector.
     Vector3f directionAbsolute()
     {
         return modelMatrix.forward;
     }
     
+    /// Local right vecto.
     Vector3f right()
     {
         return transformation.right;
     }
     
+    /// World-space right vector.
     Vector3f rightAbsolute()
     {
         return modelMatrix.right;
     }
     
+    /// Local up vector.
     Vector3f up()
     {
         return transformation.up;
     }
     
+    /// World-space up vector.
     Vector3f upAbsolute()
     {
         return modelMatrix.up;
     }
     
-    /// Translates the entity by the given vector.
+    /// Translates the entity by the given offset.
     void translate(Vector3f v)
     {
         position += v;
     }
 
-    /// Translates the entity by the given vector components.
+    /// Translates the entity by the given offset as separate components.
     void translate(float vx, float vy, float vz)
     {
         position += Vector3f(vx, vy, vz);
@@ -243,7 +315,7 @@ class Entity: Owner, Updateable
         position += transformation.up * speed;
     }
     
-    /// Rotates the entity by the given Euler angles (degrees).
+    /// Rotates the entity by the given Euler angles (in degrees).
     void rotate(Vector3f v)
     {
         auto r =
@@ -253,7 +325,7 @@ class Entity: Owner, Updateable
         rotation *= r;
     }
     
-    /// Rotates the entity by the given Euler angles (degrees).
+    /// Rotates the entity by the given Euler angles (in degrees).
     void rotate(float x, float y, float z)
     {
         rotate(Vector3f(x, y, z));
@@ -290,10 +362,18 @@ class Entity: Owner, Updateable
     }
 }
 
+/**
+ * Base class for user-defined entity transformation controllers.
+ * Subclasses should override `update` / `postUpdate` to modify entity transforms.
+ */
 abstract class EntityController: EventListener, Updateable
 {
+    /// Controlled entity.
     Entity entity;
     
+    /**
+     * Attach controller to an entity and register with event manager.
+     */
     this(EventManager eventManager, Entity entity)
     {
         super(eventManager, entity);
@@ -301,17 +381,29 @@ abstract class EntityController: EventListener, Updateable
         entity.controller = this;
     }
     
+    /**
+     * Called at the start of each update step.
+     * This method should update entity's local transformation
+     * (position, rotation, scale, transformation, invTransformation).
+     */
     void update(Time t)
     {
         //
     }
     
+    /**
+     * Called in the end of each update step after all local transforms are recalculated.
+     * This method should update entity's `modelMatrix` and `invModelMatrix`.
+     */
     void postUpdate(Time t)
     {
         //
     }
 }
 
+/**
+ * Controller that mirrors world position from another target entity.
+ */
 class PositionSync: EntityController
 {
     Entity targetEntity;

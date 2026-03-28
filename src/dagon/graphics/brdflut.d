@@ -24,6 +24,17 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * BRDF LUT generator.
+ *
+ * dagon.graphics.brdflut module provides classes to create a BRDF lookup texture
+ * for PBR workflow.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.graphics.brdflut;
 
 import dlib.core.memory;
@@ -45,15 +56,21 @@ import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 
+/// Uniform buffer object for BRDF LUT vertex shader stage.
 struct BRDFLUTShaderVertexUniformBuffer
 {
 }
 
+/// Uniform buffer object for BRDF LUT fragment shader stage.
 struct BRDFLUTShaderFragmentUniformBuffer
 {
+    /// Vector that stores output resolution in pixels in its x, y components.
     Vector4f resolution;
 }
 
+/**
+ * Shader for BRDF LUT creation.
+ */
 class BRDFLUTShader: Shader
 {
    protected:
@@ -61,6 +78,7 @@ class BRDFLUTShader: Shader
     BRDFLUTShaderFragmentUniformBuffer fsUBO;
     
    public:
+    /// Requested output resolution for the lookup texture.
     Vector2f resolution = Vector2f(0.0f, 0.0f);
 
     this(GPU gpu, Owner owner)
@@ -83,6 +101,12 @@ class BRDFLUTShader: Shader
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
+    /**
+     * Binds shader parameters to the GPU pipeline.
+     *
+     * Params:
+     *   state = Pointer to the current graphics state.
+     */
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
@@ -95,6 +119,9 @@ class BRDFLUTShader: Shader
     }
 }
 
+/**
+ * Render pass that draws a full-screen quad into a texture using the BRDF LUT shader.
+ */
 class BRDFLUTPass: RenderPass
 {
     BRDFLUTShader brdflutShader;
@@ -206,16 +233,24 @@ class BRDFLUTPass: RenderPass
     }
 }
 
+/**
+ * High-level interface to generate BRDF LUT textures.
+ */
 class BRDFLUTRenderer: Renderer
 {
     BRDFLUTPass brdflutPass;
     
+    /// Initializes BRDF LUT renderer with GPU and render target format.
     this(GPU gpu, EventManager eventManager, SDL_GPUTextureFormat format)
     {
         super(gpu, eventManager);
         brdflutPass = New!BRDFLUTPass(this, format);
     }
     
+    /**
+     * Generates BRDF LUT and store result in `outputTexture`.
+     * The passed texture must be already allocated and have the desired size.
+     */
     void generateTexture(Texture outputTexture)
     {
         view.resize(outputTexture.buffer.size.width, outputTexture.buffer.size.height);

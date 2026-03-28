@@ -58,33 +58,6 @@ import dagon.graphics.shadowmap;
 import dagon.graphics.camera;
 import dagon.graphics.light;
 
-Matrix!(T,4) orthoMatrixVulkan(T)(T l, T r, T b, T t, T n, T f)
-{
-    auto res = Matrix!(T,4).identity;
-
-    res.arrayof[0]  = 2.0 / (r - l);
-    res.arrayof[1]  = 0.0;
-    res.arrayof[2]  = 0.0;
-    res.arrayof[3]  = 0.0;
-
-    res.arrayof[4]  = 0.0;
-    res.arrayof[5]  = 2.0 / (b - t);
-    res.arrayof[6]  = 0.0;
-    res.arrayof[7]  = 0.0;
-
-    res.arrayof[8]  = 0.0;
-    res.arrayof[9]  = 0.0;
-    res.arrayof[10] = 1.0 / (n - f);
-    res.arrayof[11] = 0.0;
-
-    res.arrayof[12] = -(r + l) / (r - l);
-    res.arrayof[13] = -(b + t) / (b - t);
-    res.arrayof[14] = n / (n - f);
-    res.arrayof[15] = 1.0;
-
-    return res;
-}
-
 /**
  * Geometric representation a single shadow area for CSM.
  * Stores projection, view, and shadow matrices, as well as the position
@@ -191,7 +164,7 @@ class ShadowArea: Owner
  */
 class CascadedShadowMap: ShadowMap
 {
-    ///
+    /// GPU object.
     GPU gpu;
     
     /// The camera for which shadows are rendered.
@@ -203,7 +176,7 @@ class CascadedShadowMap: ShadowMap
     /// Layered depth texture for all areas.
     SDL_GPUTexture* depthTexture;
     
-    ///
+    /// Depth texture sampler.
     SDL_GPUSampler* depthSampler;
     
     /// Projection size for each cascade.
@@ -304,8 +277,7 @@ class CascadedShadowMap: ShadowMap
             updateCascadesForCamera(camera);
     }
     
-    ///
-    void updateCascadesForCamera(Camera cam)
+    protected void updateCascadesForCamera(Camera cam)
     {
         Vector3f cameraDirection = -cam.directionAbsolute;
         

@@ -361,7 +361,7 @@ class DecalPass: RenderPass
         
         foreach(entity; state.scene.entities)
         {
-            if (entity.isDecal && entity.drawable)
+            if (entity.visible && entity.isDecal && entity.drawable)
             {
                 state.entity = entity;
                 if (entity.material)
