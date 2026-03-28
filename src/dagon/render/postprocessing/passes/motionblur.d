@@ -74,7 +74,7 @@ class MotionBlurShader: Shader
     float shutterFramerate = 24.0f;
     float time = 0.0f;
     float minDistance = 0.01f;
-    float maxDistance = 0.8f;
+    float maxDistance = 1.0f;
     float offsetRandomCoefficient = 0.2f;
     float radialBlur = 0.0f;
     

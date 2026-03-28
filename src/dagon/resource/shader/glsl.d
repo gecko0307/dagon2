@@ -62,8 +62,7 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
         forward_compatible: false,
         messages:
             GLSLANG_MSG_DEFAULT_BIT | GLSLANG_MSG_DEBUG_INFO_BIT |
-            GLSLANG_MSG_ENHANCED    | GLSLANG_MSG_CASCADING_ERRORS_BIT |
-            GLSLANG_MSG_DEBUG_INFO_BIT,
+            GLSLANG_MSG_ENHANCED    | GLSLANG_MSG_CASCADING_ERRORS_BIT,
         resource: &glslangDefaultResource,
         callbacks: {
             include_local: null,
@@ -120,6 +119,10 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     auto spirPtr = glslang_program_SPIRV_get_ptr(program);
     res.spirv = spirPtr[0..spirSize];
     res.success = true;
+    
+    //glslang_shader_delete(shader);
+    //glslang_program_delete(program);
+    
     return res;
 }
 
