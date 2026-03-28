@@ -203,10 +203,10 @@ class Entity: Owner, Updateable
     /// Recalculates `modelMatrix` and `invModelMatrix` for the entity and its children. Should be called after `update`.
     void postUpdate(Time t)
     {
+        prevModelMatrix = modelMatrix;
+        
         if (modelMatricesValid)
             return;
-        
-        prevModelMatrix = modelMatrix;
 
         if (controller)
         {
