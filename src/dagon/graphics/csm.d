@@ -207,7 +207,7 @@ class CascadedShadowMap: ShadowMap
     SDL_GPUSampler* depthSampler;
     
     /// Projection size for each cascade.
-    float[3] projectionSize = [10, 60, 500];
+    float[3] projectionSize = [10, 30, 400];
     
     /// Near clip plane.
     float zStart = -1000.0f;
