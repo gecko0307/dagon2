@@ -103,7 +103,7 @@ struct ImageConversionOptions
 }
 
 /**
- * Loads an image from an input stream using SDL2_Image.
+ * Loads an image from an input stream using SDL3_Image.
  *
  * Params:
  *   istrm = Input stream containing the image data.

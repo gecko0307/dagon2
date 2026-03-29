@@ -62,22 +62,20 @@ class Cursor: Owner
     {
         super(owner);
         
-        /*
-        surface = loadImageViaSDLImage(istrm);
+        surface = loadImage(istrm);
         if (surface)
         {
             this.hotspotX = hotspotX;
             this.hotspotX = hotspotX;
             cursor = SDL_CreateColorCursor(surface, hotspotX, hotspotY);
         }
-        */
     }
     
     ~this()
     {
-        //if (cursor)
-        //    SDL_FreeCursor(cursor);
-        //if (surface)
-        //    SDL_FreeSurface(surface);
+        if (cursor)
+            SDL_DestroyCursor(cursor);
+        if (surface)
+            SDL_DestroySurface(surface);
     }
 }
