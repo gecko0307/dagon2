@@ -77,6 +77,8 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     uvec4 iparams;
 } ubo;
 
+#define LIGHT_TYPE_AREA_SPHERE 1
+
 layout(location = 0) out vec4 outColor;
 
 const float lightDiffuse = 1.0;
@@ -172,7 +174,12 @@ void main()
     // TODO
     //float shadow = shadowMap(worldPos);
     
-    vec3 radiance = lightRadianceAreaSphere(eyePos, N, E, baseColor, f0_scalar, roughness, metallic, 0.0, 1.0);
+    vec3 radiance;
+    if (ubo.iparams.x == LIGHT_TYPE_AREA_SPHERE)
+        radiance = lightRadianceAreaSphere(eyePos, N, E, baseColor, f0_scalar, roughness, metallic, 0.0, 1.0);
+    // TODO: support other light types
+    else
+        radiance = vec3(0.0, 0.0, 0.0);
     
     outColor = vec4(radiance * shadingMask, 1.0);
 }
