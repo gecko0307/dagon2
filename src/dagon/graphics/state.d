@@ -70,6 +70,7 @@ struct GraphicsState
     Material material;
     Texture brdfLUT;
     bool brdfLUTEnabled = false;
+    bool occlusionEnabled = false;
     
     // TODO: other data
     

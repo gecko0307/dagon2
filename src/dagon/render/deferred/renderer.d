@@ -109,6 +109,7 @@ class DeferredRenderer: Renderer
     {
         // Temporary: currently we only need gamma-correction in tonemapper for FXAA
         tonemappingPass.tonemappingShader.enableGammaCorrection = fxaaPass.active;
+        state.occlusionEnabled = ssaoPass.active;
     }
     
     override void onResize(int width, int height)

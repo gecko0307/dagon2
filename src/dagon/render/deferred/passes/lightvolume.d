@@ -64,6 +64,7 @@ struct LightVolumeShaderFragmentUniformBuffer
     Vector4f lightPosition;
     Color4f lightColor;
     Vector4f lightParams;
+    uint[4] iparams;
 }
 
 class LightVolumeShader: Shader
@@ -123,6 +124,7 @@ class LightVolumeShader: Shader
         fsUBO.lightPosition = lightPositionHmg * pass.view.viewMatrix;
         fsUBO.lightColor = light.color;
         fsUBO.lightParams = Vector4f(light.volumeRadius, light.radius, light.energy, 0.0f);
+        fsUBO.iparams[0] = light.type;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);

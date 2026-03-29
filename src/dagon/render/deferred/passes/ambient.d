@@ -147,8 +147,15 @@ class AmbientShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 6);
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 7, &state.occlusionBuffer);
-        fsUBO.flags[0] |= AmbientTextureFlags.HasOcclusionBuffer;
+        if (state.occlusionEnabled)
+        {
+            pass.bindInputBuffer(PipelineStage.Fragment, 7, &state.occlusionBuffer);
+            fsUBO.flags[0] |= AmbientTextureFlags.HasOcclusionBuffer;
+        }
+        else
+        {
+            pass.bindDefaultTexture(PipelineStage.Fragment, 7);
+        }
         
         pass.bindInputBuffer(PipelineStage.Fragment, 8, &state.velocityBuffer);
         

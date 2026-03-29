@@ -74,6 +74,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     vec4 lightPosition;
     vec4 lightColor;
     vec4 lightParams;
+    uvec4 iparams;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
