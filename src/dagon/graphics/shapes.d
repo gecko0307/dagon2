@@ -38,15 +38,20 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.graphics.shapes;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
+import dlib.container.array;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.graphics.state;
 import dagon.graphics.drawable;
 import dagon.graphics.mesh;
+
+private enum HALF_PI = PI * 0.5f;
 
 /**
  * A mesh representing a grid plane in the XZ plane.
@@ -210,6 +215,181 @@ class ShapeBox: Mesh
     this(float hw, float hh, float hd, GPU gpu, Owner owner)
     {
         this(Vector3f(hw, hh, hd), gpu, owner);
+    }
+
+    ~this()
+    {
+        if (vertices)
+            Delete(vertices);
+        if (normals)
+            Delete(normals);
+        if (texcoords)
+            Delete(texcoords);
+        if (indices)
+            Delete(indices);
+    }
+}
+
+/**
+ * A mesh representing a UV sphere.
+ */
+class ShapeSphere: Mesh
+{
+    float radius;
+
+    /**
+     * Constructs a `ShapeSphere`.
+     *
+     * Params:
+     *   radius     = Sphere radius.
+     *   slices     = Number of longitudinal segments.
+     *   stacks     = Number of latitudinal segments.
+     *   invNormals = If `true`, normals are inverted (inside-out sphere).
+     *   owner      = Owner object.
+     */
+    this(float radius, uint slices, uint stacks, bool invNormals, GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+        this.radius = radius;
+        
+        Array!Vector3f daVertices;
+        Array!Vector3f daNormals;
+        Array!Vector2f daTexcoords;
+        Array!(uint[3]) daIndices;
+
+        uint[3] tri;
+        uint i = 0;
+
+        float cuts = stacks;
+        float invCuts = 1.0f / cuts;
+
+        float invSlices = 1.0f / slices;
+        float angleStep = (2.0f * PI) * invSlices;
+
+        for(int h = 0; h < stacks; h++)
+        {
+            float h1Norm = cast(float)h * invCuts * 2.0f - 1.0f;
+            float h2Norm = cast(float)(h+1) * invCuts * 2.0f - 1.0f;
+            float y1 = sin(HALF_PI * h1Norm);
+            float y2 = sin(HALF_PI * h2Norm);
+
+            float circleRadius1 = cos(HALF_PI * y1);
+            float circleRadius2 = cos(HALF_PI * y2);
+
+            for(int a = 0; a < slices; a++)
+            {
+                float x1a = sin(angleStep * a) * circleRadius1;
+                float z1a = cos(angleStep * a) * circleRadius1;
+                float x2a = sin(angleStep * (a + 1)) * circleRadius1;
+                float z2a = cos(angleStep * (a + 1)) * circleRadius1;
+
+                float x1b = sin(angleStep * a) * circleRadius2;
+                float z1b = cos(angleStep * a) * circleRadius2;
+                float x2b = sin(angleStep * (a + 1)) * circleRadius2;
+                float z2b = cos(angleStep * (a + 1)) * circleRadius2;
+
+                Vector3f v1 = Vector3f(x1a, y1, z1a);
+                Vector3f v2 = Vector3f(x2a, y1, z2a);
+                Vector3f v3 = Vector3f(x1b, y2, z1b);
+                Vector3f v4 = Vector3f(x2b, y2, z2b);
+
+                Vector3f n1 = v1.normalized;
+                Vector3f n2 = v2.normalized;
+                Vector3f n3 = v3.normalized;
+                Vector3f n4 = v4.normalized;
+
+                daVertices.append(n1 * radius);
+                daVertices.append(n2 * radius);
+                daVertices.append(n3 * radius);
+
+                daVertices.append(n3 * radius);
+                daVertices.append(n2 * radius);
+                daVertices.append(n4 * radius);
+
+                float sign = invNormals? -1.0f : 1.0f;
+
+                daNormals.append(n1 * sign);
+                daNormals.append(n2 * sign);
+                daNormals.append(n3 * sign);
+
+                daNormals.append(n3 * sign);
+                daNormals.append(n2 * sign);
+                daNormals.append(n4 * sign);
+
+                auto uv1 = Vector2f(0, 1);
+                auto uv2 = Vector2f(1, 1);
+                auto uv3 = Vector2f(0, 0);
+                auto uv4 = Vector2f(1, 0);
+
+                daTexcoords.append(uv1);
+                daTexcoords.append(uv2);
+                daTexcoords.append(uv3);
+
+                daTexcoords.append(uv3);
+                daTexcoords.append(uv2);
+                daTexcoords.append(uv4);
+
+                if (invNormals)
+                {
+                    tri[0] = i+2;
+                    tri[1] = i+1;
+                    tri[2] = i;
+                    daIndices.append(tri);
+
+                    tri[0] = i+5;
+                    tri[1] = i+4;
+                    tri[2] = i+3;
+                    daIndices.append(tri);
+                }
+                else
+                {
+                    tri[0] = i;
+                    tri[1] = i+1;
+                    tri[2] = i+2;
+                    daIndices.append(tri);
+
+                    tri[0] = i+3;
+                    tri[1] = i+4;
+                    tri[2] = i+5;
+                    daIndices.append(tri);
+                }
+
+                i += 6;
+            }
+        }
+
+        vertices = New!(Vector3f[])(daVertices.length);
+        vertices[] = daVertices.data[];
+
+        normals = New!(Vector3f[])(daNormals.length);
+        normals[] = daNormals.data[];
+
+        texcoords = New!(Vector2f[])(daTexcoords.length);
+        texcoords[] = daTexcoords.data[];
+
+        indices = New!(uint[3][])(daIndices.length);
+        indices[] = daIndices.data[];
+
+        daVertices.free();
+        daNormals.free();
+        daTexcoords.free();
+        daIndices.free();
+        
+        dataReady = true;
+        
+        prepareBuffers();
+    }
+
+    /**
+     * Constructs a `ShapeSphere` with the default number of segments.
+     *
+     * Params:
+     *   radius     = Sphere radius.
+     *   owner      = Owner object.
+     */
+    this(float radius, GPU gpu, Owner owner)
+    {
+        this(radius, 16, 16, false, gpu, owner);
     }
 
     ~this()
