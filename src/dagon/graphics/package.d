@@ -28,10 +28,15 @@ module dagon.graphics;
 
 public
 {
+    import dagon.graphics.brdflut;
     import dagon.graphics.camera;
+    import dagon.graphics.csm;
     import dagon.graphics.drawable;
     import dagon.graphics.entity;
+    import dagon.graphics.envmap;
+    import dagon.graphics.light;
     import dagon.graphics.material;
+    import dagon.graphics.mesh;
     import dagon.graphics.scene;
     import dagon.graphics.shadowmap;
     import dagon.graphics.shapes;

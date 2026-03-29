@@ -34,6 +34,10 @@ public
     import dagon.render.deferred.passes.ambient;
     import dagon.render.deferred.passes.selfillumination;
     import dagon.render.deferred.passes.sunlight;
+    import dagon.render.deferred.passes.lightvolume;
     import dagon.render.deferred.passes.ssao;
     import dagon.render.deferred.passes.ssaodenoise;
+    import dagon.render.deferred.passes.fog;
+    import dagon.render.deferred.passes.csm;
+    import dagon.render.deferred.passes.decal;
 }

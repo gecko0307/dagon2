@@ -88,4 +88,13 @@ class Scene: Owner
             parent.addChild(c);
         return c;
     }
+    
+    Light addLight(LightType type, Entity parent = null)
+    {
+        Light light = New!Light(gpu, type, this);
+        entities.append(light);
+        if (parent)
+            parent.addChild(light);
+        return light;
+    }
 }

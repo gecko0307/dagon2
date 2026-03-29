@@ -43,9 +43,12 @@ module dagon.graphics.light;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
+import dlib.math.matrix;
+import dlib.math.transformation;
 import dlib.image.color;
 
 import dagon.core.gpu;
+import dagon.core.time;
 import dagon.graphics.entity;
 import dagon.graphics.shadowmap;
 import dagon.graphics.csm;
@@ -112,6 +115,9 @@ class Light: Entity
 
     /// The shadow map object for this light (if enabled).
     protected ShadowMap _shadowMap;
+    
+    ///
+    Matrix4x4f volumeTransformation;
 
     /**
      * Constructs a new light with default parameters.
@@ -135,6 +141,7 @@ class Light: Entity
         spotInnerCutoff = 15.0f;
         this.type = type;
         shadowEnabled = false;
+        volumeTransformation = Matrix4x4f.identity;
     }
     
     /**
@@ -162,13 +169,11 @@ class Light: Entity
         return _shadowMap;
     }
     
-    /// Recalculates `volumeTransformation`.
-    /*
-    void updateVolumeTransformation()
+    override void postUpdate(Time t)
     {
+        super.postUpdate(t);
         volumeTransformation =
             translationMatrix(positionAbsolute) *
             scaleMatrix(Vector3f(volumeRadius, volumeRadius, volumeRadius));
     }
-    */
 }

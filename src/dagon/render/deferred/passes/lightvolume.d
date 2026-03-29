@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.deferred.passes.decal;
+module dagon.render.deferred.passes.lightvolume;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -40,53 +40,37 @@ import dagon.graphics.state;
 import dagon.graphics.entity;
 import dagon.graphics.material;
 import dagon.graphics.mesh;
+import dagon.graphics.shapes;
+import dagon.graphics.light;
 import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
-struct DecalShaderVertexUniformBuffer
+struct LightVolumeShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
     Matrix4x4f projectionMatrix;
 }
 
-struct DecalShaderFragmentUniformBuffer
+struct LightVolumeShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
     Matrix4x4f invModelMatrix;
     Matrix4x4f invProjectionMatrix;
-    Color4f baseColor;
-    Vector4f roughnessMetallic;
-    Color4f emission;
-    Vector4f alphaOptions;
-    uint[4] flags;
-    float[4] fparams;
     Vector4f resolution;
-    Vector4f decalDirection;
+    Vector4f lightPosition;
+    Color4f lightColor;
+    Vector4f lightParams;
 }
 
-enum DecalFlags
-{
-    Texture = 0,
-}
-
-enum DecalTextureFlags: uint
-{
-    HasBaseColorTexture = 1 << 0,
-    HasNormalTexture = 1 << 1,
-    HasHeightTexture = 1 << 2,
-    HasRoughnessMetallicTexture = 1 << 3,
-    HasEmissionTexture = 1 << 4
-}
-
-class DecalShader: Shader
+class LightVolumeShader: Shader
 {
    protected:
-    DecalShaderVertexUniformBuffer vsUBO;
-    DecalShaderFragmentUniformBuffer fsUBO;
+    LightVolumeShaderVertexUniformBuffer vsUBO;
+    LightVolumeShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -94,16 +78,16 @@ class DecalShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Decal.vert.glsl", "data/__internal/shaders/Decal/Decal.vert.glsl",
+        vertexModule.create("LightVolume.vert.glsl", "data/__internal/shaders/LightVolume/LightVolume.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Decal.frag.glsl", "data/__internal/shaders/Decal/Decal.frag.glsl",
+        fragmentModule.create("LightVolume.frag.glsl", "data/__internal/shaders/LightVolume/LightVolume.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create DecalShader");
+            exitWithError("Failed to create LightVolumeShader");
         }
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
@@ -113,112 +97,52 @@ class DecalShader: Shader
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invModelMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
-        fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-        fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
-        fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
-        fsUBO.fparams[0] = 0.0f;
-        fsUBO.fparams[1] = 0.0f;
-        fsUBO.fparams[2] = 0.0f;
-        fsUBO.fparams[3] = 0.0f;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.decalDirection = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.lightPosition = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.lightColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        fsUBO.lightParams = Vector4f(1.0f, 0.0f, 0.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
         auto entity = state.entity;
-        auto material = state.material;
+        auto light = cast(Light)entity;
         
-        vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
+        vsUBO.modelViewMatrix = pass.view.viewMatrix * light.volumeTransformation; //entity.modelMatrix;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         fsUBO.invModelMatrix = entity.invModelMatrix;
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
-        
-        fsUBO.flags[DecalFlags.Texture] = 0;
-        fsUBO.flags[1] = 0;
-        fsUBO.flags[2] = 0;
-        fsUBO.flags[3] = 0;
-        fsUBO.baseColor = material.baseColor;
-        
-        fsUBO.roughnessMetallic.g = material.roughness;
-        fsUBO.roughnessMetallic.b = material.metallic;
-        
-        fsUBO.emission = material.emissionColor * material.emissionEnergy;
-        
-        fsUBO.alphaOptions.x = material.alphaClipThreshold;
-        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
-        fsUBO.alphaOptions.z = entity.motionBlurMask;
-        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
-        
-        fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
-        
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
+        Vector4f lightPositionHmg = Vector4f(light.positionAbsolute);
+        lightPositionHmg.w = 1.0f;
+        fsUBO.lightPosition = lightPositionHmg * pass.view.viewMatrix;
+        fsUBO.lightColor = light.color;
+        fsUBO.lightParams = Vector4f(light.volumeRadius, light.radius, light.energy, 0.0f);
         
-        Vector4f decalDirectionModel = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
-        fsUBO.decalDirection = decalDirectionModel * vsUBO.normalMatrix;
-        
-        if (material.baseColorTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
-            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasBaseColorTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 0);
-        
-        if (material.normalTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 1, material.normalTexture);
-            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasNormalTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 1);
-        
-        if (material.heightTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 2, material.heightTexture);
-            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasHeightTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 2);
-        
-        if (material.roughnessMetallicTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 3, material.roughnessMetallicTexture);
-            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasRoughnessMetallicTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 3);
-        
-        if (material.emissionTexture)
-        {
-            pass.bindTexture(PipelineStage.Fragment, 4, material.emissionTexture);
-            fsUBO.flags[DecalFlags.Texture] |= DecalTextureFlags.HasEmissionTexture;
-        }
-        else
-            pass.bindDefaultTexture(PipelineStage.Fragment, 4);
-        
-        pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.depthBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 6, &state.velocityBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class DecalPass: RenderPass
+class LightVolumePass: RenderPass
 {
    protected:
     GPU gpu;
     GBuffer gbuffer;
-    DecalShader decalShader;
-    SDL_GPUColorTargetDescription[4] colorTargetsDescription;
-    SDL_GPUColorTargetInfo[4] colorTargets;
+    ShapeSphere lightVolume;
+    LightVolumeShader lightVolumeShader;
+    SDL_GPUColorTargetDescription colorTargetDescription;
+    SDL_GPUColorTargetInfo colorTargetInfo;
     
    public:
     this(Renderer renderer, GBuffer gbuffer)
@@ -226,11 +150,12 @@ class DecalPass: RenderPass
         super(renderer);
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
-        decalShader = New!DecalShader(gpu, this);
+        lightVolume = New!ShapeSphere(1.0f, 8, 8, false, gpu, this);
+        lightVolumeShader = New!LightVolumeShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = decalShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = decalShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = lightVolumeShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = lightVolumeShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[3] vbDescriptions;
@@ -277,51 +202,25 @@ class DecalPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetBlendState blendState = {
-            src_color_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            src_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
             color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
             color_write_mask: 0,
             enable_blend: true,
             enable_color_write_mask: false
         };
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetDescription.blend_state = blendState;
         
-        // Color target 0 - color buffer
-        colorTargetsDescription[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-        colorTargetsDescription[0].blend_state = blendState;
-        colorTargets[0].load_op = SDL_GPU_LOADOP_LOAD;
-        colorTargets[0].store_op = SDL_GPU_STOREOP_STORE;
-        colorTargets[0].texture = gbuffer.colorBuffer;
-        
-        // Target 1 - normal buffer
-        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-        colorTargetsDescription[1].blend_state = blendState;
-        colorTargets[1].load_op = SDL_GPU_LOADOP_LOAD;
-        colorTargets[1].store_op = SDL_GPU_STOREOP_STORE;
-        colorTargets[1].texture = gbuffer.normalBuffer;
-        
-        // Target 2 - roughness/metallic buffer
-        colorTargetsDescription[2].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-        colorTargetsDescription[2].blend_state = blendState;
-        colorTargets[2].load_op = SDL_GPU_LOADOP_LOAD;
-        colorTargets[2].store_op = SDL_GPU_STOREOP_STORE;
-        colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
-        
-        // Target 3 - emission buffer
-        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-        colorTargetsDescription[3].blend_state = blendState;
-        colorTargets[3].load_op = SDL_GPU_LOADOP_LOAD;
-        colorTargets[3].store_op = SDL_GPU_STOREOP_STORE;
-        colorTargets[3].texture = gbuffer.emissionBuffer;
-        
-        pipelineCreateInfo.target_info.num_color_targets = colorTargetsDescription.length;
-        pipelineCreateInfo.target_info.color_target_descriptions = colorTargetsDescription.ptr;
+        pipelineCreateInfo.target_info.num_color_targets = 1;
+        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
         pipelineCreateInfo.target_info.has_depth_stencil_target = false;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_FRONT;
         pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
         pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
         pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
@@ -336,8 +235,13 @@ class DecalPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetsInfo = colorTargets.ptr;
-        numColorTargets = colorTargets.length; // color, normal, roughness-metallic, emission
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        
+        colorTargetsInfo = &colorTargetInfo;
+        numColorTargets = 1;
         depthStencilTargetInfo = null;
         enableDepthTarget = false;
     }
@@ -347,28 +251,28 @@ class DecalPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargets[0].texture = gbuffer.colorBuffer;
-        colorTargets[1].texture = gbuffer.normalBuffer;
-        colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
-        colorTargets[3].texture = gbuffer.emissionBuffer;
+        colorTargetInfo.texture = gbuffer.radianceBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "DECAL");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "LIGHT VOLUME");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
+        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
+        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        state.occlusionBuffer = InputBuffer(gbuffer.currentOcclusionBuffer, gbuffer.colorSampler);
+        state.radianceBuffer = InputBuffer(null, null);
         
         foreach(entity; state.scene.entities)
         {
-            if (entity.visible && entity.isDecal && entity.drawable)
+            Light light = cast(Light)entity;
+            if (light && light.type != LightType.Sun && light.shining)
             {
                 state.entity = entity;
-                if (entity.material)
-                    state.material = entity.material;
-                else
-                    state.material = renderer.defaultMaterial;
-                decalShader.bindParameters(state);
-                entity.drawable.render(state);
+                lightVolumeShader.bindParameters(state);
+                lightVolume.render(state);
             }
         }
         
