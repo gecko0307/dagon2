@@ -133,9 +133,7 @@ enum WindowSystem
 enum ColorProfile: uint
 {
     Gamma22 = 0,
-    sRGB = 1,
-    Linear = 2,
-    Gamma24 = 3,
+    Linear = 1
 }
 
 /// Supported image formats.
@@ -1202,39 +1200,6 @@ class Application: EventListener, Updateable
         fontManager = New!FontManager(this);
         */
         
-        // Init output color profile
-        if ("gl.outputColorProfile" in config.props)
-        {
-            string outputColorProfileStr = config.props["gl.outputColorProfile"].toString;
-            if (outputColorProfileStr == "sRGB")
-                outputColorProfile = ColorProfile.sRGB;
-            else if (outputColorProfileStr == "Gamma22")
-                outputColorProfile = ColorProfile.Gamma22;
-            else if (outputColorProfileStr == "Linear")
-                outputColorProfile = ColorProfile.Linear;
-            else if (outputColorProfileStr == "Gamma24")
-                outputColorProfile = ColorProfile.Gamma24;
-            else
-            {
-                logError("Unsupported output color profile: ", outputColorProfileStr);
-                outputColorProfile = ColorProfile.Gamma22;
-            }
-        }
-        logInfo("Output color profile: ", outputColorProfile);
-        /*
-        // TODO:
-        if (outputColorProfile == ColorProfile.Gamma22)
-            globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "0");
-        else if (outputColorProfile == ColorProfile.sRGB)
-            globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "1");
-        else if (outputColorProfile == ColorProfile.Linear)
-            globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "2");
-        else if (outputColorProfile == ColorProfile.Gamma24)
-            globalShaderDefine("DAGON_OUTPUT_COLOR_PROFILE", "3");
-        if (gpu.hdrExtendedLinearSwapchainSupported)
-            globalShaderDefine("DAGON_HDR_OUTPUT", "1");
-        */
-        
         // Init resource cache
         resourceCache = New!ResourceCache(this);
         _resourceCache = resourceCache;
@@ -1258,20 +1223,19 @@ class Application: EventListener, Updateable
         textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
         
         // Get system cursors
-        /*
-        cursors[SystemCursor.Default] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
-        cursors[SystemCursor.IBeam] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
+        cursors[SystemCursor.Default] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+        cursors[SystemCursor.IBeam] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
         cursors[SystemCursor.Wait] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
         cursors[SystemCursor.Crosshair] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
-        cursors[SystemCursor.WaitArrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAITARROW);
-        cursors[SystemCursor.SizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
-        cursors[SystemCursor.SizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
-        cursors[SystemCursor.SizeWE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
-        cursors[SystemCursor.SizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
-        cursors[SystemCursor.SizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
-        cursors[SystemCursor.No] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
-        cursors[SystemCursor.Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-        */
+        cursors[SystemCursor.WaitArrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+        cursors[SystemCursor.SizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+        cursors[SystemCursor.SizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NESW_RESIZE);
+        cursors[SystemCursor.SizeWE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+        cursors[SystemCursor.SizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+        cursors[SystemCursor.SizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE);
+        cursors[SystemCursor.No] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NOT_ALLOWED);
+        cursors[SystemCursor.Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+        // TODO: support other cursor types from SDL3
         
         version(Windows)
         {
@@ -1285,16 +1249,14 @@ class Application: EventListener, Updateable
     {
         clearOwnedObjects();
         
-        /*
         foreach(i, cur; cursors)
         {
             if (cur)
             {
-                SDL_FreeCursor(cur);
+                SDL_DestroyCursor(cur);
                 cursors[i] = null;
             }
         }
-        */
         
         Delete(gpu);
         gpu = null;
