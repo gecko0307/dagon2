@@ -46,28 +46,87 @@ import dagon.graphics.texture;
 
 class Material: Owner
 {
+    /// Base color (albedo) constant.
     Color4f baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+    
+    /// Roughness constant.
     float roughness = 0.5f;
+    
+    /// Metallic constant.
     float metallic = 0.0f;
+    
+    /// Emission (self-illumination) color constant.
     Color4f emissionColor = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    /// Emission intensity multiplier.
     float emissionEnergy = 0.0f;
+    
+    /**
+     * Index of refraction. Affects specular reflection.
+     * For most materials, the IOR is between 1.0 (air) and 4.0 (germanium).
+     */
     float ior = 1.5f;
+    
+    /// Intensity of specular reflection.
     float iorLevel = 0.5f;
+    
+    /**
+     * Level of light scattering beneath the surface.
+     * This is useful for translucent materials such as skin or wax.
+     */
     float subsurfaceScattering = 0.0f;
     
+    /**
+     * Base color (albedo) texture. Colorspace is assumed to be gamma 2.2-encoded Rec. 709/sRGB.
+     * If assigned, `baseColor` is used as a multiplier for the texture-defined color.
+     * Alpha channel determines surface opacity.
+     */
     Texture baseColorTexture;
+    
+    /// Tangent-space normal map in OpenGL style (Y-up).
     Texture normalTexture;
+    
+    /// Height map. Required for parallax mapping.
     Texture heightTexture;
+    
+    /// Roughness/metallic texture. Roughness data (linear) should be in G-channel, metallic data (linear) should be in B-channel. R-channel is reserved.
     Texture roughnessMetallicTexture;
+    
+    /**
+     * Texture that defines self-illuminated parts of the surface.
+     * If assigned, `emissionColor` is used as a multiplier for the texture-defined emission.
+     * `emissionEnergy` should be larger than zero for emission to take effect.
+     */
     Texture emissionTexture;
+    
+    /**
+     * Cubemap texture for skybox rendering.
+     * If assigned, `emissionTexture` is ignored, instead the skybox texture data is written to the emission buffer.
+     * Typically used for `EntityLayer.Background` entities, and with `shadeless` and `outputDepth` turned off.
+     */
     Texture skyboxTexture;
     
+    /// Surface opacity factor. Base color alpha is multiplied by this value to enable animated fade effects.
     float opacity = 1.0f;
+    
+    /// Surface with alpha/opacity value lower than this threshold will be invisible (discarded as fully transparent) in deferred pipeline.
     float alphaClipThreshold = 0.5f;
+    
+    /**
+     * If true, the surface is not affected by any lights.
+     * The resulting look is determied by baseColor/baseColorTexture.
+     * This is useful for interface objects in the scene (like guidelines or arrows).
+     */
     bool shadeless = false;
     
+    /// Mip level to use for skyboxTexture.
     float skyboxTextureMipLevel = 0.0f;
     
+    /**
+     * Determines if the renderer should write eye space Z coordinate of the surface to the depth buffer.
+     * If disabled, the constant value is written (currently 1.0).
+     * If the object should be rendered at the background, this should be disabled.
+     */
     bool outputDepth = true;
     
     this(Owner owner)
