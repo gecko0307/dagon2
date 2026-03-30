@@ -135,7 +135,7 @@ void main()
     
     float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
     
-    float sss = ubo.flags[FPARAM_SSS];
+    float sss = ubo.fparams[FPARAM_SSS];
     
     outColor = vec4(baseColor.rgb, sss);
     outNormal = vec4(N, 1.0);

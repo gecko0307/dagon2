@@ -280,12 +280,12 @@ class DecalPass: RenderPass
             src_color_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
             dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ZERO, //SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE, //SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
             alpha_blend_op: SDL_GPU_BLENDOP_ADD,
-            color_write_mask: 0,
+            color_write_mask: SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B,
             enable_blend: true,
-            enable_color_write_mask: false
+            enable_color_write_mask: true
         };
         
         // Color target 0 - color buffer

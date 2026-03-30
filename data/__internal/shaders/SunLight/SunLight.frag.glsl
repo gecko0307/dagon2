@@ -48,6 +48,13 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
     return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+float schlickFresnel(float u)
+{
+    float m = clamp(1.0 - u, 0.0, 1.0);
+    float m2 = m * m;
+    return m2 * m2 * m;
+}
+
 vec3 toLinear(vec3 v)
 {
     return pow(v, vec3(2.2));
@@ -150,7 +157,9 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
-    vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
+    vec4 color = texture(colorBuffer, texCoords);
+    vec3 baseColor = toLinear(color.rgb);
+    float sss = color.a;
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
 
     vec3 L = ubo.lighVector.xyz;
@@ -168,9 +177,18 @@ void main()
     
     vec3 incomingLight = toLinear(ubo.lightColor.rgb) * ubo.lightColor.a;
     
+    // Based on Hanrahan-Krueger BRDF approximation of isotropic BSSRDF
+    // 1.25 scale is used to (roughly) preserve albedo
+    // fss90 used to "flatten" retroreflection based on roughness
+    float FL = schlickFresnel(NL);
+    float FV = schlickFresnel(NE);
+    float fss90 = LH * LH * max(roughness, 0.001);
+    float fss = mix(1.0, fss90, FL) * mix(1.0, fss90, FV);
+    float ss = 1.25 * (fss * (1.0 / max(NL + NE, 0.1) - 0.5) + 0.5);
+    
     float shadow = shadowMapCascaded(eyePos, N);
-    float occlusion = shadow * 1.0;
-    vec3 diffuse = INVPI * baseColor * (kD * NL * occlusion) * (1.0 - metallic);
+    
+    vec3 diffuse = INVPI * baseColor * mix(kD * NL * shadow, vec3(ss), sss) * (1.0 - metallic);
     
     vec3 radiance = (diffuse + (specular * shadow * NL)) * incomingLight;
     

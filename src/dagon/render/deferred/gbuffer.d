@@ -96,8 +96,7 @@ class GBuffer: Owner
         colorTargetsInfo[0].clear_color = SDL_FColor(
             colorBufferClearColor.r,
             colorBufferClearColor.g,
-            colorBufferClearColor.b,
-            colorBufferClearColor.a);
+            colorBufferClearColor.b, 0.0f);
         colorTargetsInfo[0].load_op = SDL_GPU_LOADOP_CLEAR;
         colorTargetsInfo[0].store_op = SDL_GPU_STOREOP_STORE;
         colorTargetsInfo[0].texture = colorBuffer;
@@ -140,8 +139,7 @@ class GBuffer: Owner
         colorTargetsInfo[5].clear_color = SDL_FColor(
             colorBufferClearColor.r,
             colorBufferClearColor.g,
-            colorBufferClearColor.b,
-            1.0f);
+            colorBufferClearColor.b, 1.0f);
         colorTargetsInfo[5].load_op = SDL_GPU_LOADOP_CLEAR;
         colorTargetsInfo[5].store_op = SDL_GPU_STOREOP_STORE;
         colorTargetsInfo[5].texture = radianceBuffer;
@@ -272,8 +270,7 @@ class GBuffer: Owner
         colorTargetsInfo[0].clear_color = SDL_FColor(
             colorBufferClearColor.r,
             colorBufferClearColor.g,
-            colorBufferClearColor.b,
-            colorBufferClearColor.a);
+            colorBufferClearColor.b, 0.0f);
         Color4f linearColor = color.toLinear;
         colorTargetsInfo[5].clear_color = SDL_FColor(
             linearColor.r,
