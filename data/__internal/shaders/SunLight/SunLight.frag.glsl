@@ -148,7 +148,7 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
     

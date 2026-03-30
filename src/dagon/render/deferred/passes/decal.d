@@ -296,7 +296,7 @@ class DecalPass: RenderPass
         colorTargets[0].texture = gbuffer.colorBuffer;
         
         // Target 1 - normal buffer
-        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         colorTargetsDescription[1].blend_state = blendState;
         colorTargets[1].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[1].store_op = SDL_GPU_STOREOP_STORE;
@@ -310,7 +310,7 @@ class DecalPass: RenderPass
         colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
         
         // Target 3 - emission buffer
-        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         colorTargetsDescription[3].blend_state = blendState;
         colorTargets[3].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[3].store_op = SDL_GPU_STOREOP_STORE;
@@ -329,7 +329,8 @@ class DecalPass: RenderPass
         pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
         pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
         
-        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
+        
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
         pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
         pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
         pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;

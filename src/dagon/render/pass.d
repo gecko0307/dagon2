@@ -156,6 +156,11 @@ abstract class RenderPass: Owner
         SDL_BindGPUIndexBuffer(renderPass, &bufferBinding, elementSize);
     }
     
+    void setStencilReference(ubyte value)
+    {
+        SDL_SetGPUStencilReference(renderPass, value);
+    }
+    
     void drawPrimitives(uint numVertices, uint numInstances, uint firstVertex, uint firstInstance)
     {
         SDL_DrawGPUPrimitives(renderPass, numVertices, numInstances, firstVertex, firstInstance);

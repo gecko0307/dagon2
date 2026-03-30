@@ -154,7 +154,7 @@ void main()
     
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = texture(normalBuffer, gbufTexCoord).rgb;
+    vec3 N = normalize(texture(normalBuffer, gbufTexCoord).rgb * 2.0 - 1.0);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
     float NE = clamp(dot(N, E), 0.0, 1.0);

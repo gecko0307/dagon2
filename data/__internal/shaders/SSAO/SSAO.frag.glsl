@@ -108,7 +108,7 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     float depthFactor = clamp(-eyePos.z / 100.0, 0.0, 1.0);
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
 
     float occlusion = spiralSSAO(texCoords, eyePos, N, ssaoRadius / -eyePos.z);
     occlusion = pow(clamp(1.0 - occlusion, 0.0, 1.0), ssaoPower);

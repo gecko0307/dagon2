@@ -289,7 +289,7 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
-        pipelineCreateInfo.target_info.num_color_targets = gbuffer.colorTargetsDescription.length;
+        pipelineCreateInfo.target_info.num_color_targets = gbuffer.colorTargetsDescription.length - 1; // all except radiance
         pipelineCreateInfo.target_info.color_target_descriptions = gbuffer.colorTargetsDescription.ptr;
         pipelineCreateInfo.target_info.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         pipelineCreateInfo.target_info.has_depth_stencil_target = true;
@@ -311,7 +311,7 @@ class GeometryPass: RenderPass
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
         colorTargetsInfo = gbuffer.colorTargetsInfo.ptr;
-        numColorTargets = cast(uint)gbuffer.colorTargetsInfo.length;
+        numColorTargets = cast(uint)gbuffer.colorTargetsInfo.length - 1; // all except radiance
         depthStencilTargetInfo = &gbuffer.depthStencilTargetInfo;
         enableDepthTarget = true;
     }

@@ -102,7 +102,7 @@ class GBuffer: Owner
         colorTargetsInfo[0].texture = colorBuffer;
         
         // Target 1 - normal buffer
-        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         colorTargetsDescription[1].blend_state = blendState;
         colorTargetsInfo[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[1].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -118,7 +118,7 @@ class GBuffer: Owner
         colorTargetsInfo[2].texture = roughnessMetallicBuffer;
         
         // Target 3 - emission buffer
-        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         colorTargetsDescription[3].blend_state = blendState;
         colorTargetsInfo[3].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[3].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -222,7 +222,7 @@ class GBuffer: Owner
         colorTargetsInfo[0].texture = colorBuffer;
         
         // Normal
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         normalBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[1].texture = normalBuffer;
         
@@ -232,7 +232,7 @@ class GBuffer: Owner
         colorTargetsInfo[2].texture = roughnessMetallicBuffer;
         
         // Emission
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         emissionBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[3].texture = emissionBuffer;
         
@@ -245,6 +245,7 @@ class GBuffer: Owner
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         radianceBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[5].texture = radianceBuffer;
+        colorTargetsInfo[5].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         // Occlusion
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
@@ -271,12 +272,6 @@ class GBuffer: Owner
             colorBufferClearColor.r,
             colorBufferClearColor.g,
             colorBufferClearColor.b, 0.0f);
-        Color4f linearColor = color.toLinear;
-        colorTargetsInfo[5].clear_color = SDL_FColor(
-            linearColor.r,
-            linearColor.g,
-            linearColor.b,
-            1.0f);
     }
     
     void swapOcclusionBuffers()

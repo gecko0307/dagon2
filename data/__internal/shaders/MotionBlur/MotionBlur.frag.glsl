@@ -53,10 +53,10 @@ void main()
 
     for (uint i = 1; i < nSamples; i++)
     {
-        vec2 offset = blurVec * (float(i) * invSamplesMinusOne - rnd);
-        vec4 velocitySample = texture(velocityBuffer, texCoords + offset);
+        vec2 uvSample = texCoords + blurVec * (float(i) * invSamplesMinusOne - rnd);
+        vec4 velocitySample = texture(velocityBuffer, uvSample);
         float mask = velocitySample.z;
-        res += texture(colorBuffer, texCoords + offset).rgb * mask;
+        res += texture(colorBuffer, uvSample).rgb * mask;
         usedSamples += mask;
     }
 

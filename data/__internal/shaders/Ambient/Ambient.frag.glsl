@@ -89,7 +89,7 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = texture(normalBuffer, texCoords).rgb;
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
     vec3 E = normalize(-eyePos);
     vec3 R = reflect(E, N);
     float NE = clamp(dot(N, E), 0.0, 1.0);
@@ -104,6 +104,7 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
+    
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
     float diffuseOcclusion = 1.0;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_OCCLUSION_BUFFER) != 0)

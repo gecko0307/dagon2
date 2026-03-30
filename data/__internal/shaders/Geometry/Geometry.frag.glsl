@@ -66,7 +66,6 @@ layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec4 outRoughnessMetallic;
 layout(location = 3) out vec4 outEmission;
 layout(location = 4) out vec4 outVelocity;
-layout(location = 5) out vec4 outRadiance;
 
 out float gl_FragDepth;
 
@@ -138,11 +137,10 @@ void main()
     float sss = ubo.fparams[FPARAM_SSS];
     
     outColor = vec4(baseColor.rgb, sss);
-    outNormal = vec4(N, 1.0);
+    outNormal = vec4(N * 0.5 + 0.5, 1.0);
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);
-    outRadiance = vec4(0.0, 0.0, 0.0, 1.0);
     
     if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)
         gl_FragDepth = gl_FragCoord.z;

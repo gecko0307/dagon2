@@ -252,7 +252,7 @@ class AmbientPass: RenderPass
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
         colorTargetInfo.texture = gbuffer.radianceBuffer;
         
@@ -272,6 +272,7 @@ class AmbientPass: RenderPass
             return;
         
         colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo.clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "AMBIENT");
         beginPass();
