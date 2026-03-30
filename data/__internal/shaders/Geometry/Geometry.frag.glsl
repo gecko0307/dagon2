@@ -41,6 +41,7 @@ layout(location = 5) in vec4 prevPosition;
 
 #define FPARAM_F0 0
 #define FPARAM_SKYBOX_MIP_LEVEL 1
+#define FPARAM_SSS 2
 
 layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 layout(set = 2, binding = 1) uniform sampler2D normalTexture;
@@ -134,7 +135,9 @@ void main()
     
     float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
     
-    outColor = vec4(baseColor.rgb, 1.0);
+    float sss = ubo.flags[FPARAM_SSS];
+    
+    outColor = vec4(baseColor.rgb, sss);
     outNormal = vec4(N, 1.0);
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);

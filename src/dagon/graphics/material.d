@@ -53,6 +53,7 @@ class Material: Owner
     float emissionEnergy = 0.0f;
     float ior = 1.5f;
     float iorLevel = 0.5f;
+    float subsurfaceScattering = 0.0f;
     
     Texture baseColorTexture;
     Texture normalTexture;

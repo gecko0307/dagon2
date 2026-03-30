@@ -169,14 +169,16 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
-    vec3 baseColor = toLinear(texture(colorBuffer, gbufTexCoord).rgb);
+    vec4 color = texture(colorBuffer, gbufTexCoord);
+    vec3 baseColor = toLinear(color.rgb);
+    float sss = color.a;
     
     // TODO
     //float shadow = shadowMap(worldPos);
     
     vec3 radiance;
     if (ubo.iparams.x == LIGHT_TYPE_AREA_SPHERE)
-        radiance = lightRadianceAreaSphere(eyePos, N, E, baseColor, f0_scalar, roughness, metallic, 0.0, 1.0);
+        radiance = lightRadianceAreaSphere(eyePos, N, E, baseColor, f0_scalar, roughness, metallic, sss, 1.0);
     // TODO: support other light types
     else
         radiance = vec3(0.0, 0.0, 0.0);
