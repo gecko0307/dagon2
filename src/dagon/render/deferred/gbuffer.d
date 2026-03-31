@@ -41,6 +41,9 @@ class GBuffer: Owner
     SDL_GPUDepthStencilTargetInfo depthStencilTargetInfo;
     Color4f colorBufferClearColor = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
     
+    uint width;
+    uint height;
+    
     SDL_GPUTexture* depthBuffer;
     SDL_GPUTexture* colorBuffer;
     SDL_GPUTexture* normalBuffer;
@@ -61,10 +64,10 @@ class GBuffer: Owner
         super(owner);
         this.gpu = gpu;
         
-        uint drawableWidth = gpu.application.drawableWidth;
-        uint drawableHeight = gpu.application.drawableHeight;
+        width = gpu.application.drawableWidth;
+        height = gpu.application.drawableHeight;
         
-        createBuffers(drawableWidth, drawableHeight);
+        createBuffers(width, height);
         
         SDL_GPUColorTargetBlendState blendState = {
             src_color_blendfactor: SDL_GPU_BLENDFACTOR_SRC_ALPHA,
@@ -260,9 +263,9 @@ class GBuffer: Owner
     
     void resize(uint width, uint height)
     {
-        uint drawableWidth = gpu.application.drawableWidth;
-        uint drawableHeight = gpu.application.drawableHeight;
-        createBuffers(drawableWidth, drawableHeight);
+        this.width = gpu.application.drawableWidth;
+        this.height = gpu.application.drawableHeight;
+        createBuffers(this.width, this.height);
     }
     
     void clearColor(Color4f color) @property

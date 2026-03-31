@@ -284,7 +284,6 @@ class TonemappingPass: RenderPass
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
-        //InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
         tonemappingShader.bindParameters(state);
         

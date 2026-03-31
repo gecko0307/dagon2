@@ -24,9 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.postprocessing.passes.motionblur;
-
-import std.math;
+module dagon.render.postprocessing.passes.refraction;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -38,103 +36,147 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.crashhandler;
 import dagon.core.logger;
-import dagon.core.time;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
+import dagon.graphics.material;
 import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
+import dagon.render.deferred.passes.geometry;
+import dagon.render.deferred.passes.ambient;
 import dagon.render.postprocessing.context;
 
-struct MotionBlurShaderVertexUniformBuffer
+struct RefractionShaderVertexUniformBuffer
 {
-    // TODO
+    Matrix4x4f modelViewMatrix;
+    Matrix4x4f normalMatrix;
+    Matrix4x4f projectionMatrix;
+    Matrix4x4f prevModelViewMatrix;
 }
 
-struct MotionBlurShaderFragmentUniformBuffer
+struct RefractionShaderFragmentUniformBuffer
 {
+    Matrix4x4f invViewMatrix;
+    //Vector4f baseColor;
+    //Vector4f roughnessMetallic;
+    //Vector4f emission;
+    Vector4f alphaOptions;
+    uint[4] flags;
     Vector4f resolution;
-    Vector4f fparams1;
-    Vector4f fparams2;
-    uint[4] iparams;
 }
 
-class MotionBlurShader: Shader
+enum RefractionFlags: uint
+{
+    Texture = 0,
+    MaxSpecularMipLevel = 1,
+    Entity = 2
+}
+
+enum RefractionTextureFlags: uint
+{
+    HasBaseColorTexture = 1 << 0,
+    HasNormalTexture = 1 << 1,
+    HasHeightTexture = 1 << 2,
+    HasSpecularTexture = 1 << 3
+}
+
+enum RefractionEntityFlags: uint
+{
+    Static = 1 << 0
+}
+
+class RefractionShader: Shader
 {
    protected:
-    MotionBlurShaderVertexUniformBuffer vsUBO;
-    MotionBlurShaderFragmentUniformBuffer fsUBO;
+    RefractionShaderVertexUniformBuffer vsUBO;
+    RefractionShaderFragmentUniformBuffer fsUBO;
     
    public:
-    uint samples = 16;
-    float framerate = 60.0f;
-    float shutterFramerate = 24.0f;
-    float time = 0.0f;
-    float minDistance = 0.01f;
-    float maxDistance = 1.0f;
-    float offsetRandomCoefficient = 0.2f;
-    float radialBlur = 0.0f;
+    bool enableGammaCorrection = true;
     
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("MotionBlur.vert.glsl", "data/__internal/shaders/MotionBlur/MotionBlur.vert.glsl",
+        vertexModule.create("Refraction.vert.glsl", "data/__internal/shaders/Refraction/Refraction.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("MotionBlur.frag.glsl", "data/__internal/shaders/MotionBlur/MotionBlur.frag.glsl",
+        fragmentModule.create("Refraction.frag.glsl", "data/__internal/shaders/Refraction/Refraction.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create MotionBlurShader");
+            exitWithError("Failed to create RefractionShader");
         }
         
-        float blurScale = framerate / shutterFramerate;
+        vsUBO.modelViewMatrix = Matrix4x4f.identity;
+        vsUBO.normalMatrix = Matrix4x4f.identity;
+        vsUBO.projectionMatrix = Matrix4x4f.identity;
+        vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
+        
+        fsUBO.invViewMatrix = Matrix4x4f.identity;
+        fsUBO.alphaOptions = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.fparams1 = Vector4f(time, offsetRandomCoefficient, minDistance, maxDistance);
-        fsUBO.fparams2 = Vector4f(blurScale, radialBlur, 0.0f, 0.0f);
-        fsUBO.iparams[0] = samples;
-    }
-    
-    void update(Time t)
-    {
-        time += 4.0f * t.delta;
-        if (time > PI * 2.0f)
-            time = 0.0f;
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
+        auto scene = state.scene;
+        auto entity = state.entity;
+        auto material = state.material;
+        auto specularTexture = scene.specularTexture;
         
-        float blurScale = framerate / shutterFramerate;
+        vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
+        vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
+        vsUBO.projectionMatrix = pass.view.projectionMatrix;
+        vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
+        
+        fsUBO.invViewMatrix = pass.view.invViewMatrix;
+        
+        if (!entity.dynamic && entity.receiveDecals)
+            fsUBO.flags[RefractionFlags.Entity] |= RefractionEntityFlags.Static;
+        
+        fsUBO.alphaOptions.x = material.alphaClipThreshold;
+        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
+        fsUBO.alphaOptions.z = entity.motionBlurMask;
+        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
+        
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
-        fsUBO.fparams1 = Vector4f(time, offsetRandomCoefficient, minDistance, maxDistance);
-        fsUBO.fparams2 = Vector4f(blurScale, radialBlur, 0.0f, 0.0f);
-        fsUBO.iparams[0] = samples;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.velocityBuffer);
         
-        //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
+        if (specularTexture)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 1, specularTexture);
+            fsUBO.flags[RefractionFlags.Texture] |= RefractionTextureFlags.HasSpecularTexture;
+            fsUBO.flags[RefractionFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
+        }
+        else
+        {
+            pass.bindDefaultTexture(PipelineStage.Fragment, 1);
+            fsUBO.flags[RefractionFlags.MaxSpecularMipLevel] = 0;
+        }
+        
+        pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class MotionBlurPass: RenderPass
+class RefractionPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
-    MotionBlurShader motionBlurShader;
+    RefractionShader refractionShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
+    SDL_GPUDepthStencilTargetInfo depthTargetInfo;
     
     this(Renderer renderer, PostProcessingContext ppContext)
     {
@@ -143,34 +185,39 @@ class MotionBlurPass: RenderPass
         this.gbuffer = ppContext.gbuffer;
         this.ppContext = ppContext;
         
-        motionBlurShader = New!MotionBlurShader(gpu, this);
+        refractionShader = New!RefractionShader(gpu, this);
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = motionBlurShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = motionBlurShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = refractionShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = refractionShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
-        SDL_GPUVertexBufferDescription[2] vbDescriptions;
+        SDL_GPUVertexBufferDescription[3] vbDescriptions;
         
-        vbDescriptions[0].slot = VertexAttribute.Position;
+        vbDescriptions[0].slot = 0;
         vbDescriptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
         vbDescriptions[0].instance_step_rate = 0;
-        vbDescriptions[0].pitch = Vector2f.sizeof;
+        vbDescriptions[0].pitch = Vector3f.sizeof;
         
-        vbDescriptions[1].slot = VertexAttribute.Texcoord;
+        vbDescriptions[1].slot = 1;
         vbDescriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
         vbDescriptions[1].instance_step_rate = 0;
         vbDescriptions[1].pitch = Vector2f.sizeof;
+        
+        vbDescriptions[2].slot = 2;
+        vbDescriptions[2].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[2].instance_step_rate = 0;
+        vbDescriptions[2].pitch = Vector3f.sizeof;
 
         pipelineCreateInfo.vertex_input_state.num_vertex_buffers = vbDescriptions.length;
         pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
         
-        SDL_GPUVertexAttribute[2] vertexAttributes;
+        SDL_GPUVertexAttribute[3] vertexAttributes;
     
         // Position
         vertexAttributes[0].buffer_slot = VertexAttribute.Position;
         vertexAttributes[0].location = VertexAttribute.Position;
-        vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
         vertexAttributes[0].offset = 0;
         
         // Texcoords
@@ -178,6 +225,12 @@ class MotionBlurPass: RenderPass
         vertexAttributes[1].location = VertexAttribute.Texcoord;
         vertexAttributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
         vertexAttributes[1].offset = 0;
+        
+        // Normals
+        vertexAttributes[2].buffer_slot = VertexAttribute.Normal;
+        vertexAttributes[2].location = VertexAttribute.Normal;
+        vertexAttributes[2].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+        vertexAttributes[2].offset = 0;
         
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
@@ -194,10 +247,11 @@ class MotionBlurPass: RenderPass
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
         pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
-        pipelineCreateInfo.target_info.has_depth_stencil_target = false;
+        pipelineCreateInfo.target_info.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
+        pipelineCreateInfo.target_info.has_depth_stencil_target = true;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_BACK;
         pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
         pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
         pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
@@ -205,9 +259,9 @@ class MotionBlurPass: RenderPass
         pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
         pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
         
-        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS;
-        pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
-        pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_test = true;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_write = true;
         pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
@@ -217,15 +271,21 @@ class MotionBlurPass: RenderPass
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
         colorTargetInfo.texture = ppContext.writeBuffer;
         
+        depthTargetInfo.clear_depth = 1.0f;
+        depthTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
+        depthTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        depthTargetInfo.stencil_load_op = SDL_GPU_LOADOP_LOAD;
+        depthTargetInfo.stencil_store_op = SDL_GPU_STOREOP_STORE;
+        depthTargetInfo.cycle = false;
+        depthTargetInfo.clear_stencil = 0;
+        depthTargetInfo.mip_level = 0;
+        depthTargetInfo.layer = 0;
+        depthTargetInfo.texture = gbuffer.depthBuffer;
+        
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
-        depthStencilTargetInfo = null;
-        enableDepthTarget = false;
-    }
-    
-    override void update(Time t)
-    {
-        motionBlurShader.update(t);
+        depthStencilTargetInfo = &depthTargetInfo;
+        enableDepthTarget = true;
     }
     
     override void render(GraphicsState* state)
@@ -234,20 +294,34 @@ class MotionBlurPass: RenderPass
             return;
         
         colorTargetInfo.texture = ppContext.writeBuffer;
+        depthTargetInfo.texture = gbuffer.depthBuffer;
         
         beginPass();
         
-        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        //state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
         state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
-        state.entity = null;
-        motionBlurShader.bindParameters(state);
+        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         
-        renderer.renderScreenQuad(state);
+        foreach(entity; state.scene.entities)
+        {
+            if (entity.visible && !entity.isDecal && entity.drawable)
+            {
+                state.entity = entity;
+                if (entity.material)
+                {
+                    if (entity.material.blendMode == BlendMode.Transparent)
+                    {
+                        state.material = entity.material;
+                        refractionShader.bindParameters(state);
+                        entity.drawable.render(state);
+                    }
+                }
+            }
+        }
         
         endPass();
         

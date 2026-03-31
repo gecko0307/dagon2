@@ -31,7 +31,10 @@ import dlib.core.ownership;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
+import dagon.graphics.state;
 import dagon.render.deferred.gbuffer;
+import dagon.render.renderer;
+import dagon.render.pass;
 
 enum PingPongBufferState
 {
@@ -142,5 +145,45 @@ class PostProcessingContext: Owner
             readBuffer = buffer2;
             bufferState = PingPongBufferState.Ping;
         }
+    }
+}
+
+class BufferCopyPass: RenderPass
+{
+   protected:
+    GPU gpu;
+    PostProcessingContext ppContext;
+    
+   public:
+    this(Renderer renderer, PostProcessingContext ppContext)
+    {
+        super(renderer);
+        this.gpu = renderer.gpu;
+        this.ppContext = ppContext;
+    }
+    
+    override void render(GraphicsState* state)
+    {
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "COPY");
+        
+        auto copyPass = SDL_BeginGPUCopyPass(renderer.commandBuffer);
+        SDL_GPUTextureLocation texLocationSrc = {
+            texture: ppContext.gbuffer.radianceBuffer,
+            mip_level: 0, layer: 0,
+            x: 0, y: 0, z: 0
+        };
+        SDL_GPUTextureLocation texLocationDst = {
+            texture: ppContext.writeBuffer,
+            mip_level: 0, layer: 0,
+            x: 0, y: 0, z: 0
+        };
+        SDL_CopyGPUTextureToTexture(
+            copyPass,
+            &texLocationSrc, &texLocationDst,
+            ppContext.gbuffer.width, ppContext.gbuffer.height, 1,
+            false);
+        SDL_EndGPUCopyPass(copyPass);
+        
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }

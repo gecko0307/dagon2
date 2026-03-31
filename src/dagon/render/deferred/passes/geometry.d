@@ -333,8 +333,11 @@ class GeometryPass: RenderPass
                     state.material = entity.material;
                 else
                     state.material = renderer.defaultMaterial;
-                geometryShader.bindParameters(state);
-                entity.drawable.render(state);
+                if (state.material.blendMode == BlendMode.Opaque)
+                {
+                    geometryShader.bindParameters(state);
+                    entity.drawable.render(state);
+                }
             }
         }
         

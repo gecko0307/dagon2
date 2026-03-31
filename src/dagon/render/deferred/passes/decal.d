@@ -329,7 +329,6 @@ class DecalPass: RenderPass
         pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
         pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
         
-        
         pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
         pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
         pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;

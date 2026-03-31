@@ -49,6 +49,7 @@ import dagon.render.deferred.passes.sunlight;
 import dagon.render.deferred.passes.lightvolume;
 import dagon.render.deferred.passes.fog;
 import dagon.render.postprocessing.context;
+import dagon.render.postprocessing.passes.refraction;
 import dagon.render.postprocessing.passes.motionblur;
 import dagon.render.postprocessing.passes.tonemapping;
 import dagon.render.postprocessing.passes.fxaa;
@@ -69,6 +70,8 @@ class DeferredRenderer: Renderer
     SunLightPass sunLightPass;
     LightVolumePass lightVolumePass;
     FogPass fogPass;
+    BufferCopyPass bufferCopyPass;
+    RefractionPass refractionPass;
     MotionBlurPass motionBlurPass;
     TonemappingPass tonemappingPass;
     FXAAPass fxaaPass;
@@ -93,6 +96,8 @@ class DeferredRenderer: Renderer
         fogPass = New!FogPass(this, gbuffer);
         // TODO: forward pass
         // TODO: particles pass
+        bufferCopyPass = New!BufferCopyPass(this, ppContext);
+        refractionPass = New!RefractionPass(this, ppContext);
         motionBlurPass = New!MotionBlurPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);

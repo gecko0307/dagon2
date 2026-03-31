@@ -44,6 +44,12 @@ import dlib.image.color;
 
 import dagon.graphics.texture;
 
+enum BlendMode
+{
+    Opaque,
+    Transparent
+}
+
 class Material: Owner
 {
     /// Base color (albedo) constant.
@@ -128,6 +134,9 @@ class Material: Owner
      * If the object should be rendered at the background, this should be disabled.
      */
     bool outputDepth = true;
+    
+    ///
+    BlendMode blendMode = BlendMode.Opaque;
     
     this(Owner owner)
     {
