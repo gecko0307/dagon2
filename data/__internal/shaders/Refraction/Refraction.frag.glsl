@@ -9,6 +9,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     //vec4 baseColor;
     //vec4 roughnessMetallic;
     //vec4 emission;
+    vec4 ambientColor;
     vec4 alphaOptions;
     uvec4 flags;
     vec4 resolution;
@@ -39,20 +40,18 @@ out float gl_FragDepth;
 
 vec3 sampleSpecularReflection(in vec3 wN, in float roughnessSqrt)
 {
-    /*
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SPECULAR_TEXTURE) != 0)
     {
-        float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_LOD_LEVEL]);
+        float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_SPECULAR_LOD_LEVEL]);
         return textureLod(specularTexture, wN, lod).rgb * ubo.ambientColor.a;
     }
     else
     {
         return ubo.ambientColor.rgb * ubo.ambientColor.a;
     }
-    */
     
-    float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_SPECULAR_LOD_LEVEL]);
-    return textureLod(specularTexture, wN, lod).rgb; // * ubo.ambientColor.a;
+    //float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_SPECULAR_LOD_LEVEL]);
+    //return textureLod(specularTexture, wN, lod).rgb; // * ubo.ambientColor.a;
 }
 
 void main()
@@ -75,14 +74,11 @@ void main()
     vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
     vec3 wR = reflect(wE, wN);
     
-    const float ior = 1.02;
-    vec3 RR = refract(E, N, 1.0 / ior);
-    
-    const float roughness = 0.01;
-    vec3 reflection = sampleSpecularReflection(wR, sqrt(roughness));
-    
+    vec3 reflection = sampleSpecularReflection(wR, 0.01);
     float fresnel = pow(1.0 - max(dot(E, N), 0.0), 5.0);
     
+    const float ior = 1.5; //1.02;
+    vec3 RR = refract(E, N, 1.0 / ior);
     const float refractionStrength = 0.1;
     vec2 offset = RR.xy * refractionStrength;
     vec2 refractedUV = gbufTexCoord + offset;

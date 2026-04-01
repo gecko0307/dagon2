@@ -63,6 +63,7 @@ struct RefractionShaderFragmentUniformBuffer
     //Vector4f baseColor;
     //Vector4f roughnessMetallic;
     //Vector4f emission;
+    Color4f ambientColor;
     Vector4f alphaOptions;
     uint[4] flags;
     Vector4f resolution;
@@ -120,6 +121,7 @@ class RefractionShader: Shader
         vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
         
         fsUBO.invViewMatrix = Matrix4x4f.identity;
+        fsUBO.ambientColor = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.alphaOptions = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -141,6 +143,9 @@ class RefractionShader: Shader
         
         if (!entity.dynamic && entity.receiveDecals)
             fsUBO.flags[RefractionFlags.Entity] |= RefractionEntityFlags.Static;
+        
+        fsUBO.ambientColor = scene.ambientColor;
+        fsUBO.ambientColor.a = scene.ambientEnergy;
         
         fsUBO.alphaOptions.x = material.alphaClipThreshold;
         fsUBO.alphaOptions.y = cast(float)!material.shadeless;
@@ -298,7 +303,6 @@ class RefractionPass: RenderPass
         
         beginPass();
         
-        //state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
         state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
