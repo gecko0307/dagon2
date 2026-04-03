@@ -31,13 +31,16 @@ import dlib.core.ownership;
 import dlib.container.array;
 import dlib.image.color;
 
+import dagon.core.logger;
 import dagon.core.gpu;
 import dagon.graphics.entity;
 import dagon.graphics.camera;
 import dagon.graphics.light;
 import dagon.graphics.texture;
 
-class Scene: Owner
+import gscript;
+
+class Scene: Owner, GsObject
 {
     GPU gpu;
     Array!Entity entities;
@@ -96,5 +99,59 @@ class Scene: Owner
         if (parent)
             parent.addChild(light);
         return light;
+    }
+    
+    GsDynamic gsEntityByName(GsDynamic[] args)
+    {
+        logInfo(args);
+        if (args.length < 2)
+            return GsDynamic();
+        string name = args[1].asString;
+        GsDynamic result = GsDynamic();
+        foreach(entity; entities)
+        {
+            if (entity.name == name)
+            {
+                result = GsDynamic(entity);
+                break;
+            }
+        }
+        return result;
+    }
+    
+    ///
+    GsDynamic get(string key)
+    {
+        switch(key)
+        {
+            case "entities":
+                return GsDynamic(entities.data);
+            case "entityByName":
+                return GsDynamic(&gsEntityByName);
+            default:
+                return GsDynamic();
+        }
+    }
+    
+    ///
+    void set(string key, GsDynamic value)
+    {
+        // TODO
+    }
+    
+    ///
+    bool contains(string key)
+    {
+        switch(key)
+        {
+            case "entities": return true;
+            default: return false;
+        }
+    }
+    
+    ///
+    void setPrototype(GsObject obj)
+    {
+        // No-op
     }
 }

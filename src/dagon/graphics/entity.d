@@ -53,6 +53,8 @@ import dagon.core.updateable;
 import dagon.graphics.drawable;
 import dagon.graphics.material;
 
+import gscript;
+
 /// Layer categorization for entities in the scene stack.
 enum EntityLayer
 {
@@ -71,8 +73,11 @@ enum EntityLayer
  * This class tracks world/model matrices for rendering and supports movement,
  * rotation, scaling, and hierarchical transformation updates.
  */
-class Entity: Owner, Updateable
+class Entity: Owner, Updateable, GsObject
 {
+    /// Symbolic name (mainly for script access).
+    string name;
+    
     /// Array of child entities.
     Array!Entity children;
 
@@ -359,6 +364,43 @@ class Entity: Owner, Updateable
     void scale(Vector3f s)
     {
         scaling += s;
+    }
+    
+    ///
+    GsDynamic get(string key)
+    {
+        switch(key)
+        {
+            case "name":
+                return GsDynamic(name);
+            case "position":
+                return GsDynamic(GsVector(position));
+            default:
+                return GsDynamic();
+        }
+    }
+    
+    ///
+    void set(string key, GsDynamic value)
+    {
+        // TODO
+    }
+    
+    ///
+    bool contains(string key)
+    {
+        switch(key)
+        {
+            case "name": return true;
+            case "position": return true;
+            default: return false;
+        }
+    }
+    
+    ///
+    void setPrototype(GsObject obj)
+    {
+        // No-op
     }
 }
 

@@ -29,24 +29,83 @@ module dagon.game.basegame;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.container.array;
+import dlib.container.dict;
+import dlib.filesystem.filesystem;
 
 import dagon.core.application;
 import dagon.core.time;
+import dagon.core.logger;
 import dagon.game.world;
+import gscript;
 
-class BaseGame: Application
+class BaseGame: Application, GsObject
 {
     Array!World worlds;
     World activeWorld;
     
+    GsVirtualMachine vm;
+    GsInstruction[] mainScriptProgram;
+    ubyte[] mainScriptBytecode;
+    Dict!(GsDynamic, string) gsProperties;
+    GsDynamic[4] gsEventHandlerArgs;
+    
     this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
         super(w, h, fullscreen, title, args);
+        
+        // Initialize VM
+        vm = New!GsVirtualMachine(this);
+        vm.set("log", GsDynamic(&vmLog));
+        vm.set("logDebug", GsDynamic(&vmLogDebug));
+        vm.set("logInfo", GsDynamic(&vmLogInfo));
+        vm.set("logWarning", GsDynamic(&vmLogWarning));
+        vm.set("logError", GsDynamic(&vmLogError));
+        vm.set("logFatalError", GsDynamic(&vmLogFatalError));
+        vm.set("queueUserEvent", GsDynamic(&vmQueueUserEvent));
+        vm.set("send", GsDynamic(&vmSend));
+        vm.set("game", GsDynamic(this));
+        
+        gsProperties = dict!(GsDynamic, string);
+        gsEventHandlerArgs[0] = this;
+        
+        // Load main script
+        string mainScriptFile = "scripts/main.gsc";
+        if (fileExists(mainScriptFile))
+        {
+            FileStat s;
+            if (vfs.stat(mainScriptFile, s))
+            {
+                size_t size = cast(size_t)s.sizeInBytes;
+                if (size > 0)
+                {
+                    logDebug("Loading ", mainScriptFile, "...");
+                    auto istrm = vfs.openForInput(mainScriptFile);
+                    mainScriptBytecode = New!(ubyte[])(size);
+                    istrm.fillArray(mainScriptBytecode);
+                    Delete(istrm);
+                    
+                    mainScriptProgram = loadBytecode(mainScriptBytecode);
+                    debug logDebug(mainScriptProgram);
+                    if (mainScriptProgram.length)
+                    {
+                        vm.load(mainScriptProgram);
+                        vm.run();
+                    }
+                }
+            }
+        }
+        else
+        {
+            logWarning("scripts/main.gsc not found");
+        }
     }
     
     ~this()
     {
         worlds.free();
+        if (mainScriptBytecode.length)
+            Delete(mainScriptBytecode);
+        Delete(gsProperties);
     }
     
     World addWorld(World world)
@@ -55,9 +114,134 @@ class BaseGame: Application
         return world;
     }
     
+    ///
+    void triggerScriptEvent(string name, GsDynamic[] args)
+    {
+        GsDynamic* eventHandler = name in gsProperties;
+        if (eventHandler)
+        {
+            if (eventHandler.type == GsDynamicType.String)
+                vm.call(eventHandler.asString, args);
+        }
+    }
+    
+    ///
     override void onUpdate(Time t)
     {
         if (activeWorld)
             activeWorld.update(t);
+        
+        gsEventHandlerArgs[1] = GsDynamic(t.delta);
+        triggerScriptEvent("onUpdate", gsEventHandlerArgs[0..2]);
+    }
+    
+    ///
+    override void onKeyDown(int key)
+    {
+        gsEventHandlerArgs[1] = GsDynamic(key);
+        triggerScriptEvent("onKeyDown", gsEventHandlerArgs[0..2]);
+    }
+    
+    ///
+    GsDynamic get(string key)
+    {
+        switch(key)
+        {
+            case "activeWorld":
+                if (activeWorld)
+                    return GsDynamic(activeWorld);
+                else
+                    return GsDynamic();
+            default:
+                auto v = key in gsProperties;
+                if (v)
+                    return *v;
+                else
+                    return GsDynamic();
+        }
+    }
+    
+    ///
+    void set(string key, GsDynamic value)
+    {
+        gsProperties[key] = value;
+    }
+    
+    ///
+    bool contains(string key)
+    {
+        switch(key)
+        {
+            case "activeWorld": return true;
+            default:
+                if ((key in gsProperties) !is null)
+                    return true;
+                else
+                    return false;
+        }
+    }
+    
+    ///
+    void setPrototype(GsObject obj)
+    {
+        // No-op
+    }
+    
+    GsDynamic vmLog(GsDynamic[] args)
+    {
+        auto logLevel = cast(LogLevel)cast(uint)args[1].asNumber;
+        auto message = args[2].toString;
+        log(logLevel, message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmLogDebug(GsDynamic[] args)
+    {
+        auto message = args[1].toString;
+        logDebug(message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmLogInfo(GsDynamic[] args)
+    {
+        auto message = args[1].toString;
+        logInfo(message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmLogWarning(GsDynamic[] args)
+    {
+        auto message = args[1].toString;
+        logWarning(message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmLogError(GsDynamic[] args)
+    {
+        auto message = args[1].toString;
+        logError(message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmLogFatalError(GsDynamic[] args)
+    {
+        auto message = args[1].toString;
+        logFatalError(message);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmQueueUserEvent(GsDynamic[] args)
+    {
+        int code = cast(int)args[1].asNumber;
+        eventManager.queueUserEvent(code);
+        return GsDynamic();
+    }
+    
+    GsDynamic vmSend(GsDynamic[] args)
+    {
+        auto recipient = args[1].asString;
+        auto message = args[2].asString;
+        queueMessage(recipient, message, null, 1);
+        return GsDynamic();
     }
 }

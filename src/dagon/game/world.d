@@ -40,7 +40,9 @@ import dagon.game.basegame;
 import dagon.resource.image;
 import dagon.resource.texture;
 
-class World: EventListener
+import gscript;
+
+class World: EventListener, GsObject
 {
     BaseGame baseGame;
     GPU gpu;
@@ -134,5 +136,42 @@ class World: EventListener
     void onPostUpdate(Time t)
     {
         //
+    }
+    
+    ///
+    GsDynamic get(string key)
+    {
+        switch(key)
+        {
+            case "scene":
+                if (scene)
+                    return GsDynamic(scene);
+                else
+                    return GsDynamic();
+            default:
+                return GsDynamic();
+        }
+    }
+    
+    ///
+    void set(string key, GsDynamic value)
+    {
+        // TODO
+    }
+    
+    ///
+    bool contains(string key)
+    {
+        switch(key)
+        {
+            case "scene": return true;
+            default: return false;
+        }
+    }
+    
+    ///
+    void setPrototype(GsObject obj)
+    {
+        // No-op
     }
 }
