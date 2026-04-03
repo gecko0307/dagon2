@@ -5,6 +5,7 @@ Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon)
 [![comparison with Eevee](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)
 
 New features:
+- Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. As a result, the rendered image is now comparable to Blender's Eevee
 - Experimental HDR (scRGB) output support
