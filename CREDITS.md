@@ -1,7 +1,7 @@
 # Credits
 
 ## Authors and contributors
-* Core engine - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
+* Core engine and GScript3 runtime - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
 * OBJ group parser - [Vlad Davydov aka Tynuk](https://github.com/Tynukua)
 
 ## Adapted third-party code
