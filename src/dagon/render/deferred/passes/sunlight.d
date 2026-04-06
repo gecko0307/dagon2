@@ -105,7 +105,7 @@ class SunLightShader: Shader
         
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
-        fsUBO.lighVector = Vector4f(sun.directionAbsolute);
+        fsUBO.lighVector = Vector4f(sun.directionWorld);
         fsUBO.lighVector.w = 0.0;
         fsUBO.lighVector = fsUBO.lighVector * view.viewMatrix;
         fsUBO.lightColor = sun.color;

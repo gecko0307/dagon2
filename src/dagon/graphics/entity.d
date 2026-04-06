@@ -240,16 +240,16 @@ class Entity: Owner, Updateable, GsObject
     }
     
     /// Returns the world-space position of the entity.
-    Vector3f positionAbsolute()
+    Vector3f positionWorld()
     {
         return modelMatrix.translation;
     }
     
     /// Returns the world-space rotation of the entity.
-    Quaternionf rotationAbsolute()
+    Quaternionf rotationWorld()
     {
         if (parent)
-            return parent.rotationAbsolute * rotation;
+            return parent.rotationWorld * rotation;
         else
             return rotation;
     }
@@ -261,7 +261,7 @@ class Entity: Owner, Updateable, GsObject
     }
     
     /// World-space forward vector.
-    Vector3f directionAbsolute()
+    Vector3f directionWorld()
     {
         return modelMatrix.forward;
     }
@@ -273,7 +273,7 @@ class Entity: Owner, Updateable, GsObject
     }
     
     /// World-space right vector.
-    Vector3f rightAbsolute()
+    Vector3f rightWorld()
     {
         return modelMatrix.right;
     }
@@ -285,7 +285,7 @@ class Entity: Owner, Updateable, GsObject
     }
     
     /// World-space up vector.
-    Vector3f upAbsolute()
+    Vector3f upWorld()
     {
         return modelMatrix.up;
     }
@@ -375,6 +375,16 @@ class Entity: Owner, Updateable, GsObject
                 return GsDynamic(name);
             case "position":
                 return GsDynamic(GsVector(position));
+            case "rotation":
+                return GsDynamic(GsVector(rotation));
+            case "scaling":
+                return GsDynamic(GsVector(scaling));
+            case "direction":
+                return GsDynamic(GsVector(direction));
+            case "right":
+                return GsDynamic(GsVector(right));
+            case "up":
+                return GsDynamic(GsVector(up));
             default:
                 return GsDynamic();
         }
@@ -458,7 +468,7 @@ class PositionSync: EntityController
     
     override void update(Time t)
     {
-        entity.transformation = trsMatrix(targetEntity.positionAbsolute, entity.rotation, entity.scaling);
+        entity.transformation = trsMatrix(targetEntity.positionWorld, entity.rotation, entity.scaling);
         entity.invTransformation = entity.transformation.inverse;
         entity.prevModelMatrix = entity.modelMatrix;
         entity.modelMatrix = entity.transformation;

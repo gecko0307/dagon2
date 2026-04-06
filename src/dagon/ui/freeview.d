@@ -191,7 +191,7 @@ class FreeviewController: EntityController
         
         if (targetEntity)
         {
-            target = -targetEntity.positionAbsolute;
+            target = -targetEntity.positionWorld;
             smoothTarget = target;
         }
         
@@ -299,17 +299,17 @@ class FreeviewController: EntityController
         target = pos;
     }
     
-    /// Sets the camera's target to an entity's absolute position instantly.
+    /// Sets the camera's target to an entity's world position instantly.
     void setTarget(Entity e)
     {
-        target = e.positionAbsolute;
+        target = e.positionWorld;
         smoothTarget = target;
     }
     
-    /// Sets the camera's target to an entity's absolute position smoothly.
+    /// Sets the camera's target to an entity's world position smoothly.
     void setTargetSmooth(Entity e)
     {
-        target = e.positionAbsolute;
+        target = e.positionWorld;
     }
 
     /// Translates the camera's target by the given vector.

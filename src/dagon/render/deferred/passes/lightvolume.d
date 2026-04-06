@@ -110,7 +110,7 @@ class LightVolumeShader: Shader
         auto entity = state.entity;
         auto light = cast(Light)entity;
         
-        vsUBO.modelViewMatrix = pass.view.viewMatrix * light.volumeTransformation; //entity.modelMatrix;
+        vsUBO.modelViewMatrix = pass.view.viewMatrix * light.volumeTransformation;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         
@@ -119,7 +119,7 @@ class LightVolumeShader: Shader
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
-        Vector4f lightPositionHmg = Vector4f(light.positionAbsolute);
+        Vector4f lightPositionHmg = Vector4f(light.positionWorld);
         lightPositionHmg.w = 1.0f;
         fsUBO.lightPosition = lightPositionHmg * pass.view.viewMatrix;
         fsUBO.lightColor = light.color;

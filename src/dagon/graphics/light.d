@@ -159,6 +159,7 @@ class Light: Entity
             if (type == LightType.Sun)
                 _shadowMap = New!CascadedShadowMap(gpu, this, this);
             /*
+            // TODO
             else if (type == LightType.Spot)
                 _shadowMap = New!PerspectiveShadowMap(this, this);
             else
@@ -173,7 +174,7 @@ class Light: Entity
     {
         super.postUpdate(t);
         volumeTransformation =
-            translationMatrix(positionAbsolute) *
+            translationMatrix(positionWorld) *
             scaleMatrix(Vector3f(volumeRadius, volumeRadius, volumeRadius));
     }
 }

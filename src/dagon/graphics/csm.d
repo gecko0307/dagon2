@@ -147,8 +147,8 @@ class ShadowArea: Owner
      */
     void update(Light light, Camera camera)
     {
-        invViewMatrix = //light.modelMatrix;
-            translationMatrix(position) * light.rotationAbsolute.toMatrix4x4;
+        invViewMatrix =
+            translationMatrix(position) * light.rotationWorld.toMatrix4x4;
         viewMatrix = invViewMatrix.inverse;
         shadowMatrix = biasMatrix * projectionMatrix * viewMatrix * camera.invViewMatrix;
     }
@@ -279,16 +279,16 @@ class CascadedShadowMap: ShadowMap
     
     protected void updateCascadesForCamera(Camera cam)
     {
-        Vector3f cameraDirection = -cam.directionAbsolute;
+        Vector3f cameraDirection = -cam.directionWorld;
         
         float res1 = projectionSize[0] / resolution * 5;
-        area[0].position = snapTo(cam.positionAbsolute + cameraDirection * (projectionSize[0] * 0.48f - 1.0f), res1);
+        area[0].position = snapTo(cam.positionWorld + cameraDirection * (projectionSize[0] * 0.48f - 1.0f), res1);
         area[0].update(light, cam);
         
         foreach(i; 1..projectionSize.length)
         {
             auto res = projectionSize[i] / resolution * (i == 1? 10 : 100);
-            area[i].position = snapTo(cam.positionAbsolute + cameraDirection * projectionSize[i] * 0.5f, res);
+            area[i].position = snapTo(cam.positionWorld + cameraDirection * projectionSize[i] * 0.5f, res);
             area[i].update(light, cam);
         }
     }

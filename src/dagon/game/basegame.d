@@ -85,7 +85,6 @@ class BaseGame: Application, GsObject
                     Delete(istrm);
                     
                     mainScriptProgram = loadBytecode(mainScriptBytecode);
-                    debug logDebug(mainScriptProgram);
                     if (mainScriptProgram.length)
                     {
                         vm.load(mainScriptProgram);

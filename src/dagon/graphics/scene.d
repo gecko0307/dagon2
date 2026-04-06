@@ -168,7 +168,6 @@ class Scene: Owner, GsObject
     ///
     GsDynamic gsEntityByName(GsDynamic[] args)
     {
-        logInfo(args);
         if (args.length < 2)
             return GsDynamic();
         string name = args[1].asString;
