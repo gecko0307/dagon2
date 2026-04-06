@@ -46,6 +46,7 @@ import dagon.core.sdl3;
 import dagon.core.time;
 import dagon.graphics.texture;
 import dagon.graphics.state;
+import dagon.resource.shader.shader;
 import dagon.resource.shader.shadermodule;
 import dagon.render.renderer;
 import dagon.render.view;
@@ -68,6 +69,9 @@ abstract class RenderPass: Owner
 
     /// Whether this pass is active and should be executed during rendering a frame.
     bool active = true;
+    
+    /// The shader that this pass uses.
+    Shader shader;
     
    protected:
     SDL_GPURenderPass* renderPass;

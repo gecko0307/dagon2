@@ -179,6 +179,7 @@ class AmbientPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         ambientShader = New!AmbientShader(gpu, this);
+        shader = ambientShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = ambientShader.vertexModule.shader;

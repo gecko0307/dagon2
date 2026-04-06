@@ -134,6 +134,7 @@ class BRDFLUTPass: RenderPass
         super(renderer);
         
         brdflutShader = New!BRDFLUTShader(renderer.gpu, this);
+        shader = brdflutShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = brdflutShader.vertexModule.shader;

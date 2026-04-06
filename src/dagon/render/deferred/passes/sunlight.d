@@ -155,6 +155,7 @@ class SunLightPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         sunLightShader = New!SunLightShader(gpu, this);
+        shader = sunLightShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = sunLightShader.vertexModule.shader;

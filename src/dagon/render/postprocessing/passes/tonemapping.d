@@ -189,6 +189,7 @@ class TonemappingPass: RenderPass
         this.ppContext = ppContext;
         
         tonemappingShader = New!TonemappingShader(gpu, this);
+        shader = tonemappingShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = tonemappingShader.vertexModule.shader;

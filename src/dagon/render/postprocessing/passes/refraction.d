@@ -191,6 +191,7 @@ class RefractionPass: RenderPass
         this.ppContext = ppContext;
         
         refractionShader = New!RefractionShader(gpu, this);
+        shader = refractionShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = refractionShader.vertexModule.shader;

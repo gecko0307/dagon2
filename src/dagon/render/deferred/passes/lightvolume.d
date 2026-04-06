@@ -154,6 +154,7 @@ class LightVolumePass: RenderPass
         this.gbuffer = gbuffer;
         lightVolume = New!ShapeSphere(1.0f, 8, 8, false, gpu, this);
         lightVolumeShader = New!LightVolumeShader(gpu, this);
+        shader = lightVolumeShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = lightVolumeShader.vertexModule.shader;

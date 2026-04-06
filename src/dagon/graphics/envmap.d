@@ -157,6 +157,7 @@ class CubemapGeneratorPass: RenderPass
         super(renderer);
         
         cubemapGeneratorShader = New!CubemapGeneratorShader(renderer.gpu, this);
+        shader = cubemapGeneratorShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = cubemapGeneratorShader.vertexModule.shader;
@@ -349,6 +350,7 @@ class CubemapPrefilterPass: RenderPass
         super(renderer);
         
         cubemapPrefilterShader = New!CubemapPrefilterShader(renderer.gpu, this);
+        shader = cubemapPrefilterShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = cubemapPrefilterShader.vertexModule.shader;
@@ -531,6 +533,7 @@ class CubemapIrradiancePrefilterPass: RenderPass
         super(renderer);
         
         cubemapIrradiancePrefilterShader = New!CubemapIrradiancePrefilterShader(renderer.gpu, this);
+        shader = cubemapIrradiancePrefilterShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = cubemapIrradiancePrefilterShader.vertexModule.shader;

@@ -124,6 +124,7 @@ class SSAODenoisePass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         ssaoDenoiseShader = New!SSAODenoiseShader(gpu, this);
+        shader = ssaoDenoiseShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = ssaoDenoiseShader.vertexModule.shader;

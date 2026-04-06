@@ -173,6 +173,7 @@ class SSAOPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         ssaoShader = New!SSAOShader(gpu, this);
+        shader = ssaoShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = ssaoShader.vertexModule.shader;

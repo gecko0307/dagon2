@@ -122,6 +122,7 @@ class SharpeningPass: RenderPass
         this.ppContext = ppContext;
         
         sharpeningShader = New!SharpeningShader(gpu, this);
+        shader = sharpeningShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = sharpeningShader.vertexModule.shader;

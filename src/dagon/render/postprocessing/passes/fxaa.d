@@ -117,6 +117,7 @@ class FXAAPass: RenderPass
         this.ppContext = ppContext;
         
         fxaaShader = New!FXAAShader(gpu, this);
+        shader = fxaaShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = fxaaShader.vertexModule.shader;

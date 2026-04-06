@@ -227,6 +227,7 @@ class DecalPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         decalShader = New!DecalShader(gpu, this);
+        shader = decalShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = decalShader.vertexModule.shader;

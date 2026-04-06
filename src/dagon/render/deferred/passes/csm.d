@@ -122,6 +122,7 @@ class CSMPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         csmShader = New!CSMShader(gpu, this);
+        shader = csmShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = csmShader.vertexModule.shader;

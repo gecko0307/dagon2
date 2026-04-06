@@ -125,6 +125,7 @@ class FogPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         fogShader = New!FogShader(gpu, this);
+        shader = fogShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = fogShader.vertexModule.shader;

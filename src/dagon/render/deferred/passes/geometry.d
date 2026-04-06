@@ -240,6 +240,7 @@ class GeometryPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         geometryShader = New!GeometryShader(gpu, this);
+        shader = geometryShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = geometryShader.vertexModule.shader;

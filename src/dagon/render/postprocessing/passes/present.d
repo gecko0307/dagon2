@@ -110,6 +110,7 @@ class PresentPass: RenderPass
         this.ppContext = ppContext;
         
         presentShader = New!PresentShader(gpu, this);
+        shader = presentShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = presentShader.vertexModule.shader;

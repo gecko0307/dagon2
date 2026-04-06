@@ -108,6 +108,7 @@ class SelfIlluminationPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         selfIlluminationShader = New!SelfIlluminationShader(gpu, this);
+        shader = selfIlluminationShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = selfIlluminationShader.vertexModule.shader;

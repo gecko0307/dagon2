@@ -144,6 +144,7 @@ class MotionBlurPass: RenderPass
         this.ppContext = ppContext;
         
         motionBlurShader = New!MotionBlurShader(gpu, this);
+        shader = motionBlurShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
         pipelineCreateInfo.vertex_shader = motionBlurShader.vertexModule.shader;
