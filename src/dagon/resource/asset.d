@@ -24,16 +24,45 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource;
+module dagon.resource.asset;
 
-public
+import dlib.core.memory;
+import dlib.core.ownership;
+import dlib.core.stream;
+import dlib.filesystem.filesystem;
+
+import dagon.core.gpu;
+
+///
+abstract class Asset: Owner
 {
-    import dagon.resource.assetmanager;
-    import dagon.resource.asset;
-    import dagon.resource.cache;
-    import dagon.resource.dds;
-    import dagon.resource.image;
-    import dagon.resource.obj;
-    import dagon.resource.shader;
-    import dagon.resource.texture;
+    ///
+    GPU gpu;
+    
+    ///
+    bool cache = false;
+    
+    ///
+    bool persistent = false;
+    
+    ///
+    bool loaded = false;
+    
+    ///
+    this(GPU gpu, Owner owner)
+    {
+        super(owner);
+        this.gpu = gpu;
+    }
+    
+    /// Releases all resources associated with the asset.
+    void release()
+    {
+    }
+    
+    /// Loads an asset from a given stream.
+    bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    {
+        return false;
+    }
 }

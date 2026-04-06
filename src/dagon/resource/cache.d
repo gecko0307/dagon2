@@ -41,13 +41,17 @@ import dagon.core.application;
 import dagon.core.logger;
 import dagon.core.vfs;
 
+///
 enum ResourceType: uint
 {
     Shader = 0,
     Texture = 1
 }
 
+///
 alias ResourceSaveCallback = bool function(string path, OutputStream output, void* data);
+
+///
 alias ResourceLoadCallback = bool function(string path, InputStream output, void* data);
 
 class ResourceCacheStorage: Owner
@@ -64,6 +68,7 @@ class ResourceCacheStorage: Owner
     /// Standard filesystem interface.
     StdFileSystem fs;
     
+    ///
     this(ResourceCache cache, string directory, string extension)
     {
         super(cache);
@@ -74,6 +79,7 @@ class ResourceCacheStorage: Owner
         fs.createDir(directory, true);
     }
     
+    ///
     bool isFileValid(string name, SysTime compareToTimestamp)
     {
         string dirSeparator;
@@ -97,6 +103,7 @@ class ResourceCacheStorage: Owner
         return res;
     }
     
+    ///
     void saveFile(string name, ubyte[] data)
     {
         string dirSeparator;
@@ -116,6 +123,7 @@ class ResourceCacheStorage: Owner
         path.free();
     }
     
+    ///
     void saveFile(string name, ResourceSaveCallback saveCallback, void* userData)
     {
         string dirSeparator;
@@ -135,6 +143,7 @@ class ResourceCacheStorage: Owner
         path.free();
     }
     
+    ///
     ubyte[] loadFile(string name)
     {
         ubyte[] data;
@@ -163,6 +172,7 @@ class ResourceCacheStorage: Owner
         return data;
     }
     
+    ///
     ubyte[] loadFile(string name, ResourceLoadCallback loadCallback, void* userData)
     {
         ubyte[] data;
@@ -195,11 +205,16 @@ class ResourceCacheStorage: Owner
     }
 }
 
+///
 class ResourceCache: Owner
 {
+    ///
     Application application;
+    
+    ///
     Dict!(ResourceCacheStorage, uint) cacheStorage;
     
+    ///
     this(Application application, Owner owner = null)
     {
         super(owner);
@@ -207,6 +222,7 @@ class ResourceCache: Owner
         cacheStorage = dict!(ResourceCacheStorage, uint)();
     }
     
+    ///
     ResourceCacheStorage addStorage(uint resourceType, string cachedFileExtension, string directory)
     {
         ResourceCacheStorage rcs = New!ResourceCacheStorage(this, directory, cachedFileExtension);
@@ -214,6 +230,7 @@ class ResourceCache: Owner
         return rcs;
     }
     
+    ///
     ResourceCacheStorage getStorage(uint resourceType)
     {
         if (resourceType in cacheStorage)
@@ -222,6 +239,7 @@ class ResourceCache: Owner
             return null;
     }
     
+    ///
     void save(uint resourceType, string name, ubyte[] data)
     {
         ResourceCacheStorage rcs = getStorage(resourceType);
@@ -230,6 +248,7 @@ class ResourceCache: Owner
         rcs.saveFile(name, data);
     }
     
+    ///
     void save(uint resourceType, string name, ResourceSaveCallback saveCallback, void* userData)
     {
         ResourceCacheStorage rcs = getStorage(resourceType);
@@ -238,6 +257,7 @@ class ResourceCache: Owner
         rcs.saveFile(name, saveCallback, userData);
     }
     
+    ///
     ubyte[] load(uint resourceType, string name, string srcPath)
     {
         ubyte[] res;
@@ -258,6 +278,7 @@ class ResourceCache: Owner
         return res;
     }
     
+    ///
     ubyte[] load(uint resourceType, string name, string srcPath, ResourceLoadCallback loadCallback, void* userData)
     {
         ubyte[] res;
@@ -278,6 +299,7 @@ class ResourceCache: Owner
         return res;
     }
     
+    ///
     ~this()
     {
         Delete(cacheStorage);

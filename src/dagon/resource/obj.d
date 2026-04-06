@@ -58,7 +58,7 @@ import dlib.text.str;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
-//import dagon.resource.asset;
+import dagon.resource.asset;
 import dagon.graphics.mesh;
 
 /**
@@ -101,11 +101,8 @@ struct ObjFace
  * Loads mesh data from Wavefront OBJ files, supports group meshes,
  * and generates normals if missing. Materials are not supported.
  */
-class OBJAsset: Owner
+class OBJAsset: Asset
 {
-    ///
-    GPU gpu;
-    
     /// The main mesh loaded from the OBJ file.
     Mesh mesh;
 
@@ -115,8 +112,7 @@ class OBJAsset: Owner
     /// Constructs an OBJ asset.
     this(GPU gpu, Owner owner)
     {
-        super(owner);
-        this.gpu = gpu;
+        super(gpu, owner);
         groupMesh = dict!(Mesh, string);
     }
 
@@ -124,7 +120,6 @@ class OBJAsset: Owner
     ~this()
     {
         release();
-        groupMesh.free();
     }
 
     /**
@@ -138,7 +133,7 @@ class OBJAsset: Owner
      * Returns:
      *   True if loading succeeded.
      */
-    bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
         uint numVerts = 0;
         uint numNormals = 0;
@@ -444,7 +439,7 @@ class OBJAsset: Owner
     }
 
     /// Releases all resources associated with the asset.
-    void release()
+    override void release()
     {
         releaseMesh(mesh);
         
@@ -454,6 +449,10 @@ class OBJAsset: Owner
         }
         
         clearOwnedObjects();
+        
+        groupMesh.free();
+        
+        mesh = null;
     }
     
     void releaseMesh(Mesh m)

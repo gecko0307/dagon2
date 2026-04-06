@@ -24,6 +24,20 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Basic functionality for a rendering pass.
+ *
+ * Description:
+ * This module provides the base class for rendering passes.
+ * Rendering passes encapsulate individual stages of the graphics pipeline,
+ * managing GPU resources and providing methods for binding textures, buffers, 
+ * and executing draw commands.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.render.pass;
 
 import dlib.core.ownership;
@@ -36,11 +50,23 @@ import dagon.resource.shader.shadermodule;
 import dagon.render.renderer;
 import dagon.render.view;
 
+/**
+ * Abstract base class for rendering passes.
+ * A RenderPass encapsulates a single rendering operation in the graphics pipeline,
+ * managing GPU resources such as pipeline object and render targets, and providing methods
+ * to bind textures, buffers, and draw primitives. Subclasses should implement
+ * the `render` method to perform the actual rendering logic.
+ */
 abstract class RenderPass: Owner
 {
    public:
+    /// The renderer this pass belongs to.
     Renderer renderer;
+
+    /// The view associated with this pass.
     View view;
+
+    /// Whether this pass is active and should be executed during rendering a frame.
     bool active = true;
     
    protected:
@@ -52,6 +78,12 @@ abstract class RenderPass: Owner
     SDL_GPUGraphicsPipeline* graphicsPipeline;
     
    public:
+    /**
+     * Constructor. Adds the pass to the specified `Renderer`.
+     *
+     * Params:
+     *   renderer = The renderer object to associate with this pass.
+     */
     this(Renderer renderer)
     {
         super(renderer);
@@ -59,12 +91,17 @@ abstract class RenderPass: Owner
         renderer.addRenderPass(this);
     }
     
+    /// Destructor. Releases the graphics pipeline if it exists.
     ~this()
     {
         if (graphicsPipeline)
             SDL_ReleaseGPUGraphicsPipeline(renderer.gpu.device, graphicsPipeline);
     }
     
+    /**
+     * Begins the GPU render pass with the configured color and depth targets.
+     * This method initializes the render pass and binds the graphics pipeline if available.
+     */
     protected void beginPass()
     {
         renderPass = SDL_BeginGPURenderPass(
@@ -77,12 +114,20 @@ abstract class RenderPass: Owner
             SDL_BindGPUGraphicsPipeline(renderPass, graphicsPipeline);
     }
     
+    /// Ends the current GPU render pass.
     protected void endPass()
     {
         if (renderPass)
             SDL_EndGPURenderPass(renderPass);
     }
     
+    /**
+     * Binds the default texture and sampler to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     */
     void bindDefaultTexture(PipelineStage stage, uint binding)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(renderer.gpu.defaultTexture, renderer.gpu.defaultSampler);
@@ -93,6 +138,15 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    /**
+     * Binds a texture and sampler to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   texture = The GPU texture to bind.
+     *   sampler = The GPU sampler to bind.
+     */
     void bindTexture(PipelineStage stage, uint binding, SDL_GPUTexture* texture, SDL_GPUSampler* sampler)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(texture, sampler);
@@ -103,6 +157,14 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    /**
+     * Binds an input buffer's texture and sampler to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   buffer = The input buffer to bind.
+     */
     void bindInputBuffer(PipelineStage stage, uint binding, InputBuffer* buffer)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(buffer.texture, buffer.sampler);
@@ -113,6 +175,14 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    /**
+     * Binds a `Texture` to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   texture = The Texture object to bind.
+     */
     void bindTexture(PipelineStage stage, uint binding, Texture texture)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(texture.texture, texture.sampler);
@@ -123,6 +193,15 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    /**
+     * Binds uniform data (UBO) to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   data = Pointer to the uniform data.
+     *   size = Size of the uniform data in bytes.
+     */
     void bindUniformBuffer(PipelineStage stage, uint binding, void* data, uint size)
     {
         if (stage == PipelineStage.Vertex)
@@ -131,6 +210,15 @@ abstract class RenderPass: Owner
             SDL_PushGPUFragmentUniformData(renderer.commandBuffer, binding, data, size);
     }
     
+    /**
+     * Binds a uniform structure to the specified pipeline stage and binding slot.
+     * The struct must be std140 compliant.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   uniformStruct = Pointer to the uniform struct.
+     */
     void bindUniformBuffer(T)(PipelineStage stage, uint binding, T* uniformStruct) if (isStd140Compliant!T)
     {
         if (stage == PipelineStage.Vertex)
@@ -139,7 +227,14 @@ abstract class RenderPass: Owner
             SDL_PushGPUFragmentUniformData(renderer.commandBuffer, binding, uniformStruct, cast(uint)T.sizeof);
     }
     
-    // TODO: VertexBuffer class
+    /**
+     * Binds a vertex buffer to the specified slot.
+     * Vertex layout in the buffer is determined by the currently set pipeline object.
+     *
+     * Params:
+     *   slot = The vertex buffer slot index.
+     *   vertexBuffer = The GPU vertex buffer to bind.
+     */
     void bindVertexBuffer(uint slot, SDL_GPUBuffer* vertexBuffer)
     {
         SDL_GPUBufferBinding bufferBinding;
@@ -148,6 +243,13 @@ abstract class RenderPass: Owner
         SDL_BindGPUVertexBuffers(renderPass, slot, &bufferBinding, 1);
     }
     
+    /**
+     * Binds an index buffer for indexed drawing.
+     *
+     * Params:
+     *   indexBuffer = The GPU index buffer to bind.
+     *   elementSize = The size of each index element.
+     */
     void bindIndexBuffer(SDL_GPUBuffer* indexBuffer, SDL_GPUIndexElementSize elementSize)
     {
         SDL_GPUBufferBinding bufferBinding;
@@ -156,31 +258,76 @@ abstract class RenderPass: Owner
         SDL_BindGPUIndexBuffer(renderPass, &bufferBinding, elementSize);
     }
     
+    /**
+     * Sets the stencil reference value for stencil testing.
+     *
+     * Params:
+     *   value = The stencil reference value.
+     */
     void setStencilReference(ubyte value)
     {
         SDL_SetGPUStencilReference(renderPass, value);
     }
     
+    /**
+     * Draws primitives without an index buffer.
+     *
+     * Params:
+     *   numVertices = Number of vertices to draw.
+     *   numInstances = Number of instances to draw.
+     *   firstVertex = Index of the first vertex to draw.
+     *   firstInstance = Index of the first instance to draw.
+     */
     void drawPrimitives(uint numVertices, uint numInstances, uint firstVertex, uint firstInstance)
     {
         SDL_DrawGPUPrimitives(renderPass, numVertices, numInstances, firstVertex, firstInstance);
     }
     
+    /**
+     * Draws indexed primitives.
+     *
+     * Params:
+     *   numIndices = Number of indices to draw.
+     *   numInstances = Number of instances to draw.
+     *   firstIndex = Index of the first index to draw.
+     *   vertexOffset = Offset to add to each index.
+     *   firstInstance = Index of the first instance to draw.
+     */
     void drawIndexedPrimitives(uint numIndices, uint numInstances, uint firstIndex, int vertexOffset, uint firstInstance)
     {
         SDL_DrawGPUIndexedPrimitives(renderPass, numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
     }
     
+    /**
+     * Updates the render pass state. Called once per frame.
+     *
+     * Params:
+     *   t = Current frame timing information.
+     */
     void update(Time t)
     {
         //
     }
     
+    /**
+     * Performs the rendering operations for this pass.
+     * Subclasses should override this method to implement their specific rendering logic.
+     *
+     * Params:
+     *   state = Current graphics state.
+     */
     void render(GraphicsState* state)
     {
         //
     }
     
+    /**
+     * Handles resizing of the render targets.
+     *
+     * Params:
+     *   width = New width of the render target.
+     *   height = New height of the render target.
+     */
     void resize(uint width, uint height)
     {
         //

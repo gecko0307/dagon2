@@ -28,6 +28,7 @@ module dagon.game.world;
 
 import dlib.core.memory;
 import dlib.core.ownership;
+import dlib.filesystem.filesystem;
 
 import dagon.core.logger;
 import dagon.core.event;
@@ -36,22 +37,34 @@ import dagon.core.gpu;
 import dagon.graphics.texture;
 import dagon.graphics.scene;
 import dagon.game.basegame;
-//import dagon.resource.asset;
+import dagon.resource.asset;
 import dagon.resource.image;
 import dagon.resource.texture;
 
 import gscript;
 
+///
 class World: EventListener, GsObject
 {
+    ///
     BaseGame baseGame;
+    
+    ///
     GPU gpu;
+    
+    ///
     Scene scene;
+    
+    ///
     bool recalculateMatrices = true;
     
+    ///
     ImageConversionOptions defaultImageConversionOptions;
+    
+    ///
     TextureCreationOptions defaultTextureCreationOptions;
     
+    ///
     this(BaseGame baseGame)
     {
         super(baseGame.eventManager, baseGame);
@@ -66,12 +79,13 @@ class World: EventListener, GsObject
         // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
     }
     
+    ///
     void activate()
     {
         baseGame.activeWorld = this;
     }
     
-    // TODO: move to AssetManager
+    ///
     TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
     {
         TextureAsset asset = New!TextureAsset(gpu, this);
@@ -79,30 +93,43 @@ class World: EventListener, GsObject
         asset.creationOptions = *creationOptions;
         asset.cache = cache;
         if (baseGame.fileExists(filename))
-            asset.load(filename, baseGame.vfs);
+            loadAsset(asset, filename);
         else
             logError("Can\'t find file ", filename);
         return asset;
     }
     
+    ///
     TextureAsset loadTexture(string filename, bool cache = true)
     {
         return loadTexture(filename, &defaultImageConversionOptions, &defaultTextureCreationOptions, cache);
     }
     
-    // TODO: move to AssetManager
+    ///
+    bool loadAsset(Asset asset, string filename)
+    {
+        bool res = false;
+        FileStat s;
+        if (baseGame.vfs.stat(filename, s))
+        {
+            auto istrm = baseGame.vfs.openForInput(filename);
+            res = asset.load(filename, istrm, baseGame.vfs);
+            Delete(istrm);
+        }
+        else
+            logError("Can\'t find file ", filename);
+        return res;
+    }
+    
+    ///
     T loadAsset(T)(string filename)
     {
         T asset = New!T(gpu, this);
-        auto istrm = baseGame.vfs.openForInput(filename);
-        if (baseGame.fileExists(filename))
-            asset.load(filename, istrm, baseGame.vfs);
-        else
-            logError("Can\'t find file ", filename);
-        Delete(istrm);
+        loadAsset(asset, filename);
         return asset;
     }
     
+    ///
     void update(Time t)
     {
         processEvents();
@@ -128,11 +155,13 @@ class World: EventListener, GsObject
         }
     }
     
+    ///
     void onUpdate(Time t)
     {
         //
     }
     
+    ///
     void onPostUpdate(Time t)
     {
         //

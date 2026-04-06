@@ -46,10 +46,12 @@ import dagon.core.bc7;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
 import dagon.graphics.texture;
+import dagon.resource.asset;
 import dagon.resource.image;
 import dagon.resource.dds;
 import dagon.resource.hdr;
 
+///
 __gshared bc7enc_compress_block_params bc7Params;
 
 static this()
@@ -59,11 +61,8 @@ static this()
 }
 
 ///
-class TextureAsset: Owner
+class TextureAsset: Asset
 {
-    ///
-    GPU gpu;
-    
     ///
     TextureBuffer buffer;
     
@@ -77,28 +76,21 @@ class TextureAsset: Owner
     TextureCreationOptions creationOptions;
     
     ///
-    bool cache = false;
-    
-    ///
-    bool persistent = false;
-    
-    ///
-    bool loaded = false;
-    
     this(GPU gpu, Owner owner)
     {
-        super(owner);
-        this.gpu = gpu;
+        super(gpu, owner);
         conversionOptions.width = 0;
         conversionOptions.height = 0;
         conversionOptions.hint = 0;
     }
     
+    ///
     ~this()
     {
         releaseBuffer();
     }
     
+    ///
     protected void releaseBuffer()
     {
         if (buffer.data.length)
@@ -108,19 +100,15 @@ class TextureAsset: Owner
         }
     }
     
-    bool load(string filename, ReadOnlyFileSystem fs)
+    /// Releases all resources associated with the asset.
+    override void release()
     {
-        InputStream istrm;
-        FileStat s;
-        if (fs.stat(filename, s))
-            istrm = fs.openForInput(filename);
-        bool res = load(filename, istrm, fs);
-        if (istrm)
-            Delete(istrm);
-        return res;
+        releaseBuffer();
+        clearOwnedObjects();
     }
     
-    bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    ///
+    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
         string name = filename.baseName;
         
@@ -183,6 +171,7 @@ class TextureAsset: Owner
         return loaded;
     }
     
+    ///
     protected void compressTexture()
     {
         uint width = buffer.size.width;
@@ -331,11 +320,13 @@ class TextureAsset: Owner
     }
 }
 
+///
 bool textureSaveCallback(string path, OutputStream outputStream, void* data)
 {
     return saveDDS(outputStream, cast(TextureBuffer*)data);
 }
 
+///
 bool textureLoadCallback(string path, InputStream inputStream, void* data)
 {
     return loadDDS(inputStream, cast(TextureBuffer*)data);

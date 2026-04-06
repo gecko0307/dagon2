@@ -24,6 +24,18 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Scene class.
+ *
+ * Description:
+ * The `dagon.resource.scene` module defines the `Scene` class, which manages
+ * entities and environment for a 3D scene.
+ *
+ * Copyright: Timur Gafarov 2019-2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.graphics.scene;
 
 import dlib.core.memory;
@@ -40,6 +52,13 @@ import dagon.graphics.texture;
 
 import gscript;
 
+/**
+ * Manages entities and environment for a 3D scene.
+ *
+ * Description:
+ * The `Scene` class provides methods for creating entities,
+ * cameras, and lights.
+ */
 class Scene: Owner, GsObject
 {
     GPU gpu;
@@ -60,6 +79,13 @@ class Scene: Owner, GsObject
     float fogDensity = 1.0f;
     float groundFogDensity = 0.0f;
     
+    /**
+     * Constructs a new scene.
+     *
+     * Params:
+     *   gpu = GPU object.
+     *   owner = Owner object.
+     */
     this(GPU gpu, Owner owner)
     {
         super(owner);
@@ -74,6 +100,7 @@ class Scene: Owner, GsObject
         entities.free();
     }
     
+    /// Creates and adds a new entity, optionally with a parent.
     Entity addEntity(Entity parent = null)
     {
         Entity e = New!Entity(this);
@@ -83,6 +110,42 @@ class Scene: Owner, GsObject
         return e;
     }
     
+    /// Adds an existing entity to the world.
+    Entity useEntity(Entity e, bool useChildren = false)
+    {
+        entities.append(e);
+        if (useChildren)
+        {
+            foreach(child; e.children)
+                useEntity(child, useChildren);
+        }
+        return e;
+    }
+    
+    /// Removes an entity from the world without deleting it.
+    void removeEntity(Entity entity, bool removeChildren = false)
+    {
+        int index = -1;
+        foreach(i, e; entities.data)
+        {
+            if (e is entity)
+            {
+                index = cast(int)i;
+                break;
+            }
+        }
+        
+        if (index >= 0)
+            entities.removeKey(cast(size_t)index);
+        
+        if (removeChildren)
+        {
+            foreach(child; entity.children)
+                removeEntity(child, removeChildren);
+        }
+    }
+    
+    /// Creates and adds a new camera, optionally with a parent.
     Camera addCamera(Entity parent = null)
     {
         Camera c = New!Camera(this);
@@ -92,6 +155,7 @@ class Scene: Owner, GsObject
         return c;
     }
     
+    /// Creates and adds a new light of the given type, optionally with a parent.
     Light addLight(LightType type, Entity parent = null)
     {
         Light light = New!Light(gpu, type, this);
@@ -101,6 +165,7 @@ class Scene: Owner, GsObject
         return light;
     }
     
+    ///
     GsDynamic gsEntityByName(GsDynamic[] args)
     {
         logInfo(args);
