@@ -24,6 +24,18 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Provides the `View` abstraction for Dagon's rendering system.
+ *
+ * Description:
+ * The `dagon.render.view` module defines the `View` class, which
+ * encapsulates camera and projection settings for a render pass.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.render.view;
 
 import dlib.core.ownership;
@@ -34,30 +46,33 @@ import dlib.math.transformation;
 import dagon.core.time;
 import dagon.graphics.camera;
 
+/**
+ * Encapsulates camera and projection settings for a render pass.
+ */
 class View: Owner
 {
-    ///
+    /// Matrix that brings vectors from eye space to clip space.
     Matrix4x4f projectionMatrix;
     
-    ///
+    /// Inverse of projectionMatrix.
     Matrix4x4f invProjectionMatrix;
     
-    ///
+    /// Matrix that brings vectors from world space to eye space.
     Matrix4x4f viewMatrix;
     
-    ///
+    /// Inverse of viewMatrix.
     Matrix4x4f invViewMatrix;
     
-    ///
+    /// viewMatrix from the previous frame.
     Matrix4x4f prevViewMatrix;
     
-    ///
+    /// Viewport width in pixels.
     uint width;
     
-    ///
+    /// Viewport height in pixels.
     uint height;
     
-    ///
+    /// Aspect ratio of the viewport.
     float aspectRatio;
     
     /// Field of view in degrees (vertical) for perspective projection.
@@ -69,7 +84,7 @@ class View: Owner
     /// Far clipping plane distance.
     float zFar = 1000.0f;
     
-    ///
+    /// The camera used for rendering.
     Camera camera;
     
     this(uint width, uint height, Owner owner)
@@ -81,6 +96,7 @@ class View: Owner
         resize(width, height);
     }
     
+    /// Resizes the viewport and updates the aspect ratio.
     void resize(uint width, uint height)
     {
         this.width = width;
@@ -90,6 +106,12 @@ class View: Owner
         prevViewMatrix = viewMatrix;
     }
     
+    /**
+     * Updates matrices for the current frame using camera transform and projection settings.
+     *
+     * Params:
+     *   t = Frame timing information.
+     */
     void update(Time t)
     {
         prevViewMatrix = viewMatrix;
@@ -108,6 +130,7 @@ class View: Owner
             projectionMatrix = perspectiveMatrix(fov, aspectRatio, zNear, zFar);
             invViewMatrix = viewMatrix.inverse;
         }
+        // TODO: orthographic projection support
         
         invProjectionMatrix = projectionMatrix.inverse;
     }

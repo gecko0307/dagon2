@@ -94,6 +94,7 @@ struct FaceGroup
     uint firstTriangle;
     uint numTriangles;
     Material material;
+    bool visible;
 }
 
 /**
@@ -314,14 +315,17 @@ class Mesh: Owner, Drawable
                 pass.bindIndexBuffer(indexBuffer, SDL_GPU_INDEXELEMENTSIZE_32BIT);
                 if (facegroups.length)
                 {
-                    foreach(fg; facegroups)
+                    foreach(ref fg; facegroups)
                     {
-                        if (fg.material)
-                            state.material = fg.material;
-                        else
-                            state.material = pass.renderer.defaultMaterial;
-                        pass.shader.bindParameters(state);
-                        pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
+                        if (fg.visible)
+                        {
+                            if (fg.material)
+                                state.material = fg.material;
+                            else
+                                state.material = pass.renderer.defaultMaterial;
+                            pass.shader.bindParameters(state);
+                            pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
+                        }
                     }
                 }
                 else

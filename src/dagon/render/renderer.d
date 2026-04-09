@@ -24,6 +24,19 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * A high-level renderer abstraction for Dagon's rendering system.
+ *
+ * Description:
+ * The `dagon.render.renderer` module defines the basic `Renderer` class,
+ * which manages render passes and serves as a base for creating
+ * custom renderers.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.render.renderer;
 
 import dlib.core.memory;
@@ -43,17 +56,42 @@ import dagon.graphics.scene;
 import dagon.render.view;
 import dagon.render.pass;
 
+/**
+ * High-level renderer abstraction.
+ */
 abstract class Renderer: EventListener, Updateable
 {
+    /// GPU object.
     GPU gpu;
+    
+    /// GPU command buffer for rendering a frame.
     SDL_GPUCommandBuffer* commandBuffer;
+    
+    /// Array of render passes in order of execution.
     Array!RenderPass renderPasses;
+    
+    /// Quad shape for fullscreen passes.
     ShapeNormQuad screenQuad;
+    
+    /// Per-frame graphics pipeline state.
     GraphicsState state;
+    
+    /// The main render view.
     View view;
+    
+    /// Material used to render entities without a material.
     Material defaultMaterial;
+    
+    ///
     bool active = true;
     
+    /**
+     * Constructs a renderer with the given GPU and event manager.
+     *
+     * Params:
+     *   gpu = GPU object.
+     *   eventManager = Event manager.
+     */
     this(GPU gpu, EventManager eventManager)
     {
         super(eventManager, gpu);
@@ -67,17 +105,32 @@ abstract class Renderer: EventListener, Updateable
         defaultMaterial = New!Material(this);
     }
     
+    ///
     ~this()
     {
         renderPasses.free();
     }
     
+    /**
+     * Adds a render pass to the renderer.
+     * Usually it is not needed to call this method on user side,
+     * it is automatically called in RenderPass constructor.
+     *
+     * Params:
+     *   renderPass = Render pass object.
+     */
     void addRenderPass(RenderPass renderPass)
     {
         renderPasses.append(renderPass);
         renderPass.view = view;
     }
     
+    /**
+     * Updates the renderer and its pipeline for the current frame.
+     *
+     * Params:
+     *   t = Frame timing information.
+     */
     void update(Time t)
     {
         processEvents();
@@ -99,6 +152,7 @@ abstract class Renderer: EventListener, Updateable
         onUpdate(t);
     }
     
+    /// Renders the current frame using the pipeline and output buffer.
     void render()
     {
         if (!active)
@@ -120,6 +174,7 @@ abstract class Renderer: EventListener, Updateable
         SDL_SubmitGPUCommandBuffer(commandBuffer);
     }
     
+    /// Override for custom post-update logic.
     void onUpdate(Time t)
     {
         //
@@ -147,11 +202,20 @@ abstract class Renderer: EventListener, Updateable
         active = true;
     }
     
+    /**
+     * Assigns a scene to the renderer.
+     *
+     * Params:
+     *   scene = The scene to render.
+     * Note:
+     *   Override this method to implement custom scene assignment logic.
+     */
     void setScene(Scene scene)
     {
         state.scene = scene;
     }
     
+    ///
     void renderScreenQuad(GraphicsState* state)
     {
         screenQuad.render(state);

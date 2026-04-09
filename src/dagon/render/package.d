@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2026 Timur Gafarov
+Copyright (c) 2019-2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,6 +24,17 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * The main entry point for Dagon's rendering system.
+ *
+ * Description:
+ * The `dagon.render` module publicly imports all core rendering modules.
+ *
+ * Copyright: Timur Gafarov 2019-2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.render;
 
 public
