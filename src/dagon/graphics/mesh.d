@@ -52,6 +52,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.graphics.drawable;
+import dagon.graphics.material;
 import dagon.graphics.state;
 
 /**
@@ -86,9 +87,19 @@ interface TriangleSet
 }
 
 /**
- * Represents a 3D mesh with vertex and index data,
- * supporting rendering and triangle iteration.
+ * A group of triangles that use the same material.
+ */
+struct FaceGroup
+{
+    uint firstTriangle;
+    uint numTriangles;
+    Material material;
+}
+
+/**
+ * Represents an indexed 3D mesh.
  *
+ * Description:
  * The `Mesh` class stores vertex positions, normals,
  * texture coordinates, and triangle indices.
  */
@@ -114,6 +125,9 @@ class Mesh: Owner, Drawable
 
     /// Array of triangle indices.
     uint[3][] indices;
+    
+    /// Array of facegroups (optional).
+    FaceGroup[] facegroups;
     
     /// Axis-aligned bounding box for the mesh.
     AABB boundingBox;
@@ -298,7 +312,22 @@ class Mesh: Owner, Drawable
                 pass.bindVertexBuffer(VertexAttribute.Texcoord, texcoordBuffer);
                 pass.bindVertexBuffer(VertexAttribute.Normal, normalBuffer);
                 pass.bindIndexBuffer(indexBuffer, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-                pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
+                if (facegroups.length)
+                {
+                    foreach(fg; facegroups)
+                    {
+                        if (fg.material)
+                            state.material = fg.material;
+                        else
+                            state.material = pass.renderer.defaultMaterial;
+                        pass.shader.bindParameters(state);
+                        pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
+                    }
+                }
+                else
+                {
+                    pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
+                }
             }
         }
     }
