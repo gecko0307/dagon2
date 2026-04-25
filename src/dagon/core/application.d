@@ -501,7 +501,7 @@ class Application: EventListener, Updateable
         void* waylandSurface;
         
         /// Linux-only: X11 window ID of the main window.
-        uint x11WindowID;
+        long x11WindowID;
     }
     
     /// Main loop runner. Calls `Application.update` with a given fixed frequency (60 Hz by default).
@@ -743,7 +743,7 @@ class Application: EventListener, Updateable
                 freetypeLibraryPath = config.props["FreeType.path.linux"].toString;
             
             if (sdlLibraryPath == "auto")
-                sdlLibraryPath = "libSDL3.so";
+                sdlLibraryPath = "libSDL3.so.0";
             
             if (sdlImageLibraryPath == "auto")
                 sdlImageLibraryPath = "libSDL3_image.so";
