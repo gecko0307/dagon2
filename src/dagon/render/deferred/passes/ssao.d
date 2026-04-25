@@ -111,12 +111,12 @@ class SSAOShader: Shader
     
     void update(Time t)
     {
+        time += 4.0f * t.delta;
+        if (time > PI * 2.0f)
+            time = 0.0f;
+        
         if (temporalAccumulation)
         {
-            time += 4.0f * t.delta;
-            if (time > PI * 2.0f)
-                time = 0.0f;
-            
             if (numSamples > numSamplesMin)
                 numSamples--;
         }

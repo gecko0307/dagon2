@@ -35,6 +35,7 @@ import dlib.container.array;
 import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.time;
+import dagon.core.config;
 import dagon.graphics.texture;
 import dagon.graphics.envmap;
 import dagon.graphics.brdflut;
@@ -42,6 +43,7 @@ import dagon.game.basegame;
 import dagon.game.world;
 import dagon.render.deferred;
 
+///
 struct IBLData
 {
     Texture irradianceCubemap;
@@ -49,23 +51,60 @@ struct IBLData
     Texture brdfLUT;
 }
 
+///
 class Game: BaseGame
 {
+    protected string rendererConfigFilename = "render.conf";
+    
+    /// The configuration object for storing user-defined rendering settings.
+    Configuration rendererConfig;
+    
+    /// 
     CubemapRenderer cubemapRenderer;
+    
+    /// 
     BRDFLUTRenderer brdflutRenderer;
+    
+    /// 
     DeferredRenderer renderer;
+    
+    /// 
     Texture brdfLUT;
     
     this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
         super(w, h, fullscreen, title, args);
+        
+        // Create render config
+        rendererConfig = New!Configuration(this);
+        foreach(fs; vfs.mounted)
+        {
+            rendererConfig.fromFile(fs, rendererConfigFilename);
+        }
+        
+        // Create renderers
         cubemapRenderer = New!CubemapRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT);
         brdflutRenderer = New!BRDFLUTRenderer(gpu, eventManager, SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT);
         renderer = New!DeferredRenderer(gpu, eventManager);
         
+        // Generate Smith BRDF LUT
         brdfLUT = generateBRDFLUT(256, this);
         renderer.state.brdfLUT = brdfLUT;
         renderer.state.brdfLUTEnabled = true;
+        
+        // Renderer configuration
+        if ("ssao.enabled" in rendererConfig.props)
+            renderer.ssaoPass.active = cast(bool)(rendererConfig.props["ssao.enabled"].toUInt);
+        if ("ssao.samplesMin" in rendererConfig.props)
+            renderer.ssaoPass.ssaoShader.numSamplesMin = rendererConfig.props["ssao.samplesMin"].toUInt;
+        if ("ssao.samplesMax" in rendererConfig.props)
+            renderer.ssaoPass.ssaoShader.numSamplesMax = rendererConfig.props["ssao.samplesMax"].toUInt;
+        if ("ssao.radius" in rendererConfig.props)
+            renderer.ssaoPass.ssaoShader.radius = rendererConfig.props["ssao.radius"].toFloat;
+        if ("ssao.power" in rendererConfig.props)
+            renderer.ssaoPass.ssaoShader.power = rendererConfig.props["ssao.power"].toFloat;
+        if ("ssao.temporalAccumulation" in rendererConfig.props)
+            renderer.ssaoPass.ssaoShader.temporalAccumulation = cast(bool)(rendererConfig.props["ssao.temporalAccumulation"].toUInt);
     }
     
     IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
