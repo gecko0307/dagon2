@@ -33,6 +33,7 @@ import dlib.image.color;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 
+///
 class GBuffer: Owner
 {
     GPU gpu;

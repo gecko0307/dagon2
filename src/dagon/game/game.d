@@ -105,6 +105,8 @@ class Game: BaseGame
             renderer.ssaoPass.ssaoShader.power = rendererConfig.props["ssao.power"].toFloat;
         if ("ssao.temporalAccumulation" in rendererConfig.props)
             renderer.ssaoPass.ssaoShader.temporalAccumulation = cast(bool)(rendererConfig.props["ssao.temporalAccumulation"].toUInt);
+        if ("ssao.denoise" in rendererConfig.props)
+            renderer.ssaoDenoisePass.active = cast(bool)(rendererConfig.props["ssao.denoise"].toUInt);
     }
     
     IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
