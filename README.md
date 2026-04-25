@@ -19,7 +19,7 @@ New features:
 - Window minimize/restore events.
 
 Major changes from Dagon 0.x/1.x:
-- Reimplemented `dagon.render` (WIP). Deferred renderer, post-processing renderer and presentation renderer are now combined into one
+- Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
 - Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`
 - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
