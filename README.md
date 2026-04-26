@@ -61,7 +61,7 @@ Major changes from Dagon 0.x/1.x:
 
 System Requirements
 -------------------
-The recommended system requirements (for Full HD rendering at 60 fps):
+Realistic minimum system requirements (for Full HD rendering at 60 fps):
 - CPU: Intel Core i3-10100 / AMD Ryzen 3 3100
 - RAM: application-dependent, usually 8 Gb minimum
 - GPU: Vulkan-capable, tested on GeForce RTX 3050
