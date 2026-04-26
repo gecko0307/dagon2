@@ -47,8 +47,10 @@ import dagon.jolt.shape;
 
 class JoltCharacterController: EntityController
 {
+   public:
     JoltPhysicsWorld physicsWorld;
     JoltRotatedTranslatedShape standingShape;
+    JoltRotatedTranslatedShape crouchingShape;
     JPH_CharacterVirtual* characterVirtual;
     Vector3f velocity = Vector3f(0.0f, 0.0f, 0.0f);
     
@@ -58,8 +60,18 @@ class JoltCharacterController: EntityController
     
     float gravity = -30.0f;
     
+    float crouchEyeHeight;
+    float normalEyeHeight;
+    float eyeHeight;
+    float targetEyeHeight;
+    float crouchSpeed;
+    
+    Vector3f ceilingPosition = Vector3f(0.0f, 0.0f, 0.0f);
+    float maxRaycastDistance = 100.0f;
+    float headMargin = 0.0f;
+    
     JPH_ExtendedUpdateSettings extendedUpdateSettings = {
-        stickToFloorStepDown: Vector3f(0.0f, -0.1f, 0.0f), //-0.01f
+        stickToFloorStepDown: Vector3f(0.0f, -0.1f, 0.0f),
         walkStairsStepUp: Vector3f(0.0f, 0.4f, 0.0f),
         walkStairsMinStepForward: 0.02f,
         walkStairsStepForwardTest: 0.15f,
@@ -68,11 +80,15 @@ class JoltCharacterController: EntityController
     };
     
    protected:
+    JoltCapsuleShape standingCapsuleShape;
+    JoltSphereShape crouchingSphereShape;
+    float halfHeight;
     Vector3f movementVelocity = Vector3f(0.0f, 0.0f, 0.0f);
     float jumpSpeed = 10.0f;
     float verticalSpeed = 0.0f;
     bool jumped = false;
-    
+    bool crouching = false;
+    bool forcefullyCrouching = false;
     JPH_CharacterContactListener* contactListener;
     
    public:
@@ -84,10 +100,11 @@ class JoltCharacterController: EntityController
         JPH_CharacterVirtualSettings characterSettings;
         JPH_CharacterVirtualSettings_Init(&characterSettings);
         
-        auto capsuleShape = New!JoltCapsuleShape((height - radius * 2.0f) * 0.5f, radius, this);
+        standingCapsuleShape = New!JoltCapsuleShape((height - radius * 2.0f), radius, this);
+        crouchingSphereShape = New!JoltSphereShape(radius, this);
         
-        Vector3f capsuleOffset = Vector3f(0.0f, height * 0.5f, 0.0f);
-        standingShape = New!JoltRotatedTranslatedShape(capsuleShape, capsuleOffset, Quaternionf.identity, this);
+        standingShape = New!JoltRotatedTranslatedShape(standingCapsuleShape, Vector3f(0.0f, height * 0.5f, 0.0f), Quaternionf.identity, this);
+        crouchingShape = New!JoltRotatedTranslatedShape(crouchingSphereShape, Vector3f(0.0f, radius, 0.0f), Quaternionf.identity, this);
         
         characterSettings.base.shape = standingShape.shape;
         characterSettings.base.supportingVolume = JPH_Plane(Vector3f(0.0f, 1.0f, 0.0f), -radius);
@@ -101,6 +118,14 @@ class JoltCharacterController: EntityController
         
         this.mass = mass;
         this.maxStrength = 10000.0f;
+        
+        this.halfHeight = height * 0.5f;
+        
+        crouchEyeHeight = height * 0.5f;
+        normalEyeHeight = height;
+        eyeHeight = normalEyeHeight;
+        targetEyeHeight = eyeHeight;
+        crouchSpeed = 6.0f;
     }
     
     void position(Vector3f pos) @property
@@ -136,7 +161,32 @@ class JoltCharacterController: EntityController
         jumped = true;
     }
     
-    // TODO: crouch
+    void crouch(bool mode) @property
+    {
+        if (crouching != mode && groundState == JPH_GroundState.OnGround)
+        {
+            if (mode)
+            {
+                JPH_CharacterVirtual_SetShape(characterVirtual, crouchingShape.shape, 0.0f, JoltBroadPhaseLayer.NonMoving, physicsWorld.physicsSystem, null, null);
+                crouching = true;
+            }
+            else if (!forcefullyCrouching)
+            {
+                JPH_CharacterVirtual_SetShape(characterVirtual, standingShape.shape, 0.0f, JoltBroadPhaseLayer.NonMoving, physicsWorld.physicsSystem, null, null);
+                crouching = false;
+            }
+        }
+    }
+    
+    bool isCrouching() @property
+    {
+        return crouching || forcefullyCrouching;
+    }
+    
+    bool onGround() @property
+    {
+        return (groundState == JPH_GroundState.OnGround && jumped == false);
+    }
     
     override void update(Time t)
     {
@@ -190,11 +240,51 @@ class JoltCharacterController: EntityController
             translationMatrix(entity.position) *
             entity.rotation.toMatrix4x4;
         entity.invTransformation = entity.transformation.inverse;
+        
+        Vector3f raycastSource = entity.position;
+        raycastSource.y += halfHeight;
+        
+        if (hitCeiling(raycastSource))
+            forcefullyCrouching = (ceilingPosition.y - raycastSource.y) <= (halfHeight + headMargin);
+        else
+            forcefullyCrouching = false;
+        
+        if (crouching)
+        {
+            targetEyeHeight = crouchEyeHeight;
+        }
+        else
+        {
+            if (forcefullyCrouching)
+            {
+                targetEyeHeight = crouchEyeHeight;
+                crouch(true);
+            }
+            else
+            {
+                targetEyeHeight = normalEyeHeight;
+                crouch(false);
+            }
+        }
+        
+        eyeHeight += (targetEyeHeight - eyeHeight) * crouchSpeed * t.delta;
     }
     
     override void postUpdate(Time t)
     {
         entity.modelMatrix = entity.transformation;
         entity.invModelMatrix = entity.invTransformation;
+    }
+    
+    bool hitCeiling(Vector3f pstart)
+    {
+        Vector3f hitPosition;
+        if (physicsWorld.shapeCast(crouchingSphereShape, translationMatrix(pstart), Vector3f(0.0f, halfHeight, 0.0f), hitPosition))
+        {
+            ceilingPosition = hitPosition;
+            return true;
+        }
+        else
+            return false;
     }
 }
