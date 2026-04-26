@@ -65,7 +65,7 @@ Realistic minimum system requirements (for Full HD rendering at 60 fps):
 - CPU: Intel Core i3-10100 / AMD Ryzen 3 3100
 - RAM: application-dependent, usually 8 Gb minimum
 - GPU: Vulkan-capable, tested on GeForce RTX 3050
-- VRAM: 8 Gb
+- VRAM: 6-8 Gb
 - OS: 64-bit Windows 10 or higher / Linux.
 
 Usage
