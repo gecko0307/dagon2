@@ -75,7 +75,7 @@ TODO
 Runtime Dependencies
 --------------------
 - [SDL](https://www.libsdl.org) 3.4
-- [SDL_Image](https://github.com/libsdl-org/SDL_image) 3.4
+- [SDL_Image](https://github.com/libsdl-org/SDL_image) 3.2
 - [FreeType](https://www.freetype.org) 2.8.1
 - [GLSLang](https://github.com/khronosGroup/glslang)
 - [SPIRV-Cross](https://github.com/khronosgroup/spirv-cross)
