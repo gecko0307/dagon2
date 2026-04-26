@@ -14,23 +14,25 @@ Features
 --------
 Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported yet.
 
-* Scene graph
-* Virtual file system
-* [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format support
-* Textures in PNG, JPEG, WebP, AVIF, DDS, HDR, SVG and many other formats
-* S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC7 compressor and DDS exporter
-* Runs in windowed, fullscreen and borderless fullscreen modes
-* Physically based rendering (PBR) with GGX microfacet BRDF. Metallic-roughness workflow. The rendered image is comparable to Blender's Eevee
-* HDR rendering with AgX tonemapping
-* HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS
-* Directional lights with cascaded shadow mapping
-* Normal mapping, parallax mapping
-* Deferred decals with normal mapping and PBR material properties
-* Input from keyboard, mouse and up to 4 gamepads
-* Unicode text input
-* Ownership memory model
-* Built-in camera logics for easy navigation: freeview and first person views
-* Rigid body physics using [Jolt](https://github.com/jrouwe/JoltPhysics) physics engine. Built-in character controller
+- Scene graph
+- Virtual file system
+- [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format support
+- Textures in PNG, JPEG, WebP, AVIF, DDS, HDR, SVG and many other formats
+- S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC7 compressor and DDS exporter. Texture cache to accelerates loading
+- Shaders in GLSL 4.60; SPIR-V cache
+- Runs in windowed, fullscreen and borderless fullscreen modes
+- Physically based rendering (PBR) with GGX microfacet BRDF. Metallic-roughness workflow. The rendered image is comparable to Blender's Eevee
+- HDR rendering with AgX tonemapping
+- HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS
+- Directional lights with cascaded shadow mapping
+- Normal mapping, parallax mapping
+- Deferred decals with normal mapping and PBR material properties
+- Input from keyboard, mouse and up to 4 gamepads
+- Unicode text input
+- Ownership memory model
+- Built-in camera logics for easy navigation: freeview and first person views
+- Rigid body physics using [Jolt](https://github.com/jrouwe/JoltPhysics) physics engine. Built-in character controller
+- Native file open/save dialogs (for Windows, GTK, and Qt).
 
 New features:
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
@@ -72,12 +74,12 @@ TODO
 
 Runtime Dependencies
 --------------------
-* [SDL](https://www.libsdl.org) 3.4
-* [SDL_Image](https://github.com/libsdl-org/SDL_image) 3.4
-* [FreeType](https://www.freetype.org) 2.8.1
-* [GLSLang](https://github.com/khronosGroup/glslang)
-* [SPIRV-Cross](https://github.com/khronosgroup/spirv-cross)
-* [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
+- [SDL](https://www.libsdl.org) 3.4
+- [SDL_Image](https://github.com/libsdl-org/SDL_image) 3.4
+- [FreeType](https://www.freetype.org) 2.8.1
+- [GLSLang](https://github.com/khronosGroup/glslang)
+- [SPIRV-Cross](https://github.com/khronosgroup/spirv-cross)
+- [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
 
 Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux, if you want to use local libraries in Windows way (from application's working directory rather than from the system), add the following to your `dub.json`:
 
@@ -87,7 +89,7 @@ Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux
 
 Known Limitations
 -----------------
-* The engine doesn't support macOS yet. Although SDL GPU is a multi-backend API, Dagon 2 currently targets only Vulkan backend.
+- The engine doesn't support macOS yet. Although SDL GPU is a multi-backend API, Dagon 2 currently targets only Vulkan backend.
 
 Documentation
 -------------
