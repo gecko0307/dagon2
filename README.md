@@ -1,8 +1,6 @@
 Dagon Engine 2
 --------------
-Work-in-progress SDL3 port of [Dagon engine](https://github.com/gecko0307/dagon).
-
-Feature-rich, easy to use, extensible desktop game development framework for [D language](https://dlang.org/) based on Vulkan and SDL3. Works on Windows and Linux.
+Work-in-progress SDL3 port of [Dagon Engine](https://github.com/gecko0307/dagon). Feature-rich, easy to use, extensible desktop game development framework for [D language](https://dlang.org/) based on Vulkan and SDL3. Works on Windows and Linux.
 
 If you like Dagon, support its development on [Patreon](https://www.patreon.com/gecko0307) or [Liberapay](https://liberapay.com/gecko0307). You can also make a one-time donation via [NOWPayments](https://nowpayments.io/donation/gecko0307). I appreciate any support. Thanks in advance!
 
