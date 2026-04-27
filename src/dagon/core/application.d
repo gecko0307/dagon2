@@ -65,6 +65,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.glslang;
 import dagon.core.spvc;
+import dagon.core.ktx;
 import dagon.core.freetype;
 import dagon.core.event;
 import dagon.core.time;
@@ -306,6 +307,9 @@ class Application: EventListener, Updateable
     /// Path to the FreeType library.
     string freetypeLibraryPath = "auto";
     
+    /// Path to the KTX library.
+    string ktxLibraryPath = "auto";
+    
     /// Path to the folder containing translation files.
     string localePath = "locale";
     
@@ -340,6 +344,12 @@ class Application: EventListener, Updateable
     Version loadedSDLImageSupport;
     
     /**
+     * Loaded libktx API support version. This is not an actual libktx library version!
+     * To check actually loaded library version, use `ktxVersion`.
+     */
+    KTXSupport loadedKTXSupport;
+    
+    /**
      * Loaded FreeType API support version. This is not an actual FreeType library version!
      * To check actually loaded library version, use `ftVersion`.
      */
@@ -359,6 +369,9 @@ class Application: EventListener, Updateable
     
     /// Actually used SDL_Image library version.
     LibraryVersion sdlImageVersion;
+    
+    /// Actually used KTX library version.
+    LibraryVersion ktxVersion;
     
     /// Actually used FreeType library version.
     LibraryVersion ftVersion;
@@ -713,6 +726,8 @@ class Application: EventListener, Updateable
             sdlLibraryPath = config.props["SDL3.path"].toString;
         if ("SDL3Image.path" in config.props)
             sdlLibraryPath = config.props["SDL3Image.path"].toString;
+        if ("KTX.path" in config.props)
+            ktxLibraryPath = config.props["KTX.path"].toString;
         if ("FreeType.path" in config.props)
             freetypeLibraryPath = config.props["FreeType.path"].toString;
         version(Windows)
@@ -721,6 +736,8 @@ class Application: EventListener, Updateable
                 sdlLibraryPath = config.props["SDL3.path.windows"].toString;
             if ("SDL3Image.path.windows" in config.props)
                 sdlImageLibraryPath = config.props["SDL3Image.path.windows"].toString;
+            if ("KTX.path.windows" in config.props)
+                ktxLibraryPath = config.props["KTX.path.windows"].toString;
             if ("FreeType.path.windows" in config.props)
                 freetypeLibraryPath = config.props["FreeType.path.windows"].toString;
             
@@ -729,6 +746,9 @@ class Application: EventListener, Updateable
             
             if (sdlImageLibraryPath == "auto")
                 sdlImageLibraryPath = "SDL3_image.dll";
+            
+            if (ktxLibraryPath == "auto")
+                ktxLibraryPath = "ktx.dll";
             
             if (freetypeLibraryPath == "auto")
                 freetypeLibraryPath = "";
@@ -739,6 +759,8 @@ class Application: EventListener, Updateable
                 sdlLibraryPath = config.props["SDL3.path.linux"].toString;
             if ("SDL3Image.path.linux" in config.props)
                 sdlImageLibraryPath = config.props["SDL3Image.path.linux"].toString;
+            if ("KTX.path.linux" in config.props)
+                ktxLibraryPath = config.props["KTX.path.linux"].toString;
             if ("FreeType.path.linux" in config.props)
                 freetypeLibraryPath = config.props["FreeType.path.linux"].toString;
             
@@ -747,6 +769,9 @@ class Application: EventListener, Updateable
             
             if (sdlImageLibraryPath == "auto")
                 sdlImageLibraryPath = "libSDL3_image.so";
+            
+            if (ktxLibraryPath == "auto")
+                ktxLibraryPath = "libktx.so";
             
             if (freetypeLibraryPath == "auto")
                 freetypeLibraryPath = "";
@@ -789,6 +814,16 @@ class Application: EventListener, Updateable
             exitWithError("Too old version of SDL. Dagon requires SDL 3.2 or higher");
         else if (sdlImageVersion.minor < 2)
             logWarning("Too old version of SDL. Dagon will try to use it, but it is recommended to install SDL 3.2 or higher");
+        
+        // Load KTX library
+        if (ktxLibraryPath.length)
+            loadedKTXSupport = loadKTX(ktxLibraryPath);
+        else
+            loadedKTXSupport = loadKTX();
+        if (loadedKTXSupport == KTXSupport.noLibrary)
+            logWarning("libktx is not found. KTX support will be disabled");
+        else if (loadedKTXSupport == KTXSupport.badLibrary)
+            logWarning("Too old version of libktx. Please, install libktx 4.4.0 or higher");
         
         // Load GLSLang library
         // TODO: use glslangLibraryPath
@@ -1083,7 +1118,21 @@ class Application: EventListener, Updateable
         _imageFileFormatSupported[ImageFileFormat.TGA] = true;
         _imageFileFormatSupported[ImageFileFormat.HDR] = true;
         _imageFileFormatSupported[ImageFileFormat.DDS] = true;
-        // TODO: other formats
+        _imageFileFormatSupported[ImageFileFormat.SVG] = true;
+        _imageFileFormatSupported[ImageFileFormat.TIFF] = true; //(supportedFormatFlags & IMG_INIT_TIF) > 0;
+        _imageFileFormatSupported[ImageFileFormat.WebP] = true; //(supportedFormatFlags & IMG_INIT_WEBP) > 0;
+        _imageFileFormatSupported[ImageFileFormat.JPEG_XL] = true; //(supportedFormatFlags & IMG_INIT_JXL) > 0;
+        _imageFileFormatSupported[ImageFileFormat.AVIF] = true; //(supportedFormatFlags & IMG_INIT_AVIF) > 0;
+        _imageFileFormatSupported[ImageFileFormat.GIF] = true;
+        _imageFileFormatSupported[ImageFileFormat.QOI] = true;
+        _imageFileFormatSupported[ImageFileFormat.PNM] = true;
+        _imageFileFormatSupported[ImageFileFormat.XCF] = true;
+        _imageFileFormatSupported[ImageFileFormat.XPM] = true;
+        _imageFileFormatSupported[ImageFileFormat.PCX] = true;
+        _imageFileFormatSupported[ImageFileFormat.LBM] = true;
+        _imageFileFormatSupported[ImageFileFormat.ICO] = true;
+        if (loadedKTXSupport != KTXSupport.noLibrary)
+            _imageFileFormatSupported[ImageFileFormat.KTX] = true;
         
         // Init GPU
         gpu = New!GPU(this);

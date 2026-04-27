@@ -1,7 +1,8 @@
 /*
-Copyright (c) 2019-2026 Timur Gafarov
+Copyright (c) 2025-2026 Timur Gafarov.
 
 Boost Software License - Version 1.0 - August 17th, 2003
+
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
 this license (the "Software") to use, reproduce, display, distribute,
@@ -24,33 +25,11 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.core;
+module bindbc.ktx;
 
 public
 {
-    import dagon.core.application;
-    import dagon.core.bc7;
-    import dagon.core.config;
-    import dagon.core.crashhandler;
-    import dagon.core.dialogs;
-    import dagon.core.dxgiformat;
-    import dagon.core.dxt;
-    import dagon.core.event;
-    import dagon.core.freetype;
-    import dagon.core.glslang;
-    import dagon.core.gpu;
-    import dagon.core.i18n;
-    import dagon.core.ktx;
-    import dagon.core.scancodes;
-    import dagon.core.locale;
-    import dagon.core.logger;
-    import dagon.core.messaging;
-    import dagon.core.persistent;
-    import dagon.core.props;
-    import dagon.core.sdl3;
-    import dagon.core.spvc;
-    import dagon.core.time;
-    import dagon.core.updateable;
-    import dagon.core.vfs;
-    import dagon.core.vkformat;
+    import bindbc.ktx.types;
+    import bindbc.ktx.funcs;
+    import bindbc.ktx.loader;
 }

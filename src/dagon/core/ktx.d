@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2026 Timur Gafarov
+Copyright (c) 2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,33 +24,33 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.core;
 
-public
+module dagon.core.ktx;
+
+import std.conv;
+import std.string;
+
+import bindbc.loader;
+import loader = bindbc.loader.sharedlib;
+public import bindbc.ktx;
+
+import dagon.core.logger;
+
+KTXSupport loadKTX(string path = "")
 {
-    import dagon.core.application;
-    import dagon.core.bc7;
-    import dagon.core.config;
-    import dagon.core.crashhandler;
-    import dagon.core.dialogs;
-    import dagon.core.dxgiformat;
-    import dagon.core.dxt;
-    import dagon.core.event;
-    import dagon.core.freetype;
-    import dagon.core.glslang;
-    import dagon.core.gpu;
-    import dagon.core.i18n;
-    import dagon.core.ktx;
-    import dagon.core.scancodes;
-    import dagon.core.locale;
-    import dagon.core.logger;
-    import dagon.core.messaging;
-    import dagon.core.persistent;
-    import dagon.core.props;
-    import dagon.core.sdl3;
-    import dagon.core.spvc;
-    import dagon.core.time;
-    import dagon.core.updateable;
-    import dagon.core.vfs;
-    import dagon.core.vkformat;
+    KTXSupport ktxSupport;
+    if (path.length)
+        ktxSupport = bindbc.ktx.loadKTX(toStringz(path));
+    else
+        ktxSupport = bindbc.ktx.loadKTX();
+    
+    if (loader.errors.length)
+    {
+        foreach(info; loader.errors)
+        {
+            logError(to!string(info.error), ": ", to!string(info.message));
+        }
+    }
+    
+    return ktxSupport;
 }

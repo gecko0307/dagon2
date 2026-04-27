@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 module dagon.graphics.texturebuffer;
 
 import dagon.core.sdl3;
+import dagon.core.vkformat;
 import dagon.core.dxgiformat;
 import dagon.core.logger;
 
@@ -193,6 +194,105 @@ struct TextureBuffer
 }
 
 /**
+ * Converts Vulkan texture format to SDL GPU texture format.
+ *
+ * Params:
+ *   fmt = VkFormat.
+ *   tf = Output SDL_GPUTextureFormat.
+ * Returns:
+ *   true if format is supported, false otherwise.
+ */
+bool vkFormatToSDLFormat(VkFormat fmt, out TextureFormat tf)
+{
+    tf.format = SDL_GPU_TEXTUREFORMAT_INVALID;
+    tf.blockSize = 0;
+    
+    switch(fmt)
+    {
+        case VkFormat.R8_UNORM:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R8_UNORM;
+            break;
+        
+        case VkFormat.R8_SNORM:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R8_SNORM;
+            break;
+        
+        case VkFormat.R8G8_UNORM:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
+            break;
+        
+        case VkFormat.R8G8_SNORM:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R8G8_SNORM;
+            break;
+        
+        case VkFormat.R8G8B8A8_UNORM, VkFormat.R8G8B8A8_SRGB:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+            break;
+        
+        case VkFormat.R32G32B32A32_SFLOAT:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT;
+            break;
+        
+        case VkFormat.R16G16B16A16_SFLOAT:
+            tf.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+            break;
+        
+        case VkFormat.BC1_RGB_UNORM_BLOCK, VkFormat.BC1_RGB_SRGB_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM;
+            tf.blockSize = 8;
+            break;
+        
+        case VkFormat.BC2_UNORM_BLOCK, VkFormat.BC2_SRGB_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC2_RGBA_UNORM;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.BC3_UNORM_BLOCK, VkFormat.BC3_SRGB_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.BC4_UNORM_BLOCK, VkFormat.BC4_SNORM_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM;
+            tf.blockSize = 8;
+            break;
+        
+        case VkFormat.BC5_UNORM_BLOCK, VkFormat.BC5_SNORM_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC5_RG_UNORM;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.BC6H_SFLOAT_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC6H_RGB_FLOAT;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.BC6H_UFLOAT_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC6H_RGB_UFLOAT;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.BC7_UNORM_BLOCK, VkFormat.BC7_SRGB_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_BC7_RGBA_UNORM;
+            tf.blockSize = 16;
+            break;
+        
+        case VkFormat.ASTC_4x4_UNORM_BLOCK, VkFormat.ASTC_4x4_SRGB_BLOCK:
+            tf.format = SDL_GPU_TEXTUREFORMAT_ASTC_4x4_UNORM;
+            tf.blockSize = 16;
+            break;
+        
+        // TODO: other ASTC formats
+        
+        default:
+            logWarning("Unsupported VkFormat");
+            return false;
+    }
+    
+    return true;
+}
+
+/**
  * Converts DirectX texture format to SDL GPU texture format.
  *
  * Params:
@@ -203,6 +303,9 @@ struct TextureBuffer
  */
 bool dxgiFormatToSDLFormat(DXGIFormat fmt, out TextureFormat tf)
 {
+    tf.format = SDL_GPU_TEXTUREFORMAT_INVALID;
+    tf.blockSize = 0;
+    
     switch(fmt)
     {
         case DXGIFormat.R32G32B32A32_TYPELESS:

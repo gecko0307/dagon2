@@ -49,6 +49,7 @@ import dagon.graphics.texture;
 import dagon.resource.asset;
 import dagon.resource.image;
 import dagon.resource.dds;
+import dagon.resource.ktx;
 import dagon.resource.hdr;
 
 ///
@@ -125,6 +126,9 @@ class TextureAsset: Asset
             
             if (extension == ".dds")
                 loaded = loadDDS(istrm, &buffer);
+            else if (extension == ".ktx" && isImageFileFormatSupported(ImageFileFormat.KTX))
+                loaded = loadKTX1(istrm, &buffer);
+            // TODO: ktx2
             else if (extension == ".hdr")
                 loaded = loadHDR(istrm, &buffer);
             else if (isSupportedImageFormat(extension))
