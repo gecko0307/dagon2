@@ -1119,10 +1119,10 @@ class Application: EventListener, Updateable
         _imageFileFormatSupported[ImageFileFormat.HDR] = true;
         _imageFileFormatSupported[ImageFileFormat.DDS] = true;
         _imageFileFormatSupported[ImageFileFormat.SVG] = true;
-        _imageFileFormatSupported[ImageFileFormat.TIFF] = true; //(supportedFormatFlags & IMG_INIT_TIF) > 0;
-        _imageFileFormatSupported[ImageFileFormat.WebP] = true; //(supportedFormatFlags & IMG_INIT_WEBP) > 0;
-        _imageFileFormatSupported[ImageFileFormat.JPEG_XL] = true; //(supportedFormatFlags & IMG_INIT_JXL) > 0;
-        _imageFileFormatSupported[ImageFileFormat.AVIF] = true; //(supportedFormatFlags & IMG_INIT_AVIF) > 0;
+        _imageFileFormatSupported[ImageFileFormat.TIFF] = true;
+        _imageFileFormatSupported[ImageFileFormat.WebP] = true;
+        _imageFileFormatSupported[ImageFileFormat.JPEG_XL] = true;
+        _imageFileFormatSupported[ImageFileFormat.AVIF] = true;
         _imageFileFormatSupported[ImageFileFormat.GIF] = true;
         _imageFileFormatSupported[ImageFileFormat.QOI] = true;
         _imageFileFormatSupported[ImageFileFormat.PNM] = true;
@@ -1133,6 +1133,8 @@ class Application: EventListener, Updateable
         _imageFileFormatSupported[ImageFileFormat.ICO] = true;
         if (loadedKTXSupport != KTXSupport.noLibrary)
             _imageFileFormatSupported[ImageFileFormat.KTX] = true;
+        else
+            _imageFileFormatSupported[ImageFileFormat.KTX] = false;
         
         // Init GPU
         gpu = New!GPU(this);

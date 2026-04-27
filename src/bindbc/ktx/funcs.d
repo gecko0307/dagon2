@@ -60,4 +60,5 @@ __gshared
     f_ktxTexture2_GetImageOffset ktxTexture2_GetImageOffset;
     f_ktxTexture2_GetNumComponents ktxTexture2_GetNumComponents;
     f_ktxTexture2_WriteToNamedFile ktxTexture2_WriteToNamedFile;
+    f_ktxTexture2_GetVkFormat ktxTexture2_GetVkFormat;
 }

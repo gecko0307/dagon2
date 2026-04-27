@@ -24,7 +24,6 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-
 module dagon.resource.ktx;
 
 import std.stdio;
@@ -42,6 +41,7 @@ import dagon.core.vkformat;
 import dagon.core.ktx;
 import dagon.graphics.texture;
 
+///
 bool loadKTX1(InputStream istrm, TextureBuffer* buffer)
 {
     size_t dataSize = istrm.size;
@@ -55,7 +55,7 @@ bool loadKTX1(InputStream istrm, TextureBuffer* buffer)
         &tex);
     if (err != KTX_error_code.KTX_SUCCESS)
     {
-        logError("loadKTX1 error: ", err);
+        logError("loadKTX1 error: ktxTexture1_CreateFromMemory failed");
         Delete(data);
         return false;
     }
@@ -110,6 +110,151 @@ bool loadKTX1(InputStream istrm, TextureBuffer* buffer)
     }
     
     ktxTexture1_Destroy(tex);
+    
+    Delete(data);
+    
+    return true;
+}
+
+///
+enum TranscodeHint
+{
+    Quality = 0,
+    Size = 1,
+    Uncompressed = 2
+}
+
+///
+bool loadKTX2(InputStream istrm, TextureBuffer* buffer, TranscodeHint hint)
+{
+    size_t dataSize = istrm.size;
+    ubyte[] data = New!(ubyte[])(dataSize);
+    istrm.readBytes(data.ptr, dataSize);
+    
+    ktxTexture2* tex = null;
+    KTX_error_code err = ktxTexture2_CreateFromMemory(
+        data.ptr, dataSize,
+        ktxTextureCreateFlagBits.KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
+        &tex);
+    if (err != KTX_error_code.KTX_SUCCESS)
+    {
+        logError("loadKTX1 error: ktxTexture2_CreateFromMemory failed");
+        Delete(data);
+        return false;
+    }
+    
+    if (ktxTexture2_NeedsTranscoding(tex))
+    {
+        auto numChannels = ktxTexture2_GetNumComponents(tex);
+        
+        // Desktop GPUs lack ASTC support
+        //bool astcSupported = isExtensionSupported("GL_KHR_texture_compression_astc_ldr");
+        
+        ktx_transcode_fmt_e targetFormat;
+        string targetFormatStr;
+        
+        if (hint == TranscodeHint.Uncompressed)
+        {
+            targetFormat = ktx_transcode_fmt_e.KTX_TTF_RGBA32;
+            targetFormatStr = "RGBA32";
+        }
+        else if (numChannels == 1)
+        {
+            targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC4_R;
+            targetFormatStr = "RGTC/BC4";
+        }
+        else if (numChannels == 2)
+        {
+            targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC5_RG;
+            targetFormatStr = "RGTC/BC5";
+        }
+        else if (numChannels == 3)
+        {
+            if (hint == TranscodeHint.Quality)
+            {
+                targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC7_RGBA;
+                targetFormatStr = "BPTC/BC7";
+            }
+            else
+            {
+                targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC1_RGB;
+                targetFormatStr = "DXT1/BC1";
+            }
+        }
+        else if (numChannels == 4)
+        {
+            if (hint == TranscodeHint.Quality)
+            {
+                targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC7_RGBA;
+                targetFormatStr = "BPTC/BC7";
+            }
+            else
+            {
+                targetFormat = ktx_transcode_fmt_e.KTX_TTF_BC3_RGBA;
+                targetFormatStr = "DXT5/BC3";
+            }
+        }
+        
+        logDebug("Transcoding to ", targetFormatStr, "...");
+        err = ktxTexture2_TranscodeBasis(tex, targetFormat, 0);
+        if (err != KTX_error_code.KTX_SUCCESS)
+        {
+            logError("loadKTX2 error: ktxTexture2_TranscodeBasis failed");
+            Delete(data);
+            return false;
+        }
+    }
+    
+    TextureSize size;
+    size.width = tex.baseWidth;
+    size.height = tex.baseHeight;
+    size.depth = tex.baseDepth;
+    
+    TextureFormat format;
+    
+    VkFormat vkFormat = cast(VkFormat)ktxTexture2_GetVkFormat(tex);
+    if (!vkFormatToSDLFormat(vkFormat, format))
+    {
+        logError("loadKTX2 error: unsupported texture format");
+        Delete(data);
+        return false;
+    }
+    
+    if (tex.isCubemap)
+    {
+        format.type = SDL_GPU_TEXTURETYPE_CUBE;
+        format.cubeFaces = CubeFaceBit.All;
+    }
+    else
+    {
+        if (tex.numDimensions == 1)
+            format.type = SDL_GPU_TEXTURETYPE_2D;
+        else if (tex.numDimensions == 2)
+            format.type = SDL_GPU_TEXTURETYPE_2D;
+        else if (tex.numDimensions == 3)
+            format.type = SDL_GPU_TEXTURETYPE_3D;
+    }
+    
+    buffer.format = format;
+    buffer.size = size;
+    buffer.mipLevels = tex.numLevels;
+    buffer.data = New!(ubyte[])(tex.dataSize);
+    
+    size_t dstOffset = 0;
+    for (uint cubeFace = 0; cubeFace < tex.numFaces; cubeFace++)
+    {
+        for (uint mipLevel = 0; mipLevel < buffer.mipLevels; mipLevel++)
+        {
+            ktx_size_t mipLevelOffset;
+            ktxTexture2_GetImageOffset(tex, mipLevel, 0, cubeFace, &mipLevelOffset);
+            ktx_size_t mipLevelSize = ktxTexture_GetImageSize(tex, mipLevel);
+            
+            buffer.data[dstOffset..dstOffset+mipLevelSize] = tex.pData[mipLevelOffset..mipLevelOffset+mipLevelSize];
+            dstOffset += mipLevelSize;
+        }
+    }
+    
+    ktxTexture2_Destroy(tex);
     
     Delete(data);
     

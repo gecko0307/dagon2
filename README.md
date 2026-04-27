@@ -17,7 +17,7 @@ Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported
 - Scene graph
 - Virtual file system
 - [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format support
-- Textures in PNG, JPEG, WebP, AVIF, DDS, HDR, SVG and many other formats
+- Textures in PNG, JPEG, WebP, AVIF, DDS, KTX/KTX2, HDR, SVG and many other formats
 - S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC7 compressor and DDS exporter. Texture cache to accelerate loading
 - Shaders in GLSL 4.60; SPIR-V cache
 - Runs in windowed, fullscreen and borderless fullscreen modes
@@ -51,7 +51,7 @@ New features:
 Major changes from Dagon 0.x/1.x:
 - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
-- Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`
+- Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`. KTX support is now a core feature
 - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
 - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)

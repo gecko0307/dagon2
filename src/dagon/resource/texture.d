@@ -128,12 +128,15 @@ class TextureAsset: Asset
                 loaded = loadDDS(istrm, &buffer);
             else if (extension == ".ktx" && isImageFileFormatSupported(ImageFileFormat.KTX))
                 loaded = loadKTX1(istrm, &buffer);
-            // TODO: ktx2
+            else if (extension == ".ktx2" && isImageFileFormatSupported(ImageFileFormat.KTX2))
+                loaded = loadKTX2(istrm, &buffer, cast(TranscodeHint)conversionOptions.hint);
             else if (extension == ".hdr")
                 loaded = loadHDR(istrm, &buffer);
             else if (isSupportedImageFormat(extension))
                 loaded = loadImage(istrm, extension, &buffer, &conversionOptions);
             // TODO: custom loaders
+            else
+                logError("Unsupported image file format");
             
             if (!loaded)
             {

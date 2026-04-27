@@ -64,3 +64,4 @@ alias f_ktxTexture2_TranscodeBasis = KTX_error_code function(ktxTexture2* tex, k
 alias f_ktxTexture2_GetImageOffset = KTX_error_code function(ktxTexture2* tex, ktx_uint32_t level, ktx_uint32_t layer, ktx_uint32_t faceSlice, ktx_size_t* pOffset);
 alias f_ktxTexture2_GetNumComponents = ktx_uint32_t function(ktxTexture2* tex);
 alias f_ktxTexture2_WriteToNamedFile = KTX_error_code function(ktxTexture2* tex, const(char)* dstname);
+alias f_ktxTexture2_GetVkFormat = uint function(ktxTexture2* tex);
