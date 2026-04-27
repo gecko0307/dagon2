@@ -21,4 +21,5 @@ Dagon 2 depends on the following libraries:
 * [FreeType](https://freetype.org/)
 * [libtiff](https://gitlab.com/libtiff/libtiff)
 * [libwebp](https://chromium.googlesource.com/webm/libwebp)
+* [libktx](https://github.com/KhronosGroup/KTX-Software)
 * [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
