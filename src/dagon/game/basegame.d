@@ -171,7 +171,12 @@ class BaseGame: Application, GsObject
         }
     }
     
-    ///
+    /**
+     * Called every frame to update game logic.
+     *
+     * Params:
+     *   t = Time information for the frame.
+     */
     override void onUpdate(Time t)
     {
         if (activeWorld)
@@ -181,7 +186,9 @@ class BaseGame: Application, GsObject
         triggerScriptEvent("onUpdate", gsEventHandlerArgs[0..2]);
     }
     
-    ///
+    /**
+     * Key press handler.
+     */
     override void onKeyDown(int key)
     {
         gsEventHandlerArgs[1] = GsDynamic(key);
