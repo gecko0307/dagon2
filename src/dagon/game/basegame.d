@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2026 Timur Gafarov
+Copyright (c) 2019-2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,6 +24,19 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Core game logic for Dagon-based applications.
+ *
+ * Description:
+ * The `dagon.game.basegame` module defines the `BaseGame` class, which serves
+ * as a basic template for creating a game application using Dagon's built-in
+ * world management system.
+ *
+ * Copyright: Timur Gafarov 2019-2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.game.basegame;
 
 import dlib.core.memory;
@@ -38,20 +51,52 @@ import dagon.core.logger;
 import dagon.game.world;
 import gscript;
 
+/**
+ * Basic game class for Dagon applications.
+ *
+ * Description:
+ * The `BaseGame` class is a subclass of `Application` that provides
+ * basic game logic, including world management and scripting.
+ */
 class BaseGame: Application, GsObject
 {
+    /// Array of worlds of the game.
     Array!World worlds;
+    
+    /// Currently active World.
     World activeWorld;
     
+    /// GScript3 virtual machine.
     GsVirtualMachine vm;
+    
+    /// Virtual path to the main script.
+    string mainScriptPath = "scripts/main.gsc";
+    
+    /// Instruction stream for the main script.
     GsInstruction[] mainScriptProgram;
+    
+    /// Raw bytecode of the main script.
     ubyte[] mainScriptBytecode;
+    
+    /// GScript properties global to the game object.
     Dict!(GsDynamic, string) gsProperties;
+    
+    /// Arguments array for calling script event handlers.
     GsDynamic[4] gsEventHandlerArgs;
     
-    this(uint w, uint h, bool fullscreen, string title, string[] args)
+    /**
+     * Initializes the `BaseGame` object.
+     *
+     * Params:
+     *   winWidth = Window width in pixels.
+     *   winHeight = Window height in pixels.
+     *   fullscreen = If true, the application will run in fullscreen mode.
+     *   windowTitle = The window title.
+     *   args = Command line arguments.
+     */
+    this(uint winWidth, uint winHeight, bool fullscreen, string windowTitle, string[] args)
     {
-        super(w, h, fullscreen, title, args);
+        super(winWidth, winHeight, fullscreen, windowTitle, args);
         
         // Initialize VM
         vm = New!GsVirtualMachine(this);
@@ -69,17 +114,17 @@ class BaseGame: Application, GsObject
         gsEventHandlerArgs[0] = this;
         
         // Load main script
-        string mainScriptFile = "scripts/main.gsc";
-        if (fileExists(mainScriptFile))
+        // TODO: user-defined path from settings.conf
+        if (fileExists(mainScriptPath))
         {
             FileStat s;
-            if (vfs.stat(mainScriptFile, s))
+            if (vfs.stat(mainScriptPath, s))
             {
                 size_t size = cast(size_t)s.sizeInBytes;
                 if (size > 0)
                 {
-                    logDebug("Loading ", mainScriptFile, "...");
-                    auto istrm = vfs.openForInput(mainScriptFile);
+                    logDebug("Loading ", mainScriptPath, "...");
+                    auto istrm = vfs.openForInput(mainScriptPath);
                     mainScriptBytecode = New!(ubyte[])(size);
                     istrm.fillArray(mainScriptBytecode);
                     Delete(istrm);
@@ -99,6 +144,7 @@ class BaseGame: Application, GsObject
         }
     }
     
+    /// Destructor. Releases VM and game-owned objects.
     ~this()
     {
         worlds.free();
@@ -107,6 +153,7 @@ class BaseGame: Application, GsObject
         Delete(gsProperties);
     }
     
+    /// Adds a world object to the worlds array.
     World addWorld(World world)
     {
         worlds.append(world);
@@ -186,6 +233,7 @@ class BaseGame: Application, GsObject
         // No-op
     }
     
+    ///
     GsDynamic vmLog(GsDynamic[] args)
     {
         auto logLevel = cast(LogLevel)cast(uint)args[1].asNumber;
@@ -194,6 +242,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmLogDebug(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -201,6 +250,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmLogInfo(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -208,6 +258,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmLogWarning(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -215,6 +266,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmLogError(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -222,6 +274,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmLogFatalError(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -229,6 +282,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmQueueUserEvent(GsDynamic[] args)
     {
         int code = cast(int)args[1].asNumber;
@@ -236,6 +290,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
+    ///
     GsDynamic vmSend(GsDynamic[] args)
     {
         auto recipient = args[1].asString;
