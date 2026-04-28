@@ -24,6 +24,14 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Helper module that publicly imports SPIRV-Cross binding.
+ *
+ * Copyright: Timur Gafarov 2026.
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core.spvc;
 
 import std.conv;
@@ -35,6 +43,15 @@ public import bindbc.spirvcross;
 
 import dagon.core.logger;
 
+/**
+ * Loads SPIRV-Cross library.
+ *
+ * Params:
+ *   path = optional path to the library.
+ *
+ * Returns:
+ *   API support enum for the loaded library.
+ */
 SPVCSupport loadSPVC(string path = "")
 {
     SPVCSupport spvcSupport;
