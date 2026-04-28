@@ -173,6 +173,7 @@ version(Windows)
     }
 }
 
+/// Module constructor. Sets the global unhandled exception filter under Windows.
 static this()
 {
     version(Windows)

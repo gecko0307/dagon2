@@ -2816,6 +2816,19 @@ pragma(inline, true) private uint compute_match_cost_estimate(uint dist, uint ma
     return len_cost + dist_cost;
 }
 
+/**
+ * Compress RGBA8 image to BPTC/BC7 to the memory buffer.
+ * The buffer must be allocated and have the required capacity which is
+ * calculated as numBlocksH * numBlocksV * blockSizeInBytes.
+ * BC7 block is 4x4 pixels.
+ *
+ * Params:
+ *   output = Pointer to the output buffer.
+ *   image  = Pointer to the input image.
+ *   width  = Width of the image.
+ *   height = Height of the image.
+ *   params = Compression parameters, initialized via `bc7enc_compress_block_params_init`.
+ */
 void bc7Compress(ubyte* output, ubyte* image, uint width, uint height, bc7enc_compress_block_params* params)
 {
     ubyte[64] block_pixels; // 4x4 RGBA

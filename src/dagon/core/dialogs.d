@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Provides cross-platform open and save dialogs.
+ * Provides cross-platform dialogs.
  *
  * Description:
  * The `dagon.core.dialogs` module provides functions that display native
@@ -53,13 +53,29 @@ version(Windows)
 
 import dagon.core.sdl3;
 
-/// Bessage box.
+/**
+ * Shows a message box using SDL.
+ *
+ * Params:
+ *   title   = Title string.
+ *   message = Message string.
+ */
 void showMessage(string title, string message)
 {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title.toStringz, message.toStringz, null);
 }
 
-/// File open dialog.
+/**
+ * Shows a file open dialog using a platform-dependent mechanism
+ * (WinAPI under Windows, Zenity/kdialog under Linux).
+ *
+ * Params:
+ *   filters = An array of file type filters.
+ *   title   = Title string.
+ *
+ * Returns:
+ *   Full path of the opened file.
+ */
 string openFileDialog(string[] filters = ["*.*"], string title = "Select a file")
 {
     string result;
@@ -114,7 +130,17 @@ string openFileDialog(string[] filters = ["*.*"], string title = "Select a file"
     return result;
 }
 
-/// File save dialog.
+/**
+ * Shows a file save dialog using a platform-dependent mechanism
+ * (WinAPI under Windows, Zenity/kdialog under Linux).
+ *
+ * Params:
+ *   filters = An array of file type filters.
+ *   title   = Title string.
+ *
+ * Returns:
+ *   Full path of the saved file.
+ */
 string saveFileDialog(string[] filters = ["*.*"], string title = "Save file as")
 {
     string result;

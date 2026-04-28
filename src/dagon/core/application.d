@@ -1296,6 +1296,7 @@ class Application: EventListener, Updateable
         }
     }
     
+    /// Destructor. Releases application-owned objects, destroys the window and cleans up SDL subsystems.
     ~this()
     {
         clearOwnedObjects();
@@ -1477,6 +1478,10 @@ class Application: EventListener, Updateable
     }
     */
     
+    /**
+     * Runs the main loop.
+     * This will block the thread until the application terminates.
+     */
     void run()
     {
         Time t = Time(0.0, 0.0);
@@ -1515,6 +1520,12 @@ class Application: EventListener, Updateable
         // Override me
     }
     
+    /**
+     * Called on each animation frame.
+     *
+     * Params:
+     *   t = Time information for the frame.
+     */
     void update(Time t)
     {
         eventManager.update();

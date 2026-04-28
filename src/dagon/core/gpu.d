@@ -24,6 +24,18 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * GPU wrapper class.
+ *
+ * Description:
+ * The `dagon.core.gpu` module defines the `GPU` class that wraps
+ * `SDL_GPUDevice` management and GPU buffer creation API.
+ *
+ * Copyright: Timur Gafarov 2026.
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core.gpu;
 
 import std.conv;
@@ -35,25 +47,68 @@ import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.logger;
 
+/// Supported GPU backends. Only Vulkan is supported at the moment.
 enum GPUBackend
 {
     Vulkan = 0
 }
 
+/**
+ * `SDL_GPUDevice` wrapper class.
+ *
+ * This class provides an abstraction layer for SDL 3.0's GPU device management,
+ * including device initialization, buffer creation, and resource management.
+ * It handles the lifecycle of GPU resources and provides convenient methods for
+ * common GPU operations like buffer uploads and device querying.
+ */
 class GPU: Owner
 {
+    /// Reference to the Application instance.
     Application application;
+    
+    /// Pointer to the underlying SDL GPU device.
     SDL_GPUDevice* device;
+    
+    /// The GPU backend currently in use (Vulkan).
     GPUBackend backend = GPUBackend.Vulkan;
+    
+    /// Human-readable name of the GPU device.
     string deviceName = "Unknown";
+    
+    /// Name of the GPU driver.
     string deviceDriver = "Unknown";
+    
+    /// Version string of the GPU driver
     string deviceDriverVersion = "";
+    
+    /// The texture format used by the swapchain.
     SDL_GPUTextureFormat swapchainTextureFormat;
+    
+    /// Default texture for fallback sampling operations.
     SDL_GPUTexture* defaultTexture;
+    
+    /// Default sampler for fallback sampling operations.
     SDL_GPUSampler* defaultSampler;
+    
+    /// Whether the GPU device supports HDR extended linear swapchain composition.
     bool hdrExtendedLinearSwapchainSupported = false;
+    
+    /// Whether HDR swapchain is currently enabled.
     bool hdrSwapchain = false;
     
+    /**
+     * Constructs a GPU device wrapper for the given application.
+     *
+     * Initializes the SDL GPU device, claims the application window for GPU rendering,
+     * and creates default texture and sampler resources. Queries device information
+     * such as name, driver, and version. Also checks for and enables HDR swapchain
+     * support if available and requested.
+     * Terminates with an error if GPU device creation fails or the backend is unsupported.
+     *
+     * Params:
+     *   application = The parent Application instance.
+     *   owner       = Optional owner for memory management.
+     */
     this(Application application, Owner owner = null)
     {
         super(owner);
@@ -120,6 +175,9 @@ class GPU: Owner
         }
     }
     
+    /**
+     * Destructor that releases all GPU resources.
+     */
     ~this()
     {
         if (defaultTexture)
@@ -135,6 +193,19 @@ class GPU: Owner
         }
     }
     
+    /**
+     * Creates a GPU buffer with the specified usage flags and size.
+     *
+     * Allocates GPU device memory for a buffer that can be used for various purposes
+     * such as vertex data, index data, or uniform buffers.
+     *
+     * Params:
+     *   usage = SDL GPU buffer usage flags indicating the buffer's purpose.
+     *   size = Size of the buffer in bytes.
+     *
+     * Returns:
+     *   Pointer to the created SDL GPU buffer, or null if device is not initialized.
+     */
     SDL_GPUBuffer* createBuffer(SDL_GPUBufferUsageFlags usage, size_t size)
     {
         if (device is null)
@@ -145,6 +216,21 @@ class GPU: Owner
         return SDL_CreateGPUBuffer(device, &info);
     }
 
+    /**
+     * Uploads data to a GPU buffer from CPU memory.
+     *
+     * Creates a transfer buffer, copies the provided CPU data into it, and then
+     * submits a GPU copy operation to transfer the data to the target GPU buffer.
+     * The transfer buffer is released after the operation completes.
+     *
+     * Params:
+     *   ptr = Pointer to the CPU memory containing the data to upload.
+     *   size = Size of the data in bytes.
+     *   target = Pointer to the target GPU buffer to upload to.
+     *
+     * Returns:
+     *   `true` if the upload was successful, `false` if device is not initialized.
+     */
     bool uploadBuffer(void* ptr, size_t size, SDL_GPUBuffer* target)
     {
         if (device is null)
@@ -173,6 +259,15 @@ class GPU: Owner
         return true;
     }
     
+    /**
+     * Releases a GPU buffer and frees its resources.
+     *
+     * Properly cleans up the specified GPU buffer. Should be called when the buffer
+     * is no longer needed to prevent resource leaks.
+     *
+     * Params:
+     *   target = Pointer to the GPU buffer to release.
+     */
     void releaseBuffer(SDL_GPUBuffer* target)
     {
         if (device is null)

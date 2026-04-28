@@ -24,6 +24,18 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * SDL-based cursor class.
+ *
+ * Description:
+ * The `dagon.core.cursor` module provides `Cursor`, an object that
+ * stores a custom SDL cursor.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core.cursor;
 
 import dlib.core.memory;
@@ -53,11 +65,27 @@ enum SystemCursor: uint
 /// Custom cursor class.
 class Cursor: Owner
 {
+    /// SDL surface of the cursor.
     SDL_Surface* surface;
+    
+    /// SDL cursor object.
     SDL_Cursor* cursor;
+    
+    /// X-coordinate of the pixel within the cursor that interacts with screen elements.
     uint hotspotX;
+    
+    /// Y-coordinate of the pixel within the cursor that interacts with screen elements.
     uint hotspotY;
     
+    /**
+     * Cursor constructor.
+     *
+     * Params:
+     *   istrm = Input stream to load cursor image from.
+     *   hotspotX = X-coordinate of the pixel within the cursor that interacts with screen elements.
+     *   hotspotY = Y-coordinate of the pixel within the cursor that interacts with screen elements.
+     *   owner = Owner object.
+     */
     this(InputStream istrm, uint hotspotX, uint hotspotY, Owner owner)
     {
         super(owner);
@@ -71,6 +99,7 @@ class Cursor: Owner
         }
     }
     
+    /// Destructor. Releases SDL resources of the cursor.
     ~this()
     {
         if (cursor)

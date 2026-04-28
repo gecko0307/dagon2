@@ -986,6 +986,19 @@ void rgbToYCoCgBlock(ubyte* dst, const(ubyte)* src)
     }
 }
 
+/**
+ * Compress RGBA8 image to DXT (BC1 or BC3) to the memory buffer.
+ * The buffer must be allocated and have the required capacity which is
+ * calculated as numBlocksH * numBlocksV * blockSizeInBytes.
+ * DXT block is 4x4 pixels.
+ *
+ * Params:
+ *   dst    = Pointer to the destination buffer.
+ *   src    = Pointer to the source image.
+ *   width  = Width of the image.
+ *   height = Height of the image.
+ *   isDxt5 = If 0, the compression format is BC1, if 1, the compression format is BC3.
+ */
 void rygCompress(ubyte* dst, ubyte* src, int w, int h, int isDxt5)
 {
     ubyte[64] block;
@@ -1002,6 +1015,7 @@ void rygCompress(ubyte* dst, ubyte* src, int w, int h, int isDxt5)
     }
 }
 
+/// Ditto.
 alias dxtCompress = rygCompress;
 
 void rygCompressYCoCg(ubyte* dst, ubyte* src, int w, int h)

@@ -158,34 +158,91 @@ alias TaskCallback = void delegate(Object executor, void* payload);
  */
 struct Event
 {
+    /// Event type tag.
     EventType type;
+    
+    /// Scancode of the key (for keyboard event).
     int key;
+    
+    /// UTF-32 codepoint of the input character (for TextInput event).
     dchar unicode;
+    
+    /// Button code (for mouse button event).
     int button;
+    
+    /// Joystick button code (for joystick button event).
     int joystickButton;
+    
+    /// Joystick axis code (for joystick axis event).
     int joystickAxis;
+    
+    /// Joystick axis value (for joystick axis event).
     float joystickAxisValue;
+    
+    /// Gamepad button code (for gamepad button event).
     int gamepadButton;
+    
+    /// Gamepad axis code (for gamepad axis event).
     int gamepadAxis;
+    
+    /// Gamepad axis value (for gamepad axis event).
     float gamepadAxisValue;
+    
+    /// Game input device index (for joystick or gamepad events).
     int deviceIndex = -1;
+    
+    /// Game input device type tag (for joystick or gamepad events).
     GameInputDeviceType deviceType;
+    
+    /// X-coordinate (for MouseMotion or PenMotion events).
     float x;
+    
+    /// Y-coordinate (for MouseMotion or PenMotion events).
     float y;
+    
+    /// Width (for Resize event).
     int width;
+    
+    /// Height (for Resize event).
     int height;
+    
+    /// User code (for UserEvent).
     int userCode;
+    
+    /// Mouse wheel X-delta (for MouseWheel event).
     float mouseWheelX;
+    
+    /// Mouse wheel Y-delta (for MouseWheel event).
     float mouseWheelY;
+    
+    /// Pen pressure (for PenMotion event).
     float pressure;
+    
+    /// Log level (for Log event).
     LogLevel logLevel;
+    
+    /// Domain code (for Message or Task events).
     int domain;
+    
+    /// Timer identifier (for Timer event).
     int timerID;
+    
+    /// Filename (for FileChange or DropFile events).
     string filename;
+    
+    /// Message string (for Message event).
     string message;
+    
+    /// Sender name (for Message event).
     string sender;
+    
+    /// Recipient name (for Message event).
     string recipient;
+    
+    /// Task callback delegate (for Task events).
     TaskCallback callback;
+    
+    /// User data pointer (for Message, Task, UserEvent, and HardwareSpecific events).
     void* payload;
 }
 
