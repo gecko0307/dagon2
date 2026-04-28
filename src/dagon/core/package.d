@@ -24,6 +24,19 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Provides the core modules and foundational utilities for Dagon applications.
+ *
+ * Description:
+ * The `dagon.core` package includes modules for application management,
+ * configuration, event handling, input, key codes, locale detection, logging,
+ * persistent key-value storage, property system, time management and virtual file system.
+ *
+ * Copyright: Timur Gafarov 2019-2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core;
 
 public

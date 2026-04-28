@@ -25,6 +25,13 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * Helper module that publicly imports libktx binding.
+ *
+ * Copyright: Timur Gafarov 2026.
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.core.ktx;
 
 import std.conv;
@@ -36,6 +43,15 @@ public import bindbc.ktx;
 
 import dagon.core.logger;
 
+/**
+ * Loads libktx library.
+ *
+ * Params:
+ *   path = optional path to the library.
+ *
+ * Returns:
+ *   API support enum for the loaded library.
+ */
 KTXSupport loadKTX(string path = "")
 {
     KTXSupport ktxSupport;
