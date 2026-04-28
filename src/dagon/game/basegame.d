@@ -160,7 +160,7 @@ class BaseGame: Application, GsObject
         return world;
     }
     
-    ///
+    /// Calls script event handler, if it exists.
     void triggerScriptEvent(string name, GsDynamic[] args)
     {
         GsDynamic* eventHandler = name in gsProperties;
