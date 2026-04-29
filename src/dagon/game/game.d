@@ -108,6 +108,32 @@ class Game: BaseGame
             renderer.ssaoPass.ssaoShader.temporalAccumulation = cast(bool)(rendererConfig.props["ssao.temporalAccumulation"].toUInt);
         if ("ssao.denoise" in rendererConfig.props)
             renderer.ssaoDenoisePass.active = cast(bool)(rendererConfig.props["ssao.denoise"].toUInt);
+        
+        if ("decals.enabled" in rendererConfig.props)
+            renderer.decalPass.active = cast(bool)(rendererConfig.props["decals.enabled"].toUInt);
+        if ("selfIllumination.enabled" in rendererConfig.props)
+            renderer.selfIlluminationPass.active = cast(bool)(rendererConfig.props["selfIllumination.enabled"].toUInt);
+        if ("sunLight.enabled" in rendererConfig.props)
+            renderer.sunLightPass.active = cast(bool)(rendererConfig.props["sunLight.enabled"].toUInt);
+        if ("lightVolumes.enabled" in rendererConfig.props)
+            renderer.lightVolumePass.active = cast(bool)(rendererConfig.props["lightVolumes.enabled"].toUInt);
+        if ("fog.enabled" in rendererConfig.props)
+            renderer.fogPass.active = cast(bool)(rendererConfig.props["fog.enabled"].toUInt);
+        
+        if ("motionBlur.enabled" in rendererConfig.props)
+            renderer.motionBlurPass.active = cast(bool)(rendererConfig.props["motionBlur.enabled"].toUInt);
+        // TODO: other motion blur parameters
+        
+        if ("tonemapping.enabled" in rendererConfig.props)
+            renderer.tonemappingPass.active = cast(bool)(rendererConfig.props["tonemapping.enabled"].toUInt);
+        // TODO: other tonemapping parameters
+        
+        if ("fxaa.enabled" in rendererConfig.props)
+            renderer.fxaaPass.active = cast(bool)(rendererConfig.props["fxaa.enabled"].toUInt);
+        
+        if ("sharpening.enabled" in rendererConfig.props)
+            renderer.sharpeningPass.active = cast(bool)(rendererConfig.props["sharpening.enabled"].toUInt);
+        // TODO: other sharpening parameters
     }
     
     ///
