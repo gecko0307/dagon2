@@ -577,7 +577,7 @@ bool dxgiFormatToSDLFormat(DXGIFormat fmt, out TextureFormat tf)
             break;
         case DXGIFormat.BC4_UNORM, DXGIFormat.BC4_SNORM:
             tf.format = SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM;
-            tf.blockSize = 16;
+            tf.blockSize = 8;
             break;
         case DXGIFormat.BC5_UNORM, DXGIFormat.BC5_SNORM:
             tf.format = SDL_GPU_TEXTUREFORMAT_BC5_RG_UNORM;

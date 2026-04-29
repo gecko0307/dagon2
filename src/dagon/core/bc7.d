@@ -2819,7 +2819,7 @@ pragma(inline, true) private uint compute_match_cost_estimate(uint dist, uint ma
 /**
  * Compress RGBA8 image to BPTC/BC7 to the memory buffer.
  * The buffer must be allocated and have the required capacity which is
- * calculated as numBlocksH * numBlocksV * blockSizeInBytes.
+ * calculated as numBlocksH * numBlocksV * 16.
  * BC7 block is 4x4 pixels.
  *
  * Params:

@@ -101,6 +101,19 @@ void bc4CompressBlock(ubyte* dst, ubyte* src)
     dst[7] = cast(ubyte)(packedSelectors >> 40);
 }
 
+/**
+ * Compress image to BC4 to the memory buffer.
+ * The buffer must be allocated and have the required capacity which is
+ * calculated as numBlocksH * numBlocksV * 8.
+ * BC4 block is 4x4 pixels.
+ *
+ * Params:
+ *   output = Pointer to the output buffer.
+ *   image  = Pointer to the input image.
+ *   width  = Width of the image.
+ *   height = Height of the image.
+ *   numChannels = number of channels in the input image (only R channel is used).
+ */
 void bc4Compress(ubyte* output, ubyte* image, uint width, uint height, uint numChannels)
 {
     ubyte[16] block; // 4x4 luminance values

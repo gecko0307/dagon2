@@ -53,7 +53,7 @@ import dagon.core.dxgiformat;
 import dagon.core.logger;
 import dagon.graphics.texture;
 
-//version = DDSDebug;
+version = DDSDebug;
 
 /**
  * Structure describing the pixel format in a DDS file.

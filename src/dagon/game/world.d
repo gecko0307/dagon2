@@ -28,6 +28,7 @@ module dagon.game.world;
 
 import dlib.core.memory;
 import dlib.core.ownership;
+import dlib.container.dict;
 import dlib.filesystem.filesystem;
 
 import dagon.core.logger;
@@ -64,6 +65,9 @@ class World: EventListener, GsObject
     ///
     TextureCreationOptions defaultTextureCreationOptions;
     
+    /// GScript properties of the world.
+    Dict!(GsDynamic, string) gsProperties;
+    
     ///
     this(BaseGame baseGame)
     {
@@ -77,6 +81,13 @@ class World: EventListener, GsObject
         defaultTextureCreationOptions.anisotropicFiltering = true;
         
         // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
+        
+        gsProperties = dict!(GsDynamic, string);
+    }
+    
+    ~this()
+    {
+        Delete(gsProperties);
     }
     
     ///
@@ -167,7 +178,7 @@ class World: EventListener, GsObject
         //
     }
     
-    ///
+    /// GsObject property getter.
     GsDynamic get(string key)
     {
         switch(key)
@@ -177,28 +188,39 @@ class World: EventListener, GsObject
                     return GsDynamic(scene);
                 else
                     return GsDynamic();
+            case "baseGame":
+                return GsDynamic(baseGame);
             default:
-                return GsDynamic();
+                auto v = key in gsProperties;
+                if (v)
+                    return *v;
+                else
+                    return GsDynamic();
         }
     }
     
-    ///
+    /// GsObject property setter.
     void set(string key, GsDynamic value)
     {
-        // TODO
+        gsProperties[key] = value;
     }
     
-    ///
+    /// GsObject property existence check.
     bool contains(string key)
     {
         switch(key)
         {
             case "scene": return true;
-            default: return false;
+            case "baseGame": return true;
+            default:
+                if ((key in gsProperties) !is null)
+                    return true;
+                else
+                    return false;
         }
     }
     
-    ///
+    /// GsObject prototype assignment (not used).
     void setPrototype(GsObject obj)
     {
         // No-op

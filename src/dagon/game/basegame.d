@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
  * Description:
  * The `dagon.game.basegame` module defines the `BaseGame` class, which serves
  * as a basic template for creating a game application using Dagon's built-in
- * world management system.
+ * world management system and GScript3 scripting engine.
  *
  * Copyright: Timur Gafarov 2019-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -195,7 +195,7 @@ class BaseGame: Application, GsObject
         triggerScriptEvent("onKeyDown", gsEventHandlerArgs[0..2]);
     }
     
-    ///
+    /// GsObject property getter.
     GsDynamic get(string key)
     {
         switch(key)
@@ -214,13 +214,13 @@ class BaseGame: Application, GsObject
         }
     }
     
-    ///
+    /// GsObject property setter.
     void set(string key, GsDynamic value)
     {
         gsProperties[key] = value;
     }
     
-    ///
+    /// GsObject property existence check.
     bool contains(string key)
     {
         switch(key)
@@ -234,13 +234,13 @@ class BaseGame: Application, GsObject
         }
     }
     
-    ///
+    /// GsObject prototype assignment (not used).
     void setPrototype(GsObject obj)
     {
         // No-op
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.log`.
     GsDynamic vmLog(GsDynamic[] args)
     {
         auto logLevel = cast(LogLevel)cast(uint)args[1].asNumber;
@@ -249,7 +249,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.logDebug`.
     GsDynamic vmLogDebug(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -257,7 +257,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.logInfo`.
     GsDynamic vmLogInfo(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -265,7 +265,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.logWarning`.
     GsDynamic vmLogWarning(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -273,7 +273,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.logError`.
     GsDynamic vmLogError(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -281,7 +281,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM log function. Exposed to scripts as `global.logFatalError`.
     GsDynamic vmLogFatalError(GsDynamic[] args)
     {
         auto message = args[1].toString;
@@ -289,7 +289,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM user event function. Exposed to scripts as `global.queueUserEvent`.
     GsDynamic vmQueueUserEvent(GsDynamic[] args)
     {
         int code = cast(int)args[1].asNumber;
@@ -297,7 +297,7 @@ class BaseGame: Application, GsObject
         return GsDynamic();
     }
     
-    ///
+    /// Built-in VM message send function. Exposed to scripts as `global.send`.
     GsDynamic vmSend(GsDynamic[] args)
     {
         auto recipient = args[1].asString;

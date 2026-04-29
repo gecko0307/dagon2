@@ -71,6 +71,7 @@ class Game: BaseGame
     /// 
     Texture brdfLUT;
     
+    ///
     this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
         super(w, h, fullscreen, title, args);
@@ -109,6 +110,7 @@ class Game: BaseGame
             renderer.ssaoDenoisePass.active = cast(bool)(rendererConfig.props["ssao.denoise"].toUInt);
     }
     
+    ///
     IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
     {
         TextureBuffer buffer = {
@@ -164,6 +166,7 @@ class Game: BaseGame
         return IBLData(irradianceCubemap, specularCubemap, brdfLUT);
     }
     
+    ///
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)
     {
         TextureBuffer buffer = {
@@ -198,6 +201,7 @@ class Game: BaseGame
         return brdfLut;
     }
     
+    ///
     override void onUpdate(Time t)
     {
         super.onUpdate(t);
@@ -208,6 +212,7 @@ class Game: BaseGame
         renderer.update(t);
     }
     
+    ///
     override void onRender()
     {
         renderer.render();

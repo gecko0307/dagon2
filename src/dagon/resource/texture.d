@@ -276,7 +276,7 @@ class TextureAsset: Asset
                         dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 1);
                         break;
                     case TextureCompressionFormat.BC4:
-                        bc4Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 4);
+                        bc4Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, numChannels);
                         break;
                     case TextureCompressionFormat.BC7:
                         bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
@@ -319,7 +319,7 @@ class TextureAsset: Asset
                     dxtCompress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 1);
                     break;
                 case TextureCompressionFormat.BC4:
-                    bc4Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 4);
+                    bc4Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, numChannels);
                     break;
                 case TextureCompressionFormat.BC7:
                     bc7Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, &bc7Params);
