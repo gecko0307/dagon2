@@ -275,6 +275,9 @@ class TextureAsset: Asset
                     case TextureCompressionFormat.BC3:
                         dxtCompress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 1);
                         break;
+                    case TextureCompressionFormat.BC4:
+                        bc4Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, 4);
+                        break;
                     case TextureCompressionFormat.BC7:
                         bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
                         break;
