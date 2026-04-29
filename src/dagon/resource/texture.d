@@ -42,6 +42,7 @@ import dagon.core.application;
 import dagon.core.crashhandler;
 import dagon.core.gpu;
 import dagon.core.dxt;
+import dagon.core.bc4;
 import dagon.core.bc7;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
@@ -199,6 +200,11 @@ class TextureAsset: Asset
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
         }
+        else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC4)
+        {
+            blockSize = 16;
+            newFormat = SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM;
+        }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC7)
         {
             blockSize = 16;
@@ -308,6 +314,9 @@ class TextureAsset: Asset
                     break;
                 case TextureCompressionFormat.BC3:
                     dxtCompress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 1);
+                    break;
+                case TextureCompressionFormat.BC4:
+                    bc4Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, 4);
                     break;
                 case TextureCompressionFormat.BC7:
                     bc7Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, &bc7Params);

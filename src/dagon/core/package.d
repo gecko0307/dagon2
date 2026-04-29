@@ -42,6 +42,7 @@ module dagon.core;
 public
 {
     import dagon.core.application;
+    import dagon.core.bc4;
     import dagon.core.bc7;
     import dagon.core.config;
     import dagon.core.crashhandler;

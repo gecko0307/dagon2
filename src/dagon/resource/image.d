@@ -78,6 +78,7 @@ enum TextureCompressionFormat
     None = 0,
     BC1 = 1,
     BC3 = 3,
+    BC4 = 4,
     BC7 = 7,
     
     DXT1 = 1,
