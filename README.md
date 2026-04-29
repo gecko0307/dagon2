@@ -18,7 +18,7 @@ Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported
 - Virtual file system
 - [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format support
 - Textures in PNG, JPEG, WebP, AVIF, DDS, KTX/KTX2, HDR, SVG and many other formats
-- S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC7 compressor and DDS exporter. Texture cache to accelerate loading
+- S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC4/BC7 compressors and DDS exporter. Texture cache to accelerate asset loading
 - Shaders in GLSL 4.60; SPIR-V cache
 - Runs in windowed, fullscreen and borderless fullscreen modes
 - Physically based rendering (PBR) with GGX microfacet BRDF. Metallic-roughness workflow. The rendered image is comparable to Blender's Eevee
