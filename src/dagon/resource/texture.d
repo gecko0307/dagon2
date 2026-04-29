@@ -202,7 +202,7 @@ class TextureAsset: Asset
         }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC4)
         {
-            blockSize = 16;
+            blockSize = 8;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM;
         }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC7)
