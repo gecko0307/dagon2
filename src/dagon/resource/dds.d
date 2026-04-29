@@ -29,9 +29,8 @@ DEALINGS IN THE SOFTWARE.
  * DirectDraw Surface (DDS) loader.
  *
  * Description:
- * The `dagon.resource.dds` module defines the function for reading DDS files
- * into GPU-ready texture buffers. The loader supports compressed formats
- * (DXT1, DXT3, DXT5, BC4, BC5, BC6H, BC7, ASTC), cubemaps, mipmaps, and 3D/volume textures.
+ * The `dagon.resource.dds` module provides functions for reading and writing
+ * DDS texture container files.
  *
  * Copyright: Timur Gafarov 2019-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -53,7 +52,7 @@ import dagon.core.dxgiformat;
 import dagon.core.logger;
 import dagon.graphics.texture;
 
-version = DDSDebug;
+//version = DDSDebug;
 
 /**
  * Structure describing the pixel format in a DDS file.
@@ -529,7 +528,7 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
 
 /**
  * Saves a TextureBuffer to DDS file.
- * Supports uncompressed and S3TC-compressed textures.
+ * Supports uncompressed and block-compressed textures.
  *
  * Params:
  *   output = Output stream to write the file.
