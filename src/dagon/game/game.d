@@ -31,10 +31,12 @@ import std.math;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.container.array;
+import dlib.math.utils;
 
 import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.time;
+import dagon.core.props;
 import dagon.core.config;
 import dagon.graphics.texture;
 import dagon.graphics.envmap;
@@ -42,6 +44,7 @@ import dagon.graphics.brdflut;
 import dagon.game.basegame;
 import dagon.game.world;
 import dagon.render.deferred;
+import dagon.render.postprocessing;
 
 ///
 struct IBLData
@@ -122,11 +125,50 @@ class Game: BaseGame
         
         if ("motionBlur.enabled" in rendererConfig.props)
             renderer.motionBlurPass.active = cast(bool)(rendererConfig.props["motionBlur.enabled"].toUInt);
-        // TODO: other motion blur parameters
+        if ("motionBlur.samples" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.samples = max2(1, rendererConfig.props["motionBlur.samples"].toUInt);
+        if ("motionBlur.framerate" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.shutterFramerate = rendererConfig.props["motionBlur.framerate"].toFloat;
+        if ("motionBlur.minDistance" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.minDistance = rendererConfig.props["motionBlur.minDistance"].toFloat;
+        if ("motionBlur.maxDistance" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.maxDistance = rendererConfig.props["motionBlur.maxDistance"].toFloat;
+        if ("motionBlur.randomness" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.offsetRandomCoefficient = rendererConfig.props["motionBlur.randomness"].toFloat;
+        if ("motionBlur.radialBlurAmount" in rendererConfig.props)
+            renderer.motionBlurPass.motionBlurShader.radialBlur = rendererConfig.props["motionBlur.radialBlurAmount"].toFloat;
         
         if ("tonemapping.enabled" in rendererConfig.props)
             renderer.tonemappingPass.active = cast(bool)(rendererConfig.props["tonemapping.enabled"].toUInt);
-        // TODO: other tonemapping parameters
+        if ("tonemapping.look" in rendererConfig.props)
+        {
+            auto lookProp = rendererConfig.props["tonemapping.look"];
+            if (lookProp.type == DPropType.String)
+            {
+                switch(lookProp.toString)
+                {
+                    case "Base":
+                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Base;
+                        break;
+                    case "Punchy":
+                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Punchy;
+                        break;
+                    case "PunchyLegacy":
+                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        if ("tonemapping.look.offset" in rendererConfig.props)
+            renderer.tonemappingPass.tonemappingShader.look.offset = rendererConfig.props["tonemapping.look.offset"].toVector3f;
+        if ("tonemapping.look.slope" in rendererConfig.props)
+            renderer.tonemappingPass.tonemappingShader.look.slope = rendererConfig.props["tonemapping.look.slope"].toVector3f;
+        if ("tonemapping.look.power" in rendererConfig.props)
+            renderer.tonemappingPass.tonemappingShader.look.power = rendererConfig.props["tonemapping.look.power"].toVector3f;
+        if ("tonemapping.look.saturation" in rendererConfig.props)
+            renderer.tonemappingPass.tonemappingShader.look.saturation = rendererConfig.props["tonemapping.look.saturation"].toFloat;
         
         if ("fxaa.enabled" in rendererConfig.props)
             renderer.fxaaPass.active = cast(bool)(rendererConfig.props["fxaa.enabled"].toUInt);
