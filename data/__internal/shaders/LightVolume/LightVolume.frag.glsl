@@ -29,7 +29,7 @@ float distributionGGX(vec3 N, vec3 H, float roughness)
     float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH * NdotH;
     float num = a2;
-    float denom = max(NdotH2 * (a2 - 1.0) + 1.0, 0.001);
+    float denom = max(NdotH2 * (a2 - 1.0) + 1.0, 0.00001);
     const float Pi = 3.14159265359;
     denom = Pi * denom * denom;
     return num / denom;
@@ -125,7 +125,7 @@ vec3 lightRadianceAreaSphere(
     // fss90 used to "flatten" retroreflection based on roughness
     float FL = schlickFresnel(NL);
     float FV = schlickFresnel(NE);
-    float fss90 = LH * LH * max(roughness, 0.001);
+    float fss90 = LH * LH * max(roughness, 0.00001);
     float fss = mix(1.0, fss90, FL) * mix(1.0, fss90, FV);
     float ss = 1.25 * (fss * (1.0 / max(NL + NE, 0.1) - 0.5) + 0.5);
     
@@ -133,7 +133,7 @@ vec3 lightRadianceAreaSphere(
 
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(N, E), 0.0) * NL;
-    vec3 specular = numerator / max(denominator, 0.001);
+    vec3 specular = numerator / max(denominator, 0.00001);
     
     vec3 lightColorLinear = toLinear(ubo.lightColor.rgb);
     
