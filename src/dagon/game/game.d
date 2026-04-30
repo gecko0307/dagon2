@@ -175,7 +175,8 @@ class Game: BaseGame
         
         if ("sharpening.enabled" in rendererConfig.props)
             renderer.sharpeningPass.active = cast(bool)(rendererConfig.props["sharpening.enabled"].toUInt);
-        // TODO: other sharpening parameters
+        if ("sharpening.strength" in rendererConfig.props)
+            renderer.sharpeningPass.sharpeningShader.strength = rendererConfig.props["sharpening.strength"].toFloat;
     }
     
     ///
