@@ -466,7 +466,7 @@ class PositionSync: EntityController
         this.targetEntity = targetEntity;
     }
     
-    override void update(Time t)
+    override void postUpdate(Time t)
     {
         entity.transformation = trsMatrix(targetEntity.positionWorld, entity.rotation, entity.scaling);
         entity.invTransformation = entity.transformation.inverse;
