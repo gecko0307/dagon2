@@ -52,6 +52,7 @@ import dagon;
 class MyWorld: World
 {
     MyGame game;
+    Scene scene;
 
     this(MyGame game)
     {
