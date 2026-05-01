@@ -24,6 +24,10 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * World runtime container for scene management, asset loading, and event processing.
+ */
 module dagon.game.world;
 
 import dlib.core.memory;
@@ -44,31 +48,37 @@ import dagon.resource.texture;
 
 import gscript;
 
-///
+/**
+ * The world object.
+ * Manages scene, asset loading, event processing, and
+ * exposes GScript-compatible properties.
+ */
 class World: EventListener, GsObject
 {
-    ///
+    /// Reference to the parent base game instance.
     BaseGame baseGame;
     
-    ///
+    /// GPU interface used to create and manage rendering resources.
     GPU gpu;
     
-    ///
+    /// Active scene managed by this world.
     Scene scene;
     
-    ///
-    bool recalculateMatrices = true;
-    
-    ///
+    /// Default options for converting loaded image data.
     ImageConversionOptions defaultImageConversionOptions;
     
-    ///
+    /// Default options for creating new textures.
     TextureCreationOptions defaultTextureCreationOptions;
     
-    /// GScript properties of the world.
+    /// GScript dynamic properties attached to this world instance.
     Dict!(GsDynamic, string) gsProperties;
     
-    ///
+    /**
+     * Creates a new world.
+     *
+     * Params:
+     *   baseGame = The base game instance that owns this world.
+     */
     this(BaseGame baseGame)
     {
         super(baseGame.eventManager, baseGame);
@@ -85,18 +95,29 @@ class World: EventListener, GsObject
         gsProperties = dict!(GsDynamic, string);
     }
     
+    /// Releases world resources and script properties.
     ~this()
     {
         Delete(gsProperties);
     }
     
-    ///
+    /// Activates this world in the parent game.
     void activate()
     {
         baseGame.activeWorld = this;
     }
     
-    ///
+    /**
+     * Loads a texture asset from a file using provided conversion and creation settings.
+     *
+     * Params:
+     *   filename = Virtual path of the texture file to load.
+     *   conversionOptions = Image conversion settings to apply.
+     *   creationOptions = Texture creation settings to use.
+     *   cache = Whether the asset should be cached.
+     *
+     * Returns: The loaded texture asset instance.
+     */
     TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
     {
         TextureAsset asset = New!TextureAsset(gpu, this);
@@ -110,13 +131,29 @@ class World: EventListener, GsObject
         return asset;
     }
     
-    ///
+    /**
+     * Loads a texture asset from a file using default conversion and creation settings.
+     *
+     * Params:
+     *   filename = Virtual path of the texture file to load.
+     *   cache = Whether the texture asset should be cached.
+     *
+     * Returns: The loaded texture asset instance.
+     */
     TextureAsset loadTexture(string filename, bool cache = true)
     {
         return loadTexture(filename, &defaultImageConversionOptions, &defaultTextureCreationOptions, cache);
     }
     
-    ///
+    /**
+     * Loads the given asset from a file into the provided asset object.
+     *
+     * Params:
+     *   asset = The asset object to populate.
+     *   filename = Virtual path of the source file.
+     *
+     * Returns: True if loading succeeded; otherwise false.
+     */
     bool loadAsset(Asset asset, string filename)
     {
         bool res = false;
@@ -132,7 +169,14 @@ class World: EventListener, GsObject
         return res;
     }
     
-    ///
+    /**
+     * Creates and loads a new asset of type `T` from the specified file.
+     *
+     * Params:
+     *   filename = Virtual path of the asset file.
+     *
+     * Returns: A loaded asset instance of type `T`.
+     */
     T loadAsset(T)(string filename)
     {
         T asset = New!T(gpu, this);
@@ -140,7 +184,11 @@ class World: EventListener, GsObject
         return asset;
     }
     
-    ///
+    /**
+     * Updates the world for the current frame.
+     * This processes pending events, updates the active scene, and invokes
+     * pre- and post-update hooks on entities.
+     */
     void update(Time t)
     {
         processEvents();
@@ -166,19 +214,32 @@ class World: EventListener, GsObject
         }
     }
     
-    ///
+    /**
+     * Hook called before entity updates during the world update cycle.
+     * Override this method in derived worlds to perform custom per-frame logic.
+     */
     void onUpdate(Time t)
     {
         //
     }
     
-    ///
+    /**
+     * Hook called after entity updates during the world update cycle.
+     * Override this method in derived worlds to perform custom post-update logic.
+     */
     void onPostUpdate(Time t)
     {
         //
     }
     
-    /// GsObject property getter.
+    /**
+     * Returns a GScript dynamic property for the specified key.
+     *
+     * Params:
+     *   key = The property name to retrieve.
+     *
+     * Returns: The property value, or an empty `GsDynamic` if not found.
+     */
     GsDynamic get(string key)
     {
         switch(key)
@@ -199,13 +260,26 @@ class World: EventListener, GsObject
         }
     }
     
-    /// GsObject property setter.
+    /**
+     * Sets a GScript dynamic property value for the specified key.
+     *
+     * Params:
+     *   key = The property name to store.
+     *   value = The dynamic value to assign.
+     */
     void set(string key, GsDynamic value)
     {
         gsProperties[key] = value;
     }
     
-    /// GsObject property existence check.
+    /**
+     * Checks whether a GScript dynamic property exists for the specified key.
+     *
+     * Params:
+     *   key = The property name to check.
+     *
+     * Returns: True if the property exists.
+     */
     bool contains(string key)
     {
         switch(key)
@@ -220,7 +294,7 @@ class World: EventListener, GsObject
         }
     }
     
-    /// GsObject prototype assignment (not used).
+    /// Prototype assignment for GScript object compatibility (no-op).
     void setPrototype(GsObject obj)
     {
         // No-op

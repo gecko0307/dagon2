@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2026 Timur Gafarov
+Copyright (c) 2019-2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,6 +24,19 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Core game logic for Dagon-based applications.
+ *
+ * Description:
+ * The `dagon.game.game` module defines the `Game` class, which serves
+ * as a basic template for creating a game application using Dagon's built-in
+ * deferred renderer.
+ *
+ * Copyright: Timur Gafarov 2019-2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.game.game;
 
 import std.math;
@@ -46,38 +59,62 @@ import dagon.game.world;
 import dagon.render.deferred;
 import dagon.render.postprocessing;
 
-///
+/**
+ * A structure that holds environment maps for image-based lighting.
+ */
 struct IBLData
 {
+    /// Irradiance cubemap for diffuse lighting.
     Texture irradianceCubemap;
+    
+    /// Specular cubemap for reflective lighting.
     Texture specularCubemap;
+    
+    /// BRDF lookup table (aka BRDF integration map).
     Texture brdfLUT;
 }
 
-///
+/**
+ * Main game class for Dagon applications.
+ *
+ * Description:
+ * Manages rendering. The `Game` class is a subclass
+ * of `Application` and provides a framework for creating games
+ * that use Dagon's deferred renderer. It also provides functions
+ * for IBL cubemaps generation.
+ */
 class Game: BaseGame
 {
     protected string rendererConfigFilename = "render.conf";
     
-    /// The configuration object for storing user-defined rendering settings.
+    /// The configuration object for storing user-defined renderer settings.
     Configuration rendererConfig;
     
-    /// 
+    /// Renderer for generating cubemaps.
     CubemapRenderer cubemapRenderer;
     
-    /// 
+    /// Renderer for generating BRDF LUT.
     BRDFLUTRenderer brdflutRenderer;
     
-    /// 
+    /// Core renderer.
     DeferredRenderer renderer;
     
-    /// 
+    /// BRDF lookup table texture.
     Texture brdfLUT;
     
-    ///
-    this(uint w, uint h, bool fullscreen, string title, string[] args)
+    /**
+     * Constructs a new game instance.
+     *
+     * Params:
+     *   winWidth = Default window width (if `window.width` is not defined in `setting.conf`)
+     *   winHeight = Default window height (if `window.height` is not defined in `setting.conf`)
+     *   fullscreen = Default fullscreen mode (if `fullscreen` is not defined in `setting.conf`)
+     *   title = Default window title (if `window.title` not defined in `setting.conf`)
+     *   args = Optional command line arguments
+     */
+    this(uint winWidth, uint winHeight, bool fullscreen, string title, string[] args)
     {
-        super(w, h, fullscreen, title, args);
+        super(winWidth, winHeight, fullscreen, title, args);
         
         // Create render config
         rendererConfig = New!Configuration(this);
@@ -179,7 +216,16 @@ class Game: BaseGame
             renderer.sharpeningPass.sharpeningShader.strength = rendererConfig.props["sharpening.strength"].toFloat;
     }
     
-    ///
+    /**
+     * Generates IBL cubemaps from an equirectangular environment map.
+     *
+     * Params:
+     *   inputEnvmap = Input environment texture
+     *   specularResolution = Resolution for specular cubemap
+     *   cubemapsOwner = Owner for the generated textures
+     *
+     * Returns: `IBLData` struct with generated textures
+     */
     IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
     {
         TextureBuffer buffer = {
@@ -235,7 +281,15 @@ class Game: BaseGame
         return IBLData(irradianceCubemap, specularCubemap, brdfLUT);
     }
     
-    ///
+    /**
+     * Generates BRDF lookup table.
+     *
+     * Params:
+     *   resolution = Texture resolution
+     *   textureOwner = Owner for the texture
+     *
+     * Returns: Generated BRDF LUT texture
+     */
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)
     {
         TextureBuffer buffer = {
@@ -270,7 +324,12 @@ class Game: BaseGame
         return brdfLut;
     }
     
-    ///
+    /**
+     * Called on each animation frame.
+     *
+     * Params:
+     *   t = Time information for the frame.
+     */
     override void onUpdate(Time t)
     {
         super.onUpdate(t);
@@ -281,7 +340,7 @@ class Game: BaseGame
         renderer.update(t);
     }
     
-    ///
+    /// Called every frame to render the game.
     override void onRender()
     {
         renderer.render();
