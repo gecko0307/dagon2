@@ -51,6 +51,7 @@ import dagon.render.deferred.passes.fog;
 import dagon.render.postprocessing.context;
 import dagon.render.postprocessing.passes.refraction;
 import dagon.render.postprocessing.passes.motionblur;
+import dagon.render.postprocessing.passes.lensdistortion;
 import dagon.render.postprocessing.passes.tonemapping;
 import dagon.render.postprocessing.passes.fxaa;
 import dagon.render.postprocessing.passes.sharpening;
@@ -73,6 +74,7 @@ class DeferredRenderer: Renderer
     BufferCopyPass bufferCopyPass;
     RefractionPass refractionPass;
     MotionBlurPass motionBlurPass;
+    LensDistortionPass lensDistortionPass;
     TonemappingPass tonemappingPass;
     FXAAPass fxaaPass;
     SharpeningPass sharpeningPass;
@@ -99,6 +101,7 @@ class DeferredRenderer: Renderer
         bufferCopyPass = New!BufferCopyPass(this, ppContext);
         refractionPass = New!RefractionPass(this, ppContext);
         motionBlurPass = New!MotionBlurPass(this, ppContext);
+        lensDistortionPass = New!LensDistortionPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);

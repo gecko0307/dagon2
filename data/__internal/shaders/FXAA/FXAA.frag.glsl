@@ -1,7 +1,9 @@
 #version 460
 
 /*
- * FXAA implementation is based on demo by GeeXLab:
+ * Fast Approximate Anti-Aliasing algorithm by Timothy Lottes (NVIDIA)
+ * https://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf
+ * Implementation is based on demo by GeeXLab:
  * http://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce
  */
 const float FXAA_REDUCE_MIN = 1.0 / 128.0;
