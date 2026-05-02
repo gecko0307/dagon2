@@ -69,7 +69,7 @@ class LensDistortionShader: Shader
     
    public:
     float scale = 0.99f;
-    float dispersion = 0.1f;
+    float dispersion = 0.05f;
     bool useRadialDistortion = false;
     float k1 = 0.2f; // positive = barrel, negative = pincushion
     float k2 = 0.05f;

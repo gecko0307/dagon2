@@ -8,7 +8,8 @@ If you like Dagon, support its development on [Patreon](https://www.patreon.com/
 
 Screenshots
 -----------
-[![PBR test](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)
+[![PBR test 1](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)
+[![PBR test 2](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test2.jpg)
 
 Features
 --------
