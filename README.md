@@ -8,7 +8,7 @@ If you like Dagon, support its development on [Patreon](https://www.patreon.com/
 
 Screenshots
 -----------
-[![comparison with Eevee](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/03/dagon2_vs_eevee_ssao.jpg)
+[![PBR test](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test.jpg)
 
 Features
 --------
@@ -46,6 +46,7 @@ New features:
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
 - Fog effect is now applied in a separate pass. Ground fog support
+- Radial optical distortion support
 - Shadeless materials in deferred pipeline
 - Window minimize/restore events.
 
