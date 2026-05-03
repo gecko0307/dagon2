@@ -55,7 +55,6 @@ struct SSAOShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;
     Matrix4x4f invViewMatrix;
-    Matrix4x4f projectionMatrix;
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
     float[4] fparams;
@@ -97,7 +96,6 @@ class SSAOShader: Shader
         
         fsUBO.viewMatrix = Matrix4x4f.identity;
         fsUBO.invViewMatrix = Matrix4x4f.identity;
-        fsUBO.projectionMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
         
@@ -133,7 +131,6 @@ class SSAOShader: Shader
         
         fsUBO.viewMatrix = view.viewMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
-        fsUBO.projectionMatrix = view.projectionMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.resolution.x = view.width / 2;
         fsUBO.resolution.x = view.height / 2;

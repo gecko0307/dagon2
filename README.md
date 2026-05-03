@@ -40,6 +40,7 @@ New features:
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
+- Screen-space local reflections (SSLR)
 - Experimental HDR (scRGB) output support
 - 2x supersampling support
 - Temporal SSAO support

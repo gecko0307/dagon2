@@ -34,7 +34,6 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;
-    mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
     vec4 fparams;
