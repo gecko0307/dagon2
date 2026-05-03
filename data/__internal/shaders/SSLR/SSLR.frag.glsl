@@ -60,7 +60,7 @@ layout(location = 0) out vec4 outColor;
 vec3 sslr(vec3 P, vec3 R)
 {
     const float maxDistance = 5.0;
-    const int steps = 40;
+    const int steps = 20;
     float invSamples = 1.0 / float(steps);
     vec3 color = vec3(0.0, 0.0, 0.0);
     const float bias = 0.1;
@@ -119,7 +119,7 @@ void main()
     float shadingMask = roughnessMetallic.a;
     
     vec3 rN = normalize(sampleHemisphere(N, texCoords));
-    vec3 mixedNormal = mix(N, rN, roughness * 0.05);
+    vec3 mixedNormal = mix(N, rN, roughness * 0.5);
     
     vec3 R = normalize(reflect(E, mixedNormal));
     float NE = clamp(dot(N, E), 0.0, 1.0);
