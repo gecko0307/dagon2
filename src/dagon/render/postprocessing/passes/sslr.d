@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.deferred.passes.ssao;
+module dagon.render.postprocessing.passes.sslr;
 
 import std.math;
 
@@ -36,8 +36,9 @@ import dlib.image.color;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;
-import dagon.core.time;
 import dagon.core.crashhandler;
+import dagon.core.logger;
+import dagon.core.time;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
@@ -46,53 +47,44 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
+import dagon.render.postprocessing.context;
 
-struct SSAOShaderVertexUniformBuffer
+struct SSLRShaderVertexUniformBuffer
 {
+    // TODO
 }
 
-struct SSAOShaderFragmentUniformBuffer
+struct SSLRShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;
     Matrix4x4f invViewMatrix;
     Matrix4x4f projectionMatrix;
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
-    float[4] fparams;
-    uint[4] iparams;
 }
 
-class SSAOShader: Shader
+class SSLRShader: Shader
 {
    protected:
-    SSAOShaderVertexUniformBuffer vsUBO;
-    SSAOShaderFragmentUniformBuffer fsUBO;
-    float time = 0.0f;
-    uint numSamples = 0;
-    bool disableAccumulationForNextFrame = false;
+    SSLRShaderVertexUniformBuffer vsUBO;
+    SSLRShaderFragmentUniformBuffer fsUBO;
     
    public:
-    float radius = 0.5f;
-    float power = 6.0f;
-    uint numSamplesMax = 40;
-    uint numSamplesMin = 20;
-    bool temporalAccumulation = false;
-    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("SSAO.vert.glsl", "data/__internal/shaders/SSAO/SSAO.vert.glsl",
+        vertexModule.create("SSLR.vert.glsl", "data/__internal/shaders/SSLR/SSLR.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("SSAO.frag.glsl", "data/__internal/shaders/SSAO/SSAO.frag.glsl",
+        fragmentModule.create("SSLR.frag.glsl", "data/__internal/shaders/SSLR/SSLR.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create SSAOShader");
+            exitWithError("Failed to create SSLRShader");
         }
         
         fsUBO.viewMatrix = Matrix4x4f.identity;
@@ -100,30 +92,6 @@ class SSAOShader: Shader
         fsUBO.projectionMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        
-        fsUBO.fparams[0] = 0.0f;
-        fsUBO.fparams[1] = 0.0f;
-        fsUBO.fparams[2] = 0.0f;
-        fsUBO.fparams[3] = 0.0f;
-        
-        numSamples = numSamplesMax;
-        fsUBO.iparams[0] = numSamples;
-        fsUBO.iparams[1] = temporalAccumulation;
-    }
-    
-    void update(Time t)
-    {
-        time += 4.0f * t.delta;
-        if (time > PI * 2.0f)
-            time = 0.0f;
-        
-        if (temporalAccumulation)
-        {
-            if (numSamples > numSamplesMin)
-                numSamples--;
-        }
-        else
-            numSamples = numSamplesMin;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -135,52 +103,41 @@ class SSAOShader: Shader
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.projectionMatrix = view.projectionMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
-        fsUBO.resolution.x = view.width / 2;
-        fsUBO.resolution.x = view.height / 2;
-        fsUBO.fparams[0] = time;
-        fsUBO.fparams[1] = radius;
-        fsUBO.fparams[2] = power;
-        fsUBO.iparams[0] = numSamples;
-        fsUBO.iparams[1] = temporalAccumulation && !disableAccumulationForNextFrame;
-        disableAccumulationForNextFrame = false;
+        fsUBO.resolution.x = pass.view.width;
+        fsUBO.resolution.y = pass.view.height;
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.depthBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.occlusionBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.velocityBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.colorBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.normalBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 4, &state.roughnessMetallicBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
-    
-    void resetAccumulation()
-    {
-        disableAccumulationForNextFrame = true;
-        time = 0.0f;
-        numSamples = numSamplesMax;
-    }
 }
 
-class SSAOPass: RenderPass
+class SSLRPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    SSAOShader ssaoShader;
-    
-    SDL_GPUColorTargetDescription colorTargetDescription;
+    PostProcessingContext ppContext;
+    SSLRShader sslrShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     
-    this(Renderer renderer, GBuffer gbuffer)
+    this(Renderer renderer, PostProcessingContext ppContext)
     {
         super(renderer);
         this.gpu = renderer.gpu;
-        this.gbuffer = gbuffer;
-        ssaoShader = New!SSAOShader(gpu, this);
-        shader = ssaoShader;
+        this.gbuffer = ppContext.gbuffer;
+        this.ppContext = ppContext;
+        
+        sslrShader = New!SSLRShader(gpu, this);
+        shader = sslrShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = ssaoShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = ssaoShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = sslrShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = sslrShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -215,19 +172,15 @@ class SSAOPass: RenderPass
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
-        SDL_GPUColorTargetBlendState blendState = {
-            src_color_blendfactor: SDL_GPU_BLENDFACTOR_CONSTANT_COLOR,
-            dst_color_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR,
-            color_blend_op: SDL_GPU_BLENDOP_ADD,
-            src_alpha_blendfactor: SDL_GPU_BLENDFACTOR_CONSTANT_COLOR,
-            dst_alpha_blendfactor: SDL_GPU_BLENDFACTOR_ONE_MINUS_CONSTANT_COLOR,
-            alpha_blend_op: SDL_GPU_BLENDOP_ADD,
-            color_write_mask: 0,
-            enable_blend: false,
-            enable_color_write_mask: false
-        };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
-        colorTargetDescription.blend_state = blendState;
+        SDL_GPUColorTargetDescription colorTargetDescription;
+        colorTargetDescription.format = ppContext.bufferFormat;
+        colorTargetDescription.blend_state.enable_blend = false;
+        colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        colorTargetDescription.blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        colorTargetDescription.blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        colorTargetDescription.blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        colorTargetDescription.blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
         pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
@@ -249,10 +202,10 @@ class SSAOPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetInfo.clear_color = SDL_FColor(1.0f, 1.0f, 1.0f, 1.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -260,18 +213,12 @@ class SSAOPass: RenderPass
         enableDepthTarget = false;
     }
     
-    override void update(Time t)
-    {
-        ssaoShader.update(t);
-    }
-    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
             return;
         
-        gbuffer.swapOcclusionBuffers();
-        colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         beginPass();
         
@@ -281,18 +228,14 @@ class SSAOPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.occlusionBuffer = InputBuffer(gbuffer.previousOcclusionBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
+        state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
         state.entity = null;
-        ssaoShader.bindParameters(state);
+        sslrShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         
         endPass();
-    }
-    
-    override void resize(uint width, uint height)
-    {
-        ssaoShader.resetAccumulation();
+        
+        ppContext.swapTargets();
     }
 }

@@ -50,6 +50,7 @@ import dagon.render.deferred.passes.lightvolume;
 import dagon.render.deferred.passes.fog;
 import dagon.render.postprocessing.context;
 import dagon.render.postprocessing.passes.refraction;
+import dagon.render.postprocessing.passes.sslr;
 import dagon.render.postprocessing.passes.motionblur;
 import dagon.render.postprocessing.passes.lensdistortion;
 import dagon.render.postprocessing.passes.tonemapping;
@@ -73,6 +74,7 @@ class DeferredRenderer: Renderer
     FogPass fogPass;
     BufferCopyPass bufferCopyPass;
     RefractionPass refractionPass;
+    SSLRPass sslrPass;
     MotionBlurPass motionBlurPass;
     LensDistortionPass lensDistortionPass;
     TonemappingPass tonemappingPass;
@@ -100,6 +102,7 @@ class DeferredRenderer: Renderer
         // TODO: particles pass
         bufferCopyPass = New!BufferCopyPass(this, ppContext);
         refractionPass = New!RefractionPass(this, ppContext);
+        sslrPass = New!SSLRPass(this, ppContext);
         motionBlurPass = New!MotionBlurPass(this, ppContext);
         lensDistortionPass = New!LensDistortionPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);

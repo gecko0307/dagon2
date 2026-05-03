@@ -34,6 +34,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;
+    mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
     vec4 fparams;
@@ -90,7 +91,7 @@ float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
     
     ao *= invSamples;
     
-    return ao;
+    return 1.0 - ao;
 }
 
 void main()
@@ -111,7 +112,7 @@ void main()
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
 
     float occlusion = spiralSSAO(texCoords, eyePos, N, ssaoRadius / -eyePos.z);
-    occlusion = pow(clamp(1.0 - occlusion, 0.0, 1.0), ssaoPower);
+    occlusion = pow(clamp(occlusion, 0.0, 1.0), ssaoPower);
     occlusion = mix(occlusion, 1.0, depthFactor);
     
     // Temporal accumulation
