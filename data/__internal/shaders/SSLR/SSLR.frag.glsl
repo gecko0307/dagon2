@@ -63,13 +63,13 @@ layout(location = 0) out vec4 outColor;
 
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
-    const float maxDistance = 5.0;
+    const float maxDistance = 4.0;
     const int steps = 40;
     const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     float jitter = hash(texCoords * 467.759) * 0.8;
-    const float thickness = 0.2;
+    const float thickness = 0.25;
     float prevT = 0.0;
 
     for (int i = 0; i <= steps; i++)
