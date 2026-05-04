@@ -91,13 +91,12 @@ void main()
     
     vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
     vec3 E = normalize(-eyePos);
-    vec3 R = reflect(E, N);
     float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
     vec3 wE = normalize(worldPos - worldCamPos);
     vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
-    vec3 wR = reflect(wE, wN);
+    vec3 wR = normalize(reflect(wE, wN));
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;

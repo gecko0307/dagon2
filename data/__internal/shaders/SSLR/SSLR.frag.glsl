@@ -68,13 +68,13 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
     const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float jitter = hash(texCoords * 467.759) * 0.8;
-    const float thickness = 0.25;
+    float jitter = hash(texCoords * 467.759) * 0.9;
+    const float thickness = 0.2;
     float prevT = 0.0;
 
     for (int i = 0; i <= steps; i++)
     {
-        float t = (float(i) + 0.5 + jitter) * invSamples * maxDistance;
+        float t = (float(i) + jitter) * invSamples * maxDistance;
 
         vec3 samplePos = P + R * t;
         vec4 clip = ubo.projectionMatrix * vec4(samplePos, 1.0);
@@ -159,6 +159,9 @@ void main()
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
     float roughness = roughnessMetallic.g;
+    
+    float roughnessFactor = 1.0 - clamp((roughness - 0.1) / (0.5 - 0.1), 0.0, 1.0);
+    
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
@@ -176,5 +179,5 @@ void main()
     vec4 reflection = sslr(eyePos, R, roughness);
     vec3 indirectSpecular = reflection.rgb * F;
 
-    outColor = vec4(mix(original, indirectSpecular, reflection.a), 1.0);
+    outColor = vec4(mix(original, indirectSpecular, reflection.a * roughnessFactor), 1.0);
 }

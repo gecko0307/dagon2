@@ -202,10 +202,7 @@ class FirstPersonViewController: EntityController
                 mouseRelV = (eventManager.mouseY - prevMouseY) * mouseSensitivity;
             }
             
-            if (abs(mouseRelH) > EPSILON || abs(mouseRelV) > EPSILON)
-                isMoving = true;
-            
-            //logInfo(mouseRelH, ", ", mouseRelV);
+            isMoving = true;
             
             // TODO:
             //float hAxis = inputManager.getAxis("horizontal");
@@ -245,7 +242,7 @@ class FirstPersonViewController: EntityController
         direction = orientation.rotate(Vector3f(0.0f, 0.0f, 1.0f));
         directionHorizontal = orientationH.rotate(Vector3f(0.0f, 0.0f, 1.0f));
         right = orientationH.rotate(Vector3f(1.0f, 0.0f, 0.0f));
-        up = orientationH.rotate(Vector3f(01.0f, 1.0f, 0.0f));
+        up = orientationH.rotate(Vector3f(0.0f, 1.0f, 0.0f));
     }
     
     override void postUpdate(Time t)
