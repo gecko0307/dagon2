@@ -44,6 +44,10 @@ layout(set = 2, binding = 2) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 3) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 4) uniform sampler2D roughnessMetallicBuffer;
 
+#define FLAGS_MAX_LOD_LEVEL 1
+
+#define FPARAM_TIME 0
+
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
@@ -57,38 +61,78 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
-vec3 sslr(vec3 P, vec3 R)
+vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     const float maxDistance = 5.0;
-    const int steps = 20;
+    const int steps = 40;
+    const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
-    vec3 color = vec3(0.0, 0.0, 0.0);
-    const float bias = 0.1;
-    float jitter = hash(texCoords * 467.759);
-    const float thickness = 0.1;
+    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    float jitter = hash(texCoords * 467.759) * 0.8;
+    const float thickness = 0.2;
+    float prevT = 0.0;
+
     for (int i = 0; i <= steps; i++)
     {
-        float t = bias + (float(i) + jitter) * invSamples * maxDistance;
-        
+        float t = (float(i) + 0.5 + jitter) * invSamples * maxDistance;
+
         vec3 samplePos = P + R * t;
         vec4 clip = ubo.projectionMatrix * vec4(samplePos, 1.0);
         clip /= clip.w;
         vec2 uv = clip.xy * 0.5 + 0.5;
         uv.y = 1.0 - uv.y;
-        
-        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec3(0.0);
-        
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+            return vec4(0.0);
+
         float depth = texture(depthBuffer, uv).x;
         vec3 ndc = vec3(uv, depth);
         vec3 hitPos = unproject(ubo.invProjectionMatrix, ndc);
-        
+
         if (samplePos.z < hitPos.z && samplePos.z > hitPos.z - thickness)
         {
-            vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), uv) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), uv));
+            float tLo = prevT;
+            float tHi = t;
+
+            for (int j = 0; j < refineSteps; j++)
+            {
+                float tMid = 0.5 * (tLo + tHi);
+                vec3 midPos = P + R * tMid;
+                vec4 midClip = ubo.projectionMatrix * vec4(midPos, 1.0);
+                midClip /= midClip.w;
+                vec2 midUV = midClip.xy * 0.5 + 0.5;
+                midUV.y = 1.0 - midUV.y;
+
+                if (midUV.x < 0.0 || midUV.x > 1.0 || midUV.y < 0.0 || midUV.y > 1.0)
+                {
+                    tHi = tMid;
+                    continue;
+                }
+
+                float midDepth = texture(depthBuffer, midUV).x;
+                vec3 midHitPos = unproject(ubo.invProjectionMatrix, vec3(midUV, midDepth));
+
+                if (midPos.z < midHitPos.z)
+                    tHi = tMid;
+                else
+                    tLo = tMid;
+            }
+
+            float tFinal = tHi;
+            vec3 finalPos = P + R * tFinal;
+            vec4 finalClip = ubo.projectionMatrix * vec4(finalPos, 1.0);
+            finalClip /= finalClip.w;
+            vec2 finalUV = finalClip.xy * 0.5 + 0.5;
+            finalUV.y = 1.0 - finalUV.y;
+
+            vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
-            float distanceFade = 1.0 - clamp(t / maxDistance, 0.0, 1.0);
-            return texture(radianceBuffer, uv).rgb * screenFade * distanceFade;
+            float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
+            float alpha = clamp(screenFade * distanceFade, 0.0, 1.0);
+            return vec4(texture(radianceBuffer, finalUV).rgb * alpha, alpha);
         }
+
+        prevT = t;
     }
 
     return color;
@@ -118,10 +162,10 @@ void main()
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
-    vec3 rN = normalize(sampleHemisphere(N, texCoords));
-    vec3 mixedNormal = mix(N, rN, roughness * 0.5);
+    vec3 rndN = normalize(sampleHemisphere(N, texCoords));
+    vec3 stochN = mix(N, rndN, roughness * 0.2);
     
-    vec3 R = normalize(reflect(E, mixedNormal));
+    vec3 R = normalize(reflect(E, stochN));
     float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
@@ -129,7 +173,8 @@ void main()
     
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     
-    vec3 reflection = sslr(eyePos, R) * F;
+    vec4 reflection = sslr(eyePos, R, roughness);
+    vec3 indirectSpecular = reflection.rgb * F;
 
-    outColor = vec4(original + reflection * shadingMask, 1.0);
+    outColor = vec4(mix(original, indirectSpecular, reflection.a), 1.0);
 }
