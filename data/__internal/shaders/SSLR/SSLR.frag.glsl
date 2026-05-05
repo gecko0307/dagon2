@@ -56,6 +56,7 @@ layout(set = 2, binding = 3) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 4) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 5) uniform sampler2D prevReflectionBuffer;
 layout(set = 2, binding = 6) uniform sampler2D velocityBuffer;
+layout(set = 2, binding = 7) uniform sampler2D brdfLUT;
 
 #define FLAGS_MAX_LOD_LEVEL 1
 
@@ -69,6 +70,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invProjectionMatrix;
     vec4 resolution;
     vec4 fparams; // time
+    uvec4 iparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -186,8 +188,13 @@ void main()
     
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     
+    vec2 brdf = (ubo.iparams[0] == 1)?
+        texture(brdfLUT, vec2(NE, roughness)).rg :
+        vec2(1.0, 0.0);
+    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    
     vec4 reflection = sslr(eyePos, R, roughness);
-    reflection = vec4(reflection.rgb * F, reflection.a);
+    reflection = vec4(reflection.rgb * FssEss, reflection.a);
     
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);

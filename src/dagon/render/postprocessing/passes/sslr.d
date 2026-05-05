@@ -62,6 +62,7 @@ struct SSLRShaderFragmentUniformBuffer
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
     float[4] fparams;
+    uint[4] iparams;
 }
 
 class SSLRShader: Shader
@@ -111,6 +112,8 @@ class SSLRShader: Shader
     {
         auto pass = state.pass;
         auto view = pass.view;
+        auto scene = state.scene;
+        auto brdfLUT = scene.brdfLUT;
         
         fsUBO.viewMatrix = view.viewMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
@@ -127,6 +130,17 @@ class SSLRShader: Shader
         pass.bindInputBuffer(PipelineStage.Fragment, 4, &state.roughnessMetallicBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.reflectionBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 6, &state.velocityBuffer);
+        
+        if (brdfLUT && scene.brdfLUTEnabled)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 7, brdfLUT);
+            fsUBO.iparams[0] = true;
+        }
+        else
+        {
+            pass.bindDefaultTexture(PipelineStage.Fragment, 7);
+            fsUBO.iparams[0] = false;
+        }
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
