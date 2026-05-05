@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.postprocessing.passes.sslr;
+module dagon.render.postprocessing.passes.reflection;
 
 import std.math;
 
@@ -49,27 +49,21 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
-struct SSLRShaderVertexUniformBuffer
+struct ReflectionShaderVertexUniformBuffer
 {
     // TODO
 }
 
-struct SSLRShaderFragmentUniformBuffer
+struct ReflectionShaderFragmentUniformBuffer
 {
-    Matrix4x4f viewMatrix;
-    Matrix4x4f invViewMatrix;
-    Matrix4x4f projectionMatrix;
-    Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
-    float[4] fparams;
 }
 
-class SSLRShader: Shader
+class ReflectionShader: Shader
 {
    protected:
-    SSLRShaderVertexUniformBuffer vsUBO;
-    SSLRShaderFragmentUniformBuffer fsUBO;
-    float time = 0.0f;
+    ReflectionShaderVertexUniformBuffer vsUBO;
+    ReflectionShaderFragmentUniformBuffer fsUBO;
     
    public:
     this(GPU gpu, Owner owner)
@@ -77,68 +71,42 @@ class SSLRShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("SSLR.vert.glsl", "data/__internal/shaders/SSLR/SSLR.vert.glsl",
+        vertexModule.create("Reflection.vert.glsl", "data/__internal/shaders/Reflection/Reflection.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("SSLR.frag.glsl", "data/__internal/shaders/SSLR/SSLR.frag.glsl",
+        fragmentModule.create("Reflection.frag.glsl", "data/__internal/shaders/Reflection/Reflection.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create SSLRShader");
+            exitWithError("Failed to create ReflectionShader");
         }
         
-        fsUBO.viewMatrix = Matrix4x4f.identity;
-        fsUBO.invViewMatrix = Matrix4x4f.identity;
-        fsUBO.projectionMatrix = Matrix4x4f.identity;
-        fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.fparams[0] = 0.0f;
-        fsUBO.fparams[1] = 0.0f;
-        fsUBO.fparams[2] = 0.0f;
-        fsUBO.fparams[3] = 0.0f;
-    }
-    
-    void update(Time t)
-    {
-        time += 4.0f * t.delta;
-        if (time > PI * 2.0f)
-            time = 0.0f;
     }
     
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
-        auto view = pass.view;
         
-        fsUBO.viewMatrix = view.viewMatrix;
-        fsUBO.invViewMatrix = view.invViewMatrix;
-        fsUBO.projectionMatrix = view.projectionMatrix;
-        fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
-        fsUBO.fparams[0] = time;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.colorBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.normalBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 4, &state.roughnessMetallicBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.reflectionBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 6, &state.velocityBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.reflectionBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class SSLRPass: RenderPass
+class ReflectionPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
-    SSLRShader sslrShader;
+    ReflectionShader reflectionShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     
     this(Renderer renderer, PostProcessingContext ppContext)
@@ -148,12 +116,12 @@ class SSLRPass: RenderPass
         this.gbuffer = ppContext.gbuffer;
         this.ppContext = ppContext;
         
-        sslrShader = New!SSLRShader(gpu, this);
-        shader = sslrShader;
+        reflectionShader = New!ReflectionShader(gpu, this);
+        shader = reflectionShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = sslrShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = sslrShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = reflectionShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = reflectionShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[2] vbDescriptions;
@@ -218,10 +186,10 @@ class SSLRPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 1.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.currentReflectionBuffer;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -229,18 +197,12 @@ class SSLRPass: RenderPass
         enableDepthTarget = false;
     }
     
-    override void update(Time t)
-    {
-        sslrShader.update(t);
-    }
-    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
             return;
         
-        gbuffer.swapReflectionBuffers();
-        colorTargetInfo.texture = gbuffer.currentReflectionBuffer;
+        colorTargetInfo.texture = ppContext.writeBuffer;
         
         beginPass();
         
@@ -250,13 +212,15 @@ class SSLRPass: RenderPass
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
         state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.reflectionBuffer = InputBuffer(gbuffer.previousReflectionBuffer, gbuffer.colorSampler);
+        state.reflectionBuffer = InputBuffer(gbuffer.currentReflectionBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
         state.entity = null;
-        sslrShader.bindParameters(state);
+        reflectionShader.bindParameters(state);
         
         renderer.renderScreenQuad(state);
         
         endPass();
+        
+        ppContext.swapTargets();
     }
 }

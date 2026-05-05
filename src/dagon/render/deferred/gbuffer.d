@@ -56,6 +56,10 @@ class GBuffer: Owner
     SDL_GPUTexture* occlusionBuffer2;
     SDL_GPUTexture* previousOcclusionBuffer;
     SDL_GPUTexture* currentOcclusionBuffer;
+    SDL_GPUTexture* reflectionBuffer1;
+    SDL_GPUTexture* reflectionBuffer2;
+    SDL_GPUTexture* previousReflectionBuffer;
+    SDL_GPUTexture* currentReflectionBuffer;
     
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
@@ -198,6 +202,10 @@ class GBuffer: Owner
             SDL_ReleaseGPUTexture(gpu.device, occlusionBuffer1);
         if (occlusionBuffer2)
             SDL_ReleaseGPUTexture(gpu.device, occlusionBuffer2);
+        if (reflectionBuffer1)
+            SDL_ReleaseGPUTexture(gpu.device, reflectionBuffer1);
+        if (reflectionBuffer2)
+            SDL_ReleaseGPUTexture(gpu.device, reflectionBuffer2);
     }
     
     void createBuffers(uint width, uint height)
@@ -257,9 +265,17 @@ class GBuffer: Owner
         textureCreateInfo.height = height / 2;
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         occlusionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
-        
         currentOcclusionBuffer = occlusionBuffer1;
         previousOcclusionBuffer = occlusionBuffer2;
+        
+        // Reflection
+        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.width = width / 2;
+        textureCreateInfo.height = height / 2;
+        reflectionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        reflectionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        currentOcclusionBuffer = reflectionBuffer1;
+        previousOcclusionBuffer = reflectionBuffer2;
     }
     
     void resize(uint width, uint height)
@@ -289,6 +305,20 @@ class GBuffer: Owner
         {
             currentOcclusionBuffer = occlusionBuffer1;
             previousOcclusionBuffer = occlusionBuffer2;
+        }
+    }
+    
+    void swapReflectionBuffers()
+    {
+        if (currentReflectionBuffer is reflectionBuffer1)
+        {
+            currentReflectionBuffer = reflectionBuffer2;
+            previousReflectionBuffer = reflectionBuffer1;
+        }
+        else
+        {
+            currentReflectionBuffer = reflectionBuffer1;
+            previousReflectionBuffer = reflectionBuffer2;
         }
     }
 }

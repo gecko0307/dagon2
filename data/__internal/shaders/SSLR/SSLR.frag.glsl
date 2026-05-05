@@ -43,6 +43,8 @@ layout(set = 2, binding = 1) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 2) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 3) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 4) uniform sampler2D roughnessMetallicBuffer;
+layout(set = 2, binding = 5) uniform sampler2D prevReflectionBuffer;
+layout(set = 2, binding = 6) uniform sampler2D velocityBuffer;
 
 #define FLAGS_MAX_LOD_LEVEL 1
 
@@ -55,6 +57,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
+    vec4 fparams; // time
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -63,12 +66,13 @@ layout(location = 0) out vec4 outColor;
 
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
+    float roughnessFactor = 1.0 - clamp((roughness - 0.1) / (0.5 - 0.1), 0.0, 1.0);
     const float maxDistance = 4.0;
     const int steps = 40;
     const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float jitter = hash(texCoords * 467.759) * 0.9;
+    float jitter = hash(texCoords * 467.759 + ubo.fparams[0]) * 0.9;
     const float thickness = 0.2;
     float prevT = 0.0;
 
@@ -128,7 +132,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
             float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
-            float alpha = clamp(screenFade * distanceFade, 0.0, 1.0);
+            float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
             return vec4(texture(radianceBuffer, finalUV).rgb * alpha, alpha);
         }
 
@@ -140,12 +144,10 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
 
 void main()
 {
-    vec3 original = texture(radianceBuffer, texCoords).rgb;
-    
     float depth = texture(depthBuffer, texCoords).x;
     if (depth == 1.0)
     {
-        outColor = vec4(original, 1.0);
+        outColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;
     }
     
@@ -160,13 +162,11 @@ void main()
     float f0_scalar = roughnessMetallic.r;
     float roughness = roughnessMetallic.g;
     
-    float roughnessFactor = 1.0 - clamp((roughness - 0.1) / (0.5 - 0.1), 0.0, 1.0);
-    
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
-    vec3 rndN = normalize(sampleHemisphere(N, texCoords));
-    vec3 stochN = mix(N, rndN, roughness * 0.2);
+    vec3 rndN = normalize(sampleHemisphere(N, texCoords + ubo.fparams[0]));
+    vec3 stochN = mix(N, rndN, roughness);
     
     vec3 R = normalize(reflect(E, stochN));
     float NE = clamp(dot(N, E), 0.0, 1.0);
@@ -177,7 +177,13 @@ void main()
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     
     vec4 reflection = sslr(eyePos, R, roughness);
-    vec3 indirectSpecular = reflection.rgb * F;
+    reflection = vec4(reflection.rgb * F, reflection.a);
+    
+    vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
+    vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
+    float velocityLength = length(uvVelocity);
+    float alpha = mix(0.03, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
+    vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
 
-    outColor = vec4(mix(original, indirectSpecular, reflection.a * roughnessFactor), 1.0);
+    outColor = accumulatedReflection;
 }

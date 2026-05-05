@@ -63,6 +63,7 @@ struct GraphicsState
     InputBuffer emissionBuffer;
     InputBuffer velocityBuffer;
     InputBuffer occlusionBuffer;
+    InputBuffer reflectionBuffer;
     InputBuffer radianceBuffer;
     RenderPass pass;
     Scene scene;
@@ -83,6 +84,7 @@ struct GraphicsState
         emissionBuffer = InputBuffer.init;
         velocityBuffer = InputBuffer.init;
         occlusionBuffer = InputBuffer.init;
+        reflectionBuffer = InputBuffer.init;
         radianceBuffer = InputBuffer.init;
     }
 }
