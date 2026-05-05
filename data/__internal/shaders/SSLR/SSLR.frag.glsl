@@ -16,11 +16,6 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
-vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
-{
-    return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}
-
 float hash(vec2 p)
 {
     return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
@@ -79,7 +74,7 @@ layout(location = 0) out vec4 outColor;
 
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
-    float roughnessFactor = 1.0 - clamp((roughness - 0.1) / (0.5 - 0.1), 0.0, 1.0);
+    float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.5 - 0.2), 0.0, 1.0);
     const float maxDistance = 4.0;
     const int steps = 40;
     const int refineSteps = 4;
@@ -148,7 +143,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             float screenFade = edgeFactor.x * edgeFactor.y;
             float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
             float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
-            return vec4(texture(radianceBuffer, finalUV).rgb * alpha, alpha);
+            return vec4(texture(radianceBuffer, finalUV).rgb, alpha);
         }
 
         prevT = t;
@@ -183,20 +178,10 @@ void main()
     vec3 H = importanceSampleGGX(xi, roughness, N);
     vec3 R = normalize(reflect(E, mix(N, H, roughness)));
     
-    float NE = clamp(dot(N, E), 0.0, 1.0);
-    
-    vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
-    vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
-    
-    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    
-    vec2 brdf = (ubo.iparams[0] == 1)?
-        texture(brdfLUT, vec2(NE, roughness)).rg :
-        vec2(1.0, 0.0);
-    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    float NE = 1.0 - clamp(dot(N, -E), 0.0, 1.0);
     
     vec4 reflection = sslr(eyePos, R, roughness);
-    reflection = vec4(reflection.rgb * FssEss, reflection.a);
+    reflection = vec4(reflection.rgb * NE, reflection.a);
     
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
