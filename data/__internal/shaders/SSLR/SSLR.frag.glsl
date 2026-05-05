@@ -142,7 +142,9 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             vec2 finalUV = finalClip.xy * 0.5 + 0.5;
             finalUV.y = 1.0 - finalUV.y;
 
-            vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
+            vec2 edgeFactor =
+                smoothstep(vec2(0.0), vec2(0.2), finalUV) *
+                (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
             float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
             float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
@@ -199,7 +201,7 @@ void main()
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.05, 1.0, clamp(velocityLength * 30.0, 0.0, 1.0));
+    float alpha = mix(0.015, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
 
     outColor = accumulatedReflection;
