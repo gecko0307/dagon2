@@ -1,5 +1,8 @@
 #version 460
 
+#define PI 3.14159265359
+const float PI2 = PI * 2.0;
+
 // Converts normalized device coordinates to eye space position
 vec3 unproject(mat4 invProjMatrix, vec3 ndc)
 {
@@ -23,19 +26,27 @@ float hash(vec2 p)
     return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
 }
 
-vec3 randomSpherePoint(vec2 uv)
+// Brian Karis, "Real Shading in Unreal Engine 4"
+vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 {
-    float ang1 = hash(uv) * 6.283185;
-    float ang2 = hash(uv + 0.5) * 3.141592;
-    return vec3(sin(ang2)*cos(ang1), sin(ang2)*sin(ang1), cos(ang2));
-}
-
-vec3 sampleHemisphere(vec3 N, vec2 uv) {
-    vec3 v = randomSpherePoint(uv); 
-    if (dot(v, N) > 0.0)
-        return v;
-    else
-        return -v;
+    float a = roughness; // * roughness;
+    
+    // Sample in spherical coordinates
+    float phi = PI2 * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    
+    // Construct tangent space vector
+    vec3 H;
+    H.x = sinTheta * cos(phi);
+    H.y = sinTheta * sin(phi);
+    H.z = cosTheta;
+    
+    // Tangent to world space
+    vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangentX = normalize(cross(upVector, N));
+    vec3 tangentY = cross(N, tangentX);
+    return tangentX * H.x + tangentY * H.y + N * H.z;
 }
 
 layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
@@ -161,14 +172,13 @@ void main()
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
     float roughness = roughnessMetallic.g;
-    
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
-    vec3 rndN = normalize(sampleHemisphere(N, texCoords + ubo.fparams[0]));
-    vec3 stochN = mix(N, rndN, roughness);
+    vec2 xi = vec2(hash(texCoords + ubo.fparams[0]), hash(texCoords * 1.1 + ubo.fparams[0]));
+    vec3 H = importanceSampleGGX(xi, roughness, N);
+    vec3 R = normalize(reflect(E, mix(N, H, roughness)));
     
-    vec3 R = normalize(reflect(E, stochN));
     float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
@@ -182,7 +192,7 @@ void main()
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.03, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
+    float alpha = mix(0.05, 1.0, clamp(velocityLength * 30.0, 0.0, 1.0));
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
 
     outColor = accumulatedReflection;

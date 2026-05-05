@@ -120,7 +120,8 @@ void main()
         vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
         float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
         float velocityLength = length(uvVelocity);
-        float alpha = mix(0.01, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
+        //float alpha = mix(0.01, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
+        float alpha = mix(0.05, 1.0, clamp(velocityLength * 100.0, 0.0, 1.0));
         occlusion = mix(prevOcclusion, occlusion, alpha);
     }
     
