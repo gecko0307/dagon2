@@ -4,8 +4,6 @@ Feature-rich, easy to use, extensible desktop game development framework for [D 
 
 This is work-in-progress SDL3/Vulkan port of [Dagon Engine 1.0](https://github.com/gecko0307/dagon).
 
-If you like Dagon, support its development on [Patreon](https://www.patreon.com/gecko0307) or [Liberapay](https://liberapay.com/gecko0307). You can also make a one-time donation via [NOWPayments](https://nowpayments.io/donation/gecko0307). I appreciate any support. Thanks in advance!
-
 > Note: this project is not connected to Dagon engine by Senscape.
 
 Screenshots
