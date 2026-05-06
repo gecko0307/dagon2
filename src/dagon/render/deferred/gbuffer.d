@@ -274,8 +274,30 @@ class GBuffer: Owner
         textureCreateInfo.height = height / 2;
         reflectionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         reflectionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
-        currentOcclusionBuffer = reflectionBuffer1;
-        previousOcclusionBuffer = reflectionBuffer2;
+        currentReflectionBuffer = reflectionBuffer1;
+        previousReflectionBuffer = reflectionBuffer2;
+        
+        /*
+        // Reset 
+        size_t reflectionBufferSize = (width / 2) * (height / 2) * 8;
+        SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpu.device);
+        SDL_GPUTransferBufferCreateInfo transferInfo = {
+            usage: SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+            size: reflectionBufferSize
+        };
+        SDL_GPUTransferBuffer* transfer = SDL_CreateGPUTransferBuffer(gpu.device, &transferInfo);
+        
+        void *map = SDL_MapGPUTransferBuffer(gpu.device, transfer, false);
+        memset(map, 0, reflectionBufferSize);
+        SDL_UnmapGPUTransferBuffer(gpu.device, transfer);
+
+        SDL_GPUTransferBufferLocation source = { transfer_buffer: transfer, offset: 0 };
+        SDL_GPUBufferRegion destination = { buffer: reflectionBuffer1, offset: 0, size: reflectionBufferSize };
+        SDL_UploadToGPUBuffer(cmd, &source, &destination, false);
+
+        SDL_SubmitGPUCommandBuffer(cmd);
+        SDL_ReleaseGPUTransferBuffer(gpu.device, transfer);
+        */
     }
     
     void resize(uint width, uint height)
