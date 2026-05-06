@@ -10,9 +10,10 @@ If you like Dagon, support its development on [Patreon](https://www.patreon.com/
 
 Screenshots
 -----------
-[![SSLR test 4](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr4.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr4.jpg)
-[![SSLR test 5](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr5.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr5.jpg)
-[![PBR test 3](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test3.jpg)
+[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-temporal4-1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-temporal4-1.jpg)
+[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new1.jpg)
+[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)
+[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)
 
 Features
 --------
