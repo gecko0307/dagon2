@@ -31,7 +31,7 @@ Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported
 - HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS
 - Directional lights with cascaded shadow mapping
 - Normal mapping, parallax mapping
-- Glossy screen-space local reflections (SSLR) with importance sampling and temporal denoising
+- Stochastic screen-space reflections (SSSR) with importance sampling and temporal denoising
 - Deferred decals with normal mapping and PBR material properties
 - Input from keyboard, mouse and up to 4 gamepads
 - Unicode text input
@@ -44,7 +44,7 @@ New features:
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
-- SSLR pass
+- Screen-space reflections
 - Experimental HDR (scRGB) output support
 - 2x supersampling support
 - Temporal SSAO support
