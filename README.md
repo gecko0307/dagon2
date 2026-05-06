@@ -17,7 +17,7 @@ Screenshots
 
 Features
 --------
-Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported yet.
+Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are ported yet.
 
 - Scene graph
 - Virtual file system
