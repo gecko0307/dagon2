@@ -31,7 +31,7 @@ Note: Dagon 2 is in active development, not all features of Dagon 1.0 are ported
 - HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS
 - Directional lights with cascaded shadow mapping
 - Normal mapping, parallax mapping
-- Screen-space local reflections (SSLR) with importance sampling and temporal denoising
+- Glossy screen-space local reflections (SSLR) with importance sampling and temporal denoising
 - Deferred decals with normal mapping and PBR material properties
 - Input from keyboard, mouse and up to 4 gamepads
 - Unicode text input
