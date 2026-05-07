@@ -60,6 +60,13 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
+/*
+float hash(vec2 p)
+{
+    return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
+}
+*/
+
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
@@ -68,6 +75,8 @@ layout(set = 2, binding = 4) uniform sampler2DArrayShadow shadowTextureArray;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;
     mat4 shadowMatrix1;
@@ -140,6 +149,44 @@ float shadowMapCascaded(in vec3 pos, in vec3 N)
     return s1;
 }
 
+/*
+float contactShadow(vec3 rayStart, vec3 lightDir, float maxDistance, int steps)
+{
+    float shadow = 1.0;
+    float stepSize = maxDistance / float(steps);
+    const float maxThickness = 0.05;
+    float jitter = hash(texCoords) * stepSize;
+    rayStart += lightDir * 0.02; 
+    
+    for (int i = 0; i < steps; i++)
+    {
+        float t = stepSize * float(i) + jitter;
+        vec3 samplePos = rayStart + lightDir * t;
+        
+        vec4 clipPos = ubo.projectionMatrix * vec4(samplePos, 1.0);
+        clipPos /= clipPos.w;
+        vec2 uv = clipPos.xy * 0.5 + 0.5;
+        uv.y = 1.0 - uv.y;
+        
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+        
+        float depth = texture(depthBuffer, uv).x;
+        vec3 ndc = vec3(uv, depth);
+        vec3 hitPos = unproject(ubo.invProjectionMatrix, ndc);
+
+        float depthDiff = abs(hitPos.z - samplePos.z);
+        if (depthDiff < maxThickness && samplePos.z < hitPos.z)
+        {
+            //float hitStrength = clamp(1.0 - (depthDiff / maxThickness), 0.0, 1.0);
+            shadow = 0.0; //min(shadow, 1.0 - hitStrength);
+            break;
+        }
+    }
+    
+    return shadow;
+}
+*/
+
 void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
@@ -186,7 +233,7 @@ void main()
     float fss = mix(1.0, fss90, FL) * mix(1.0, fss90, FV);
     float ss = 1.25 * (fss * (1.0 / max(NL + NE, 0.1) - 0.5) + 0.5);
     
-    float shadow = shadowMapCascaded(eyePos, N);
+    float shadow = shadowMapCascaded(eyePos, N); // * contactShadow(eyePos, L, 0.03, 2);
     
     vec3 diffuse = INVPI * baseColor * mix(kD * NL * shadow, vec3(ss), sss) * (1.0 - metallic);
     

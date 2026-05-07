@@ -52,6 +52,8 @@ struct SunLightShaderVertexUniformBuffer
 
 struct SunLightShaderFragmentUniformBuffer
 {
+    Matrix4x4f viewMatrix;
+    Matrix4x4f projectionMatrix;
     Matrix4x4f invViewMatrix;
     Matrix4x4f invProjectionMatrix;
     Matrix4x4f shadowMatrix1;
@@ -86,6 +88,8 @@ class SunLightShader: Shader
             exitWithError("Failed to create SunLightShader");
         }
         
+        fsUBO.viewMatrix = Matrix4x4f.identity;
+        fsUBO.projectionMatrix = Matrix4x4f.identity;
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.lighVector = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
@@ -103,6 +107,8 @@ class SunLightShader: Shader
         auto scene = state.scene;
         auto sun = scene.sun;
         
+        fsUBO.viewMatrix = view.viewMatrix;
+        fsUBO.projectionMatrix = view.projectionMatrix;
         fsUBO.invViewMatrix = view.invViewMatrix;
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.lighVector = Vector4f(sun.directionWorld);
