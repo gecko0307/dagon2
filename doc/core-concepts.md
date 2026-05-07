@@ -99,7 +99,8 @@ Scene (root)
 
 Each entity can have:
 - TRS transformation (position, rotation, scale)
-- Drawable (visual geometry; usually an indexed triangle mesh) and material
+- Drawable (visual geometry; usually an indexed triangle mesh)
+- Material (a set of properties describing a surface)
 - Controller (an object that drives entity state updates)
 - Child entities.
 
@@ -107,7 +108,7 @@ TODO: scere creation example
 
 ## The Game Loop
 Every frame follows this sequence:
-- Event dispatch. Process SDL events like keyboard, mouse, or gamepad input, and custom events;
+- Event dispatch. Processes SDL events like keyboard, mouse, or gamepad input, and custom events;
 - Update. Calls `update` method for everything that should be updated per-frame. Updates are fixed, usually at 60 Hz rate, but this can be configured. Update is where entities recalculate their transformation matrices; 
 - Post-update. This is used in cases when some controller logic depend on up-to-date global state (like camera following and transformation constraints);
 - Render. The engine fills a command buffer and submits it to the GPU for asynchronous processing.
