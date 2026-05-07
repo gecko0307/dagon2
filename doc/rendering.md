@@ -38,7 +38,7 @@ Ld = 1/PI * albedo * (1 - F) * NL * occlusion * (1 - metallic)
 
 ### Image-Based Lighting
 
-IBL is a standard rendering technique to achieve approximated global illumination in a very computationally inexpensive way, which works best in outdoor scenes. The "infinitely far" environment of a scene (such as the sky and the surrounding landscape) is pre-baked into an environment map. Environment maps are typically captured using 360° photography, or rendered from 3D scenes. IBL is a very efficient way to add realism to computer games, especially in the PBR pipeline.
+IBL is a standard technique to achieve approximated global illumination in a very computationally inexpensive way, which works best in outdoor scenes. The "infinitely far" environment of a scene (such as the sky and the surrounding landscape) is pre-baked into an environment map. Environment maps are typically captured using 360° photography, or rendered from 3D scenes. IBL is a very efficient way to add realism to computer games, especially in the PBR pipeline.
 
 Dagon implements an industry-standard IBL method known as the split sum approximation. Introduced by Brian Karis in Epic Games, it splits the rendering equation into two precomputable parts: a pre-filtered environment map and a 2D lookup table, sometimes called a BRDF integration map or DFG (Distribution, Fresnel, Geometry). This red-green LUT outputs a scale (red channel) and an offset (green channel) for the Fresnel term for different roughness values and viewing angles.
 
@@ -54,7 +54,7 @@ Dagon's deferred pipeline supports subsurface scattering based on Hanrahan-Krueg
 
 Screen-space reflections are a technique to achieve approximated dynamic reflections in real time. It works per-pixel by raymarching through the depth buffer along the reflection vector and sampling the HDR buffer at the point where the ray hits reconstructed geometry. Given sufficient precision, the basic technique gives mirror-like reflections. To support glossy reflections, stochastic methods are used: the ray is thrown at randomized direction, effectively sampling the specular lobe of the given BRDF. This by itself gives very noisy reflections due to undersampling, but the results can be accumulated over time and smoothed out using exponential moving average, which finally make SSR look convincing and viable for real use.
 
-Like all screen-space effects, SSR suffers from inherent information discontinuities. It's only possible to reconstruct geometry which is directly visible on screen, and this results in holes and gaps in reflections when the ray hits nothing in the depth buffer. This is also why screen-space reflections disappear when objects go off-screen (for example, when the camera looks down). Thus SSR is only practical when combined with a fallback global reflection method, which is usually environment probes.
+Like all screen-space effects, SSR suffers from inherent information discontinuities. It's only possible to reconstruct geometry that is directly visible on screen, and this results in holes and gaps in reflections when the ray hits nothing in the depth buffer. This is also why screen-space reflections disappear when objects go off-screen (for example, when the camera looks down). Thus SSR is only practical when combined with a fallback global reflection method, which is usually environment probes.
 
 ### HDR
 
@@ -62,4 +62,4 @@ Dagon's renderer outputs radiance into a floating-point frame buffer without cla
 
 Dagon utilizes AgX tone mapper from Blender 4.0+ and Filament, which provides great color accuracy and balance.
 
-Dagon also supports direct output to wide-gamut HDR buffer without tone mapping pass. This requires HDR-capable display and operating system support.
+Dagon also supports direct output to wide-gamut HDR swapchain without tone mapping pass. This requires HDR-capable display and operating system support.
