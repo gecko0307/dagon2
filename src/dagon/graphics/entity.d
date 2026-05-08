@@ -366,7 +366,14 @@ class Entity: Owner, Updateable, GsObject
         scaling += s;
     }
     
-    ///
+    /**
+     * Returns a GScript dynamic property for the specified key.
+     *
+     * Params:
+     *   key = The property name to retrieve.
+     *
+     * Returns: The property value, or an empty `GsDynamic` if not found.
+     */
     GsDynamic get(string key)
     {
         switch(key)
@@ -390,13 +397,26 @@ class Entity: Owner, Updateable, GsObject
         }
     }
     
-    ///
+    /**
+     * Sets a GScript dynamic property value for the specified key.
+     *
+     * Params:
+     *   key = The property name to store.
+     *   value = The dynamic value to assign.
+     */
     void set(string key, GsDynamic value)
     {
         // TODO
     }
     
-    ///
+    /**
+     * Checks whether a GScript dynamic property exists for the specified key.
+     *
+     * Params:
+     *   key = The property name to check.
+     *
+     * Returns: True if the property exists.
+     */
     bool contains(string key)
     {
         switch(key)
@@ -407,7 +427,7 @@ class Entity: Owner, Updateable, GsObject
         }
     }
     
-    ///
+    /// Prototype assignment for GScript object compatibility (no-op).
     void setPrototype(GsObject obj)
     {
         // No-op
