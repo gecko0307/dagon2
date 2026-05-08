@@ -50,6 +50,12 @@ Equirectangular mapping uses a single 2D image and spherical coordinate space to
 
 Dagon's deferred pipeline supports subsurface scattering based on Hanrahan-Krueger approximation of isotropic BSSRDF, like in the Disney Principled BRDF.
 
+### Screen-Space Ambient Occlusion
+
+Ambient occlusion is a simplest form of global illumination. Within this technique, it is assumed that the scene is uniformly lit with ambient light that is attenuated in cavities and corners. The ambient light usually takes form of a diffuse (Lambertian) IBL, and occlusion factor is used to darken it, much like a shadow map blocks a regular light on a surface.
+
+In Dagon, ambient occlusion is computed in screen space, by raymarchig the depth buffer in random directions on a hemisphere around each point. This is not perfectly accurate, but still gives a descent look in most usage scenarios. To reduce noise inherent to any stochastic solver, resulting occlusion factor is averaged over multiple frames.
+
 ### Screen-Space Reflections
 
 Screen-space reflections are a technique to achieve approximated dynamic reflections in real time. It works per-pixel by raymarching through the depth buffer along the reflection vector and sampling the HDR buffer at the point where the ray hits reconstructed geometry. Given sufficient precision, the basic technique gives mirror-like reflections. To support glossy reflections, stochastic methods are used: the ray is thrown at randomized direction, effectively sampling the specular lobe of the given BRDF. This by itself gives very noisy reflections due to undersampling, but the results can be accumulated over time and smoothed out using exponential moving average, which finally make SSR look convincing and viable for real use.
