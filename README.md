@@ -10,7 +10,6 @@ Screenshots
 -----------
 [![Puddles](https://blog.pixperfect.online/wp-content/uploads/2026/05/demo_QxFDy3slL6.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/demo_QxFDy3slL6.jpg)
 [![Puddles](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-puddles1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-puddles1.jpg)
-[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new1.jpg)
 [![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)
 [![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)
 
