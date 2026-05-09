@@ -67,6 +67,7 @@ import dagon.core.glslang;
 import dagon.core.spvc;
 import dagon.core.ktx;
 import dagon.core.freetype;
+import dagon.core.assimp;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.logger;
@@ -310,6 +311,9 @@ class Application: EventListener, Updateable
     /// Path to the KTX library.
     string ktxLibraryPath = "auto";
     
+    /// Path to the Assimp library.
+    string assimpLibraryPath = "auto";
+    
     /// Path to the folder containing translation files.
     string localePath = "locale";
     
@@ -355,14 +359,20 @@ class Application: EventListener, Updateable
      */
     FTSupport loadedFTSupport;
     
+    /**
+     * Loaded Assimp API support version. This is not an actual Assimp library version!
+     * To check actually loaded library version, use `assimpVersion`.
+     */
+    AssimpSupport loadedAssimpSupport;
+    
     /// SDL_Image available or not.
     bool sdlImagePresent = false;
     
     /// FreeType available or not.
     bool freetypePresent = false;
     
-    /// Wintab available or not.
-    bool wintabPresent = false;
+    /// Assimp available or not.
+    bool assimpPresent = false;
     
     /// Actually used SDL library version.
     LibraryVersion sdlVersion;
@@ -381,6 +391,9 @@ class Application: EventListener, Updateable
     
     /// Actually used SPIRV-Cross library version.
     LibraryVersion spvcVersion;
+    
+    /// Actually used Assimp library version.
+    LibraryVersion assimpVersion;
     
     /// SPIRV-Cross context.
     spvc_context spvcContext;
@@ -730,6 +743,8 @@ class Application: EventListener, Updateable
             ktxLibraryPath = config.props["KTX.path"].toString;
         if ("FreeType.path" in config.props)
             freetypeLibraryPath = config.props["FreeType.path"].toString;
+        if ("Assimp.path" in config.props)
+            assimpLibraryPath = config.props["Assimp.path"].toString;
         version(Windows)
         {
             if ("SDL3.path.windows" in config.props)
@@ -740,6 +755,8 @@ class Application: EventListener, Updateable
                 ktxLibraryPath = config.props["KTX.path.windows"].toString;
             if ("FreeType.path.windows" in config.props)
                 freetypeLibraryPath = config.props["FreeType.path.windows"].toString;
+            if ("Assimp.path.windows" in config.props)
+                assimpLibraryPath = config.props["Assimp.path.windows"].toString;
             
             if (sdlLibraryPath == "auto")
                 sdlLibraryPath = "SDL3.dll";
@@ -751,7 +768,10 @@ class Application: EventListener, Updateable
                 ktxLibraryPath = "ktx.dll";
             
             if (freetypeLibraryPath == "auto")
-                freetypeLibraryPath = "";
+                freetypeLibraryPath = "freetype-6.dll";
+            
+            if (assimpLibraryPath == "auto")
+                assimpLibraryPath = "Assimp.dll";
         }
         else version(linux)
         {
@@ -775,6 +795,9 @@ class Application: EventListener, Updateable
             
             if (freetypeLibraryPath == "auto")
                 freetypeLibraryPath = "";
+            
+            if (assimpLibraryPath == "auto")
+                assimpLibraryPath = "libassimp.so";
         }
         
         // Load SDL3 library
@@ -886,6 +909,34 @@ class Application: EventListener, Updateable
                 ftVersion.patch = ftVersionPatch;
                 logInfo("FreeType version: ", ftVersion.major, ".", ftVersion.minor, ".", ftVersion.patch);
             }
+        }
+        
+        // Load Assimp
+        if (assimpLibraryPath.length)
+            loadedAssimpSupport = loadAssimp(assimpLibraryPath);
+        else
+            loadedAssimpSupport = loadAssimp();
+        if (loadedAssimpSupport != AssimpSupport.v500)
+        {
+            if (loadedAssimpSupport == AssimpSupport.badLibrary)
+            {
+                logWarning("Failed to load some Assimp functions. It seems that you have an old version of Assimp. Dagon will try to use it, but it is recommended to install Assimp 5 or higher");
+                assimpPresent = true;
+            }
+            else
+            {
+                logError("Assimp library is not found. Please, install Assimp 5 or higher");
+                assimpPresent = false;
+            }
+        }
+        else
+            assimpPresent = true;
+        if (assimpPresent)
+        {
+            assimpVersion.major = aiGetVersionMajor();
+            assimpVersion.minor = aiGetVersionMinor();
+            assimpVersion.patch = aiGetVersionRevision();
+            logInfo("Assimp version: ", assimpVersion.major, ".", assimpVersion.minor, ".", assimpVersion.patch);
         }
         
         // Init SDL
