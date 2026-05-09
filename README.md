@@ -88,6 +88,7 @@ Runtime Dependencies
 - [FreeType](https://www.freetype.org) 2.8.1
 - [GLSLang](https://github.com/khronosGroup/glslang)
 - [SPIRV-Cross](https://github.com/khronosgroup/spirv-cross)
+- [Assimp](https://github.com/assimp/assimp)
 - [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
 
 Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux, if you want to use local libraries in Windows way (from application's working directory rather than from the system), add the following to your `dub.json`:
