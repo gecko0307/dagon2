@@ -35,6 +35,7 @@ import dlib.core.ownership;
 import dlib.core.stream;
 import dlib.container.array;
 import dlib.math.vector;
+import dlib.image.color;
 import dlib.filesystem.filesystem;
 
 import dagon.core.logger;
@@ -166,10 +167,17 @@ class ModelAsset: Asset
     {
         Material mat = New!Material(this);
         
-        //mat.roughnessFactor = 1.0f;
-        //mat.metallicFactor = 0.0f;
+        mat.roughness = 1.0f;
+        mat.metallic = 0.0f;
         
-        // TODO: read material parameters
+        // Read diffuse color
+        Color4f baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        aiColor4D diffuseColor;
+        if (aiGetMaterialColor(material, "$clr.diffuse", 0, 0, &diffuseColor) == aiReturn.SUCCESS)
+            baseColor = fromAssimpColor(diffuseColor);
+        mat.baseColor = baseColor;
+        
+        // TODO
         
         materials.insertBack(mat);
         
