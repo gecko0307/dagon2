@@ -25,7 +25,7 @@ Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are 
 - Shaders in GLSL 4.60; SPIR-V cache
 - Runs in windowed, fullscreen and borderless fullscreen modes
 - Hybrid deferred+forward rendering pipeline
-- Physically based rendering (PBR) with GGX microfacet BRDF, industry-standard Metallic-Roughness material workflow and image-based lighting based on [split-sum approximation](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf). The rendered image is comparable to Blender's Eevee
+- Physically based rendering (PBR) with GGX microfacet BRDF, industry-standard Metallic-Roughness material workflow and image-based lighting based on [split-sum approximation](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf)
 - HDR rendering with AgX tonemapping. Wide-gamut scRGB output support for HDR displays
 - HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS
 - Directional lights with cascaded shadow mapping
