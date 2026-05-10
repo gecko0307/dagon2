@@ -145,6 +145,9 @@ class Mesh: Owner, Drawable
     ///
     SDL_GPUBuffer* indexBuffer;
     
+    ///
+    Material material;
+    
     /**
      * Constructs a mesh with the given owner.
      *
@@ -313,6 +316,7 @@ class Mesh: Owner, Drawable
                 pass.bindVertexBuffer(VertexAttribute.Texcoord, texcoordBuffer);
                 pass.bindVertexBuffer(VertexAttribute.Normal, normalBuffer);
                 pass.bindIndexBuffer(indexBuffer, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+                
                 if (facegroups.length)
                 {
                     foreach(ref fg; facegroups)
@@ -321,8 +325,11 @@ class Mesh: Owner, Drawable
                         {
                             if (fg.material)
                                 state.material = fg.material;
+                            else if (material)
+                                state.material = material;
                             else
                                 state.material = pass.renderer.defaultMaterial;
+                            
                             pass.shader.bindParameters(state);
                             pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
                         }
@@ -330,6 +337,12 @@ class Mesh: Owner, Drawable
                 }
                 else
                 {
+                    if (material)
+                    {
+                        state.material = material;
+                        pass.shader.bindParameters(state);
+                    }
+                    
                     pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
                 }
             }

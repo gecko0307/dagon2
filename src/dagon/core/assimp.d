@@ -37,6 +37,9 @@ module dagon.core.assimp;
 import std.conv;
 import std.string;
 
+import dlib.math.matrix;
+import dlib.image.color;
+
 import bindbc.loader;
 import loader = bindbc.loader.sharedlib;
 public import bindbc.assimp;
@@ -69,4 +72,21 @@ AssimpSupport loadAssimp(string path = "")
     }
     
     return assimpSupport;
+}
+
+///
+Color4f fromAssimpColor(aiColor4D col)
+{
+    return Color4f(col.r, col.g, col.b, col.a);
+}
+
+///
+Matrix4x4f fromAssimpMatrix(aiMatrix4x4 m)
+{
+    return matrixf(
+        m.a1, m.a2, m.a3, m.a4,
+        m.b1, m.b2, m.b3, m.b4,
+        m.c1, m.c2, m.c3, m.c4,
+        m.d1, m.d2, m.d3, m.d4
+    );
 }

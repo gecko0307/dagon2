@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2026 Timur Gafarov
+Copyright (c) 2025-2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,17 +24,57 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource;
+module dagon.resource.model;
 
-public
+import dlib.core.memory;
+import dlib.core.ownership;
+import dlib.core.stream;
+import dlib.container.array;
+import dlib.filesystem.filesystem;
+
+import dagon.core.gpu;
+import dagon.core.assimp;
+import dagon.graphics.drawable;
+import dagon.graphics.state;
+import dagon.graphics.entity;
+import dagon.graphics.mesh;
+import dagon.graphics.material;
+import dagon.resource.asset;
+
+///
+class ModelAsset: Asset
 {
-    import dagon.resource.assetmanager;
-    import dagon.resource.asset;
-    import dagon.resource.cache;
-    import dagon.resource.dds;
-    import dagon.resource.image;
-    import dagon.resource.model;
-    import dagon.resource.obj;
-    import dagon.resource.shader;
-    import dagon.resource.texture;
+    ///
+    Entity rootEntity;
+    
+    ///
+    Array!Entity entities;
+    
+    ///
+    Array!Mesh meshes;
+    
+    ///
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+    }
+    
+    ///
+    ~this()
+    {
+        //
+    }
+    
+    /// Releases all resources associated with the asset.
+    override void release()
+    {
+        //
+    }
+    
+    /// Loads an asset from a given stream.
+    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    {
+        //
+        return false;
+    }
 }
