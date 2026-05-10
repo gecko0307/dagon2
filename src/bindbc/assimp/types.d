@@ -264,14 +264,14 @@ struct aiExportDataBlob
     aiExportDataBlob* next;
 }
 
-alias aiFileWriteProc = size_t function(aiFile*, const char*, size_t, size_t);
-alias aiFileReadProc = size_t function(aiFile*, char*, size_t,size_t);
-alias aiFileTellProc = size_t function(aiFile*);
-alias aiFileFlushProc = void function(aiFile*);
-alias aiFileSeek = aiReturn function(aiFile*, size_t, aiOrigin);
+alias aiFileWriteProc = extern(System) size_t function(aiFile*, const char*, size_t, size_t);
+alias aiFileReadProc = extern(System) size_t function(aiFile*, char*, size_t,size_t);
+alias aiFileTellProc = extern(System) size_t function(aiFile*);
+alias aiFileFlushProc = extern(System) void function(aiFile*);
+alias aiFileSeek = extern(System) aiReturn function(aiFile*, size_t, aiOrigin);
 
-alias aiFileOpenProc = aiFile* function(aiFileIO*, const char*, const char*);
-alias aiFileCloseProc = void function(aiFileIO*, aiFile*);
+alias aiFileOpenProc = extern(System) aiFile* function(aiFileIO*, const char*, const char*);
+alias aiFileCloseProc = extern(System) void function(aiFileIO*, aiFile*);
 
 alias aiUserData = char*;
 
@@ -391,6 +391,7 @@ enum aiTextureMapping
     PLANE = 0x4,
     OTHER = 0x5,
 }
+
 enum aiTextureType
 {
     NONE = 0,
@@ -412,6 +413,15 @@ enum aiTextureType
     DIFFUSE_ROUGHNESS = 16,
     AMBIENT_OCCLUSION = 17,
     UNKNOWN = 18,
+    SHEEN = 19,
+    CLEARCOAT = 20,
+    TRANSMISSION = 21,
+    MAYA_BASE = 22,
+    MAYA_SPECULAR = 23,
+    MAYA_SPECULAR_COLOR = 24,
+    MAYA_SPECULAR_ROUGHNESS = 25,
+    ANISOTROPY = 26,
+    GLTF_METALLIC_ROUGHNESS = 27
 }
 
 enum AI_TEXTURE_TYPE_MAX = aiTextureType.UNKNOWN;

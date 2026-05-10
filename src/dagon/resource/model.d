@@ -73,6 +73,82 @@ class AssimpMesh: Mesh
 
 alias ModelConversionOptions = aiPostProcessSteps;
 
+extern(System) size_t vfsRead(aiFile* f, char* buffer, size_t size, size_t count)
+{
+    if (size == 0 || count == 0) return 0;
+    auto istrm = cast(InputStream)f.UserData;
+    size_t bytesRead = istrm.readBytes(buffer, size * count);
+    return bytesRead / size;
+}
+
+extern(System) aiReturn vfsSeek(aiFile* f, size_t offset, aiOrigin origin)
+{
+    auto istrm = cast(InputStream)f.UserData;
+    size_t targetPos;
+
+    switch (origin)
+    {
+        case aiOrigin.SET:
+            targetPos = offset;
+            break;
+        case aiOrigin.CUR:
+            targetPos = istrm.position + offset;
+            break;
+        case aiOrigin.END:
+            targetPos = istrm.size + offset;
+            break;
+        default:
+            return aiReturn.FAILURE;
+    }
+
+    if (targetPos <= istrm.size)
+    {
+        istrm.seek(targetPos);
+        return aiReturn.SUCCESS;
+    }
+    
+    return aiReturn.FAILURE;
+}
+
+extern(System) size_t vfsTell(aiFile* f)
+{
+    InputStream istrm = cast(InputStream)f.UserData;
+    return istrm.position;
+}
+
+extern(System) size_t vfsFileSize(aiFile* f)
+{
+    InputStream istrm = cast(InputStream)f.UserData;
+    return istrm.size;
+}
+
+extern(System) aiFile* vfsOpen(aiFileIO* io, const(char)* filePath, const(char)* mode)
+{
+    ReadOnlyFileSystem fs = cast(ReadOnlyFileSystem)io.UserData;
+    
+    InputStream istrm = fs.openForInput(filePath.to!string);
+    
+    aiFile* f = New!(aiFile)();
+    f.ReadProc = &vfsRead;
+    f.WriteProc = null;
+    f.TellProc = &vfsTell;
+    f.FileSizeProc = &vfsFileSize;
+    f.SeekProc = &vfsSeek;
+    f.FlushProc = null;
+    f.UserData = cast(char*)istrm;
+    
+    logInfo(filePath.to!string);
+    
+    return f;
+}
+
+extern(System) void vfsClose(aiFileIO* io, aiFile* f)
+{
+    InputStream istrm = cast(InputStream)f.UserData;
+    Delete(istrm);
+    Delete(f);
+}
+
 ///
 class ModelAsset: Asset
 {
@@ -128,11 +204,11 @@ class ModelAsset: Asset
         ubyte[] data = New!(ubyte[])(dataSize);
         istrm.readBytes(data.ptr, dataSize);
         
-        const(aiScene*) scene = aiImportFileFromMemory(
-            cast(const(char)*)data.ptr,
-            cast(uint)dataSize,
-            conversionOptions,
-            filename.toStringz);
+        aiFileIO io;
+        io.OpenProc = &vfsOpen;
+        io.CloseProc = &vfsClose;
+        io.UserData = cast(char*)fs;
+        const(aiScene*) scene = aiImportFileEx(toStringz(filename), conversionOptions, &io);
         
         bool result;
         if (scene)
@@ -170,14 +246,34 @@ class ModelAsset: Asset
         mat.roughness = 1.0f;
         mat.metallic = 0.0f;
         
-        // Read diffuse color
+        aiColor4D color;
+        aiString texturePath;
+        
+        // Read base color
         Color4f baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-        aiColor4D diffuseColor;
-        if (aiGetMaterialColor(material, "$clr.diffuse", 0, 0, &diffuseColor) == aiReturn.SUCCESS)
-            baseColor = fromAssimpColor(diffuseColor);
+        if (aiGetMaterialColor(material, "$clr.base", 0, 0, &color) == aiReturn.SUCCESS)
+            baseColor = fromAssimpColor(color);
+        else if (aiGetMaterialColor(material, "$clr.diffuse", 0, 0, &color) == aiReturn.SUCCESS)
+            baseColor = fromAssimpColor(color);
         mat.baseColor = baseColor;
         
-        // TODO
+        // Read base color texture
+        string baseColorTexturePath;
+        if (aiGetMaterialTexture(material, aiTextureType.BASE_COLOR, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
+        {
+            baseColorTexturePath = texturePath.data[0..texturePath.length].idup;
+            logInfo("Base color texture path: ", baseColorTexturePath);
+        }
+        
+        // Read metallic-roughness texture
+        string metallicRoughnessTexturePath;
+        if (aiGetMaterialTexture(material, aiTextureType.GLTF_METALLIC_ROUGHNESS, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
+        {
+            metallicRoughnessTexturePath = texturePath.data[0..texturePath.length].idup;
+            logInfo("Metallic/roughness texture path: ", metallicRoughnessTexturePath);
+        }
+        
+        // TODO: other textures
         
         materials.insertBack(mat);
         
