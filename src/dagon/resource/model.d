@@ -179,7 +179,7 @@ class ModelAsset: Asset
     protected Mesh readMesh(const(aiMesh)* mesh)
     {
         AssimpMesh m = New!AssimpMesh(gpu, this);
-        auto name = mesh.mName.data[0..mesh.mName.length];
+        auto name = mesh.mName.data[0..mesh.mName.length].idup;
         
         bool needGenNormals = false;
         
@@ -250,7 +250,7 @@ class ModelAsset: Asset
     protected Entity readNode(const(aiNode)* node, Entity parent = null)
     {
         Entity e = New!Entity(this);
-        auto name = node.mName.data[0..node.mName.length];
+        //auto name = node.mName.data[0..node.mName.length].idup;
         
         aiVector3D scaling;
         aiQuaternion rotation;
@@ -261,25 +261,29 @@ class ModelAsset: Asset
         e.rotation = fromAssimpQuaternion(rotation);
         e.scaling = fromAssimpVector(scaling);
         
-        e.parent = parent;
+        if (parent)
+            parent.addChild(e);
         
         if (node.mNumChildren > 0)
         {
             for (uint i = 0; i < node.mNumChildren; ++i)
             {
                 auto childEntity = readNode(node.mChildren[i], e);
-                e.addChild(childEntity);
             }
         }
         
-        if (node.mNumMeshes > 0)
+        if (node.mNumMeshes == 1)
+        {
+            e.drawable = meshes[node.mMeshes[0]];
+        }
+        else if (node.mNumMeshes > 0)
         {
             auto meshGroup = New!DrawableGroup(e);
             e.drawable = meshGroup;
             
             for (uint i = 0; i < node.mNumMeshes; ++i)
             {
-                meshGroup.add(meshes[i]);
+                meshGroup.add(meshes[node.mMeshes[i]]);
             }
         }
         
