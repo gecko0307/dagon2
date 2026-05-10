@@ -19,7 +19,7 @@ Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are 
 
 - Scene graph
 - Virtual file system
-- [OBJ](https://en.wikipedia.org/wiki/Wavefront_.obj_file) format support
+- Imports almost any 3D model via [Assimp](https://github.com/assimp/assimp) library
 - Textures in PNG, JPEG, WebP, AVIF, DDS, KTX/KTX2, HDR, SVG and many other formats
 - S3TC (DXTn), RGTC, BPTC, [Basis Universal](https://github.com/BinomialLLC/basis_universal) texture compression support. Built-in DXT1/DXT5/BC4/BC7 compressors and DDS exporter. Texture cache to accelerate asset loading
 - Shaders in GLSL 4.60; SPIR-V cache
