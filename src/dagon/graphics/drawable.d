@@ -26,11 +26,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Provides the core interface for renderable objects.
+ * Provides the core interface and grouping utilities for renderable objects.
  *
  * Description:
  * The `dagon.graphics.drawable` module provides the `Drawable` interface,
- * which must be implemented by any object that can be rendered.
+ * which must be implemented by any object that can be rendered,
+ * and the `DrawableGroup` class, which allows grouping multiple drawables
+ * for batched rendering.
  *
  * Copyright: Timur Gafarov 2017-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -38,6 +40,8 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.graphics.drawable;
 
+import dlib.core.ownership;
+import dlib.container.array;
 import dagon.graphics.state;
 
 /**
@@ -54,4 +58,83 @@ interface Drawable
      *   state = Pointer to the graphics pipeline state.
      */
     void render(GraphicsState* state);
+}
+
+/**
+ * A group of drawables that can be rendered together.
+ *
+ * The `DrawableGroup` class allows you to add multiple `Drawable` objects and
+ * render them all at once.
+ */
+class DrawableGroup: Owner, Drawable
+{
+    /// The array of drawables in this group.
+    Array!Drawable drawables;
+    
+    /**
+     * Constructs an empty drawable group.
+     *
+     * Params:
+     *   owner = The owner object.
+     */
+    this(Owner owner)
+    {
+        super(owner);
+    }
+    
+    /// Destructor. Frees the drawables array.
+    ~this()
+    {
+        drawables.free();
+    }
+    
+    /**
+     * Constructs a drawable group with a single drawable.
+     *
+     * Params:
+     *   drawable = The drawable to add.
+     *   owner    = The owner object.
+     */
+    this(Drawable drawable, Owner owner)
+    {
+        super(owner);
+        add(drawable);
+    }
+    
+    /**
+     * Constructs a drawable group with an array of drawables.
+     *
+     * Params:
+     *   drawablesArr = The array of drawables to add.
+     *   owner        = The owner object.
+     */
+    this(Drawable[] drawablesArr, Owner owner)
+    {
+        super(owner);
+        foreach(d; drawablesArr)
+            add(d);
+    }
+    
+    /**
+     * Adds a drawable to the group.
+     *
+     * Params:
+     *   d = The drawable to add.
+     */
+    void add(Drawable d)
+    {
+        drawables.append(d);
+    }
+    
+    /**
+     * Renders all drawables in the group.
+     *
+     * Params:
+     *   state = Pointer to the graphics pipeline state.
+     */
+    void render(GraphicsState* state)
+    {
+        foreach(d; drawables)
+            d.render(state);
+    }
 }
