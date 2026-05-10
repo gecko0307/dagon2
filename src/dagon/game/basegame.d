@@ -113,8 +113,10 @@ class BaseGame: Application, GsObject
         gsProperties = dict!(GsDynamic, string);
         gsEventHandlerArgs[0] = this;
         
+        if ("mainScript.path" in config.props)
+            mainScriptPath = config.props["mainScript.path"].toString;
+        
         // Load main script
-        // TODO: user-defined path from settings.conf
         if (fileExists(mainScriptPath))
         {
             FileStat s;

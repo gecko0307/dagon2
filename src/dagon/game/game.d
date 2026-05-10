@@ -160,6 +160,13 @@ class Game: BaseGame
         if ("fog.enabled" in rendererConfig.props)
             renderer.fogPass.active = cast(bool)(rendererConfig.props["fog.enabled"].toUInt);
         
+        if ("sslr.enabled" in rendererConfig.props)
+        {
+            renderer.sslrPass.active = cast(bool)(rendererConfig.props["sslr.enabled"].toUInt);
+            renderer.reflectionPass.active = renderer.sslrPass.active;
+        }
+        // TODO: other SSLR options
+        
         if ("motionBlur.enabled" in rendererConfig.props)
             renderer.motionBlurPass.active = cast(bool)(rendererConfig.props["motionBlur.enabled"].toUInt);
         if ("motionBlur.samples" in rendererConfig.props)

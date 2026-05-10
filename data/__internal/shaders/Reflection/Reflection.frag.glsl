@@ -27,7 +27,7 @@ void main()
 {
     vec3 original = texture(colorBuffer, texCoords).rgb;
     vec4 reflection = texture(reflectionBuffer, texCoords);
-    vec3 blurredReflection = blurReflection(texCoords);
-    vec3 color = mix(original, blurredReflection, reflection.a);
+    //vec3 blurredReflection = blurReflection(texCoords);
+    vec3 color = mix(original, reflection.rgb, reflection.a);
     outColor = vec4(color, 1.0);
 }
