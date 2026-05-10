@@ -106,6 +106,9 @@ struct FaceGroup
  */
 class Mesh: Owner, Drawable
 {
+    /// Symbolic name.
+    string name;
+    
     ///
     GPU gpu;
     

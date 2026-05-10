@@ -37,7 +37,9 @@ module dagon.core.assimp;
 import std.conv;
 import std.string;
 
+import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.image.color;
 
 import bindbc.loader;
@@ -72,6 +74,18 @@ AssimpSupport loadAssimp(string path = "")
     }
     
     return assimpSupport;
+}
+
+///
+Vector3f fromAssimpVector(aiVector3D v)
+{
+    return Vector3f(v.x, v.y, v.z);
+}
+
+///
+Quaternionf fromAssimpQuaternion(aiQuaternion q)
+{
+    return Quaternionf(q.x, q.y, q.z, q.w);
 }
 
 ///

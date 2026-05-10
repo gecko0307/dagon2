@@ -26,12 +26,18 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.model;
 
+import std.string;
+import std.path;
+import std.conv;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
 import dlib.container.array;
+import dlib.math.vector;
 import dlib.filesystem.filesystem;
 
+import dagon.core.logger;
 import dagon.core.gpu;
 import dagon.core.assimp;
 import dagon.graphics.drawable;
@@ -40,6 +46,31 @@ import dagon.graphics.entity;
 import dagon.graphics.mesh;
 import dagon.graphics.material;
 import dagon.resource.asset;
+import dagon.resource.texture;
+
+class AssimpMesh: Mesh
+{
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+    }
+    
+    ~this()
+    {
+        if (vertices.length)
+            Delete(vertices);
+        if (normals.length)
+            Delete(normals);
+        if (texcoords.length)
+            Delete(texcoords);
+        if (indices.length)
+            Delete(indices);
+        if (facegroups.length)
+            Delete(facegroups);
+    }
+}
+
+alias ModelConversionOptions = aiPostProcessSteps;
 
 ///
 class ModelAsset: Asset
@@ -51,7 +82,16 @@ class ModelAsset: Asset
     Array!Entity entities;
     
     ///
-    Array!Mesh meshes;
+    Array!AssimpMesh meshes;
+    
+    ///
+    Array!Material materials;
+    
+    ///
+    Array!TextureAsset textureAssets;
+    
+    ///
+    ModelConversionOptions conversionOptions = ModelConversionOptions.Triangulate;
     
     ///
     this(GPU gpu, Owner owner)
@@ -62,19 +102,189 @@ class ModelAsset: Asset
     ///
     ~this()
     {
-        //
+        release();
     }
     
     /// Releases all resources associated with the asset.
     override void release()
     {
-        //
+        entities.free();
+        meshes.free();
+        materials.free();
+        textureAssets.free();
     }
     
     /// Loads an asset from a given stream.
     override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
     {
-        //
-        return false;
+        release();
+        
+        logDebug("Loading ", filename, "...");
+        
+        string rootDir = dirName(filename);
+        
+        size_t dataSize = istrm.size;
+        ubyte[] data = New!(ubyte[])(dataSize);
+        istrm.readBytes(data.ptr, dataSize);
+        
+        const(aiScene*) scene = aiImportFileFromMemory(
+            cast(const(char)*)data.ptr,
+            cast(uint)dataSize,
+            conversionOptions,
+            filename.toStringz);
+        
+        bool result;
+        if (scene)
+        {
+            for (uint i = 0; i < scene.mNumMaterials; i++)
+            {
+                readMaterial(scene.mMaterials[i], fs, rootDir);
+            }
+            
+            for (uint i = 0; i < scene.mNumMeshes; i++)
+            {
+                readMesh(scene.mMeshes[i]);
+            }
+            
+            rootEntity = readNode(scene.mRootNode);
+            
+            aiReleaseImport(scene);
+            result = true;
+        }
+        else
+        {
+            logError("Failed to load \"", filename, "\". ", aiGetErrorString().to!string);
+            result = false;
+        }
+        
+        Delete(data);
+        
+        return result;
+    }
+    
+    protected Material readMaterial(const(aiMaterial)* material, ReadOnlyFileSystem fs, string rootDir)
+    {
+        Material mat = New!Material(this);
+        
+        //mat.roughnessFactor = 1.0f;
+        //mat.metallicFactor = 0.0f;
+        
+        // TODO: read material parameters
+        
+        materials.insertBack(mat);
+        
+        return mat;
+    }
+    
+    protected Mesh readMesh(const(aiMesh)* mesh)
+    {
+        AssimpMesh m = New!AssimpMesh(gpu, this);
+        auto name = mesh.mName.data[0..mesh.mName.length];
+        
+        bool needGenNormals = false;
+        
+        m.vertices = New!(Vector3f[])(mesh.mNumVertices);
+        
+        if (mesh.mNormals is null)
+        {
+            needGenNormals = true;
+            logWarning("Mesh \"", name, "\" has no normals (they will be generated)");
+        }
+        else
+        {
+            m.normals = New!(Vector3f[])(mesh.mNumVertices);
+        }
+        
+        if (mesh.mTextureCoords[0] is null)
+        {
+            logWarning("Mesh \"", name, "\" has no texcoords");
+        }
+        else
+        {
+            m.texcoords = New!(Vector2f[])(mesh.mNumVertices);
+        }
+        
+        m.indices = New!(uint[3][])(mesh.mNumFaces);
+        
+        for (uint i = 0; i < mesh.mNumVertices; ++i)
+        {
+            m.vertices[i] = *cast(Vector3f*)&mesh.mVertices[i];
+            
+            if (mesh.mNormals !is null)
+                m.normals[i] = *cast(Vector3f*)&mesh.mNormals[i];
+            
+            if (mesh.mTextureCoords[0] !is null)
+            {
+                m.texcoords[i].x = mesh.mTextureCoords[0][i].x;
+                m.texcoords[i].y = mesh.mTextureCoords[0][i].y;
+            }
+        }
+        
+        for (uint i = 0; i < mesh.mNumFaces; ++i)
+        {
+            auto face = mesh.mFaces[i];
+            foreach (j; 0..face.mNumIndices)
+            {
+                m.indices[i][j] = face.mIndices[j];
+            }
+        }
+        
+        if (mesh.mMaterialIndex < materials.length)
+        {
+            m.material = materials[mesh.mMaterialIndex];
+        }
+        
+        if (needGenNormals)
+            m.generateNormals();
+        
+        m.calcBoundingBox();
+        m.dataReady = true;
+        
+        m.prepareBuffers();
+        
+        meshes.insertBack(m);
+        
+        return m;
+    }
+    
+    protected Entity readNode(const(aiNode)* node, Entity parent = null)
+    {
+        Entity e = New!Entity(this);
+        auto name = node.mName.data[0..node.mName.length];
+        
+        aiVector3D scaling;
+        aiQuaternion rotation;
+        aiVector3D position;
+        aiDecomposeMatrix(&node.mTransformation, &scaling, &rotation, &position);
+        
+        e.position = fromAssimpVector(position);
+        e.rotation = fromAssimpQuaternion(rotation);
+        e.scaling = fromAssimpVector(scaling);
+        
+        e.parent = parent;
+        
+        if (node.mNumChildren > 0)
+        {
+            for (uint i = 0; i < node.mNumChildren; ++i)
+            {
+                auto childEntity = readNode(node.mChildren[i], e);
+                e.addChild(childEntity);
+            }
+        }
+        
+        if (node.mNumMeshes > 0)
+        {
+            auto meshGroup = New!DrawableGroup(e);
+            e.drawable = meshGroup;
+            
+            for (uint i = 0; i < node.mNumMeshes; ++i)
+            {
+                meshGroup.add(meshes[i]);
+            }
+        }
+        
+        entities.insertBack(e);
+        
+        return e;
     }
 }
