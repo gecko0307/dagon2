@@ -255,14 +255,13 @@ class ModelAsset: Asset
         else if (aiGetMaterialColor(material, "$clr.diffuse", 0, 0, &color) == aiReturn.SUCCESS)
             baseColor = fromAssimpColor(color);
         mat.baseColor = baseColor.toGamma;
-        logInfo(mat.baseColor);
         
         // Read base color texture
         string baseColorTexturePath;
         if (aiGetMaterialTexture(material, aiTextureType.BASE_COLOR, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
         {
             baseColorTexturePath = texturePath.data[0..texturePath.length].idup;
-            logInfo("Base color texture path: ", baseColorTexturePath);
+            //logInfo("Base color texture path: ", baseColorTexturePath);
             if (baseColorTexturePath.length)
             {
                 if (baseColorTexturePath in textureAssets)
@@ -288,7 +287,7 @@ class ModelAsset: Asset
         if (aiGetMaterialTexture(material, aiTextureType.NORMALS, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
         {
             normalTexturePath = texturePath.data[0..texturePath.length].idup;
-            logInfo("Normal texture path: ", normalTexturePath);
+            //logInfo("Normal texture path: ", normalTexturePath);
             if (normalTexturePath.length)
             {
                 if (normalTexturePath in textureAssets)
@@ -328,7 +327,7 @@ class ModelAsset: Asset
         if (aiGetMaterialTexture(material, aiTextureType.GLTF_METALLIC_ROUGHNESS, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
         {
             metallicRoughnessTexturePath = texturePath.data[0..texturePath.length].idup;
-            logInfo("Metallic/roughness texture path: ", metallicRoughnessTexturePath);
+            //logInfo("Metallic/roughness texture path: ", metallicRoughnessTexturePath);
         }
         
         // TODO: other textures
@@ -456,7 +455,7 @@ class ModelAsset: Asset
     protected Entity readNode(const(aiNode)* node, Entity parent = null)
     {
         Entity e = New!Entity(this);
-        //auto name = node.mName.data[0..node.mName.length].idup;
+        auto name = node.mName.data[0..node.mName.length].idup;
         
         aiVector3D scaling;
         aiQuaternion rotation;
