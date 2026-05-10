@@ -34,9 +34,11 @@ import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
 import dlib.container.array;
+import dlib.container.dict;
 import dlib.math.vector;
 import dlib.image.color;
 import dlib.filesystem.filesystem;
+import dlib.text.str;
 
 import dagon.core.logger;
 import dagon.core.gpu;
@@ -165,21 +167,24 @@ class ModelAsset: Asset
     Array!Material materials;
     
     ///
-    Array!TextureAsset textureAssets;
+    Dict!(TextureAsset, string) textureAssets;
     
     ///
-    ModelConversionOptions conversionOptions = ModelConversionOptions.Triangulate;
+    ModelConversionOptions conversionOptions =
+        ModelConversionOptions.Triangulate | ModelConversionOptions.FlipUVs;
     
     ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
+        textureAssets = dict!(TextureAsset, string)();
     }
     
     ///
     ~this()
     {
         release();
+        Delete(textureAssets);
     }
     
     /// Releases all resources associated with the asset.
@@ -188,7 +193,7 @@ class ModelAsset: Asset
         entities.free();
         meshes.free();
         materials.free();
-        textureAssets.free();
+        textureAssets.clear();
     }
     
     /// Loads an asset from a given stream.
@@ -199,10 +204,6 @@ class ModelAsset: Asset
         logDebug("Loading ", filename, "...");
         
         string rootDir = dirName(filename);
-        
-        size_t dataSize = istrm.size;
-        ubyte[] data = New!(ubyte[])(dataSize);
-        istrm.readBytes(data.ptr, dataSize);
         
         aiFileIO io;
         io.OpenProc = &vfsOpen;
@@ -234,8 +235,6 @@ class ModelAsset: Asset
             result = false;
         }
         
-        Delete(data);
-        
         return result;
     }
     
@@ -255,7 +254,8 @@ class ModelAsset: Asset
             baseColor = fromAssimpColor(color);
         else if (aiGetMaterialColor(material, "$clr.diffuse", 0, 0, &color) == aiReturn.SUCCESS)
             baseColor = fromAssimpColor(color);
-        mat.baseColor = baseColor;
+        mat.baseColor = baseColor.toGamma;
+        logInfo(mat.baseColor);
         
         // Read base color texture
         string baseColorTexturePath;
@@ -263,7 +263,65 @@ class ModelAsset: Asset
         {
             baseColorTexturePath = texturePath.data[0..texturePath.length].idup;
             logInfo("Base color texture path: ", baseColorTexturePath);
+            if (baseColorTexturePath.length)
+            {
+                if (baseColorTexturePath in textureAssets)
+                {
+                    mat.baseColorTexture = textureAssets[baseColorTexturePath].texture;
+                }
+                else
+                {
+                    auto aBaseColorTexture = New!TextureAsset(gpu, this);
+                    aBaseColorTexture.creationOptions.generateMipmaps = true;
+                    aBaseColorTexture.creationOptions.repeatUV = true;
+                    aBaseColorTexture.creationOptions.anisotropicFiltering = true;
+                    // TODO: compression parameters
+                    textureAssets[baseColorTexturePath] = aBaseColorTexture;
+                    if (loadTextureAsset(aBaseColorTexture, fs, rootDir, baseColorTexturePath))
+                        mat.baseColorTexture = aBaseColorTexture.texture;
+                }
+            }
         }
+        
+        // Read normal texture
+        string normalTexturePath;
+        if (aiGetMaterialTexture(material, aiTextureType.NORMALS, 0, &texturePath, null, null, null, null, null, null) == aiReturn.SUCCESS)
+        {
+            normalTexturePath = texturePath.data[0..texturePath.length].idup;
+            logInfo("Normal texture path: ", normalTexturePath);
+            if (normalTexturePath.length)
+            {
+                if (normalTexturePath in textureAssets)
+                {
+                    mat.normalTexture = textureAssets[normalTexturePath].texture;
+                }
+                else
+                {
+                    auto aNormalTexture = New!TextureAsset(gpu, this);
+                    aNormalTexture.creationOptions.generateMipmaps = true;
+                    aNormalTexture.creationOptions.repeatUV = true;
+                    aNormalTexture.creationOptions.anisotropicFiltering = true;
+                    // TODO: compression parameters
+                    textureAssets[normalTexturePath] = aNormalTexture;
+                    if (loadTextureAsset(aNormalTexture, fs, rootDir, normalTexturePath))
+                        mat.normalTexture = aNormalTexture.texture;
+                }
+            }
+        }
+        
+        // Read roughness factor
+        float roughness;
+        if (aiGetMaterialFloat(material, "$mat.roughnessFactor", 0, 0, &roughness) == aiReturn.SUCCESS)
+            mat.roughness = roughness;
+        else
+            mat.roughness = 1.0f;
+        
+        // Read metallic factor
+        float metallic;
+        if (aiGetMaterialFloat(material, "$mat.metallicFactor", 0, 0, &metallic) == aiReturn.SUCCESS)
+            mat.metallic = metallic;
+        else
+            mat.metallic = 0.0f;
         
         // Read metallic-roughness texture
         string metallicRoughnessTexturePath;
@@ -278,6 +336,50 @@ class ModelAsset: Asset
         materials.insertBack(mat);
         
         return mat;
+    }
+    
+    protected bool loadTextureAsset(TextureAsset asset, ReadOnlyFileSystem fs, string rootDir, string relPath)
+    {
+        String imgPath1 = String(rootDir);
+        imgPath1 ~= "/";
+        imgPath1 ~= relPath;
+        string assetPath1 = imgPath1.toString;
+        
+        bool res = false;
+        FileStat fstat;
+        if (fs.stat(assetPath1, fstat))
+        {
+            InputStream istrm = fs.openForInput(assetPath1);
+            res = asset.load(assetPath1, istrm, fs);
+            if (!res)
+                logError("Failed to load \"", assetPath1, "\"");
+            Delete(istrm);
+        }
+        /*
+        else
+        {
+            //TODO
+            // If relPath failed (may be absolute path), try to load using baseName
+            String imgPath2 = String(rootDir);
+            imgPath2 ~= "/";
+            imgPath2 ~= baseName(relPath);
+            string assetPath2 = imgPath2.toString;
+            if (fs.stat(assetPath2, fstat))
+            {
+                res = assetManager.loadAssetThreadSafePart(asset, assetPath2);
+                if (!res)
+                    logError("Failed to load \"", assetPath2, "\"");
+            }
+            else
+                logError("Image file \"", relPath, "\" not found");
+            
+            imgPath2.free();
+        }
+        */
+        
+        imgPath1.free();
+        
+        return res;
     }
     
     protected Mesh readMesh(const(aiMesh)* mesh)

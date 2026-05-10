@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2025-2026 Timur Gafarov
+Copyright (c) 2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,12 +24,12 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module bindbc.assimp;
+module bindbc.assimp.helpers;
 
-public
+import bindbc.assimp.types;
+import bindbc.assimp.funcs;
+
+aiReturn aiGetMaterialFloat(const aiMaterial* pMat, const char* pKey, uint type, uint index, ai_real* pOut)
 {
-    import bindbc.assimp.types;
-    import bindbc.assimp.funcs;
-    import bindbc.assimp.helpers;
-    import bindbc.assimp.loader;
+    return aiGetMaterialFloatArray(pMat, pKey, type, index, pOut, null);
 }

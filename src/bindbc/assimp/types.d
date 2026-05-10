@@ -513,6 +513,20 @@ enum AI_MATKEY_SHADER_TESSELATION = tuple("?sh.ts",0,0);
 enum AI_MATKEY_SHADER_PRIMITIVE = tuple("?sh.ps",0,0);
 enum AI_MATKEY_SHADER_COMPUTE = tuple("?sh.cs",0,0);
 
+enum AI_MATKEY_USE_COLOR_MAP = tuple("$mat.useColorMap",0,0);
+
+enum AI_MATKEY_BASE_COLOR = tuple("$clr.base", 0, 0);
+enum AI_MATKEY_BASE_COLOR_TEXTURE = tuple(aiTextureType.BASE_COLOR, 0);
+enum AI_MATKEY_USE_METALLIC_MAP = tuple("$mat.useMetallicMap", 0, 0);
+enum AI_MATKEY_METALLIC_FACTOR = tuple("$mat.metallicFactor", 0, 0);
+enum AI_MATKEY_METALLIC_TEXTURE = tuple(aiTextureType.METALNESS, 0);
+enum AI_MATKEY_USE_ROUGHNESS_MAP = tuple("$mat.useRoughnessMap", 0, 0);
+enum AI_MATKEY_ROUGHNESS_FACTOR = tuple("$mat.roughnessFactor", 0, 0);
+enum AI_MATKEY_ROUGHNESS_TEXTURE = tuple(aiTextureType.DIFFUSE_ROUGHNESS, 0);
+// Anisotropy factor. 0.0 = isotropic, 1.0 = anisotropy along tangent direction,
+// -1.0 = anisotropy along bitangent direction
+enum AI_MATKEY_ANISOTROPY_FACTOR = tuple("$mat.anisotropyFactor", 0, 0);
+
 enum _AI_MATKEY_TEXTURE_BASE         = "$tex.file";
 enum _AI_MATKEY_UVWSRC_BASE          = "$tex.uvwsrc";
 enum _AI_MATKEY_TEXOP_BASE           = "$tex.op";
