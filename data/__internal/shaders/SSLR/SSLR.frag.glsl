@@ -186,7 +186,7 @@ void main()
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.01, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
+    float alpha = mix(0.02, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
 
     outColor = accumulatedReflection;

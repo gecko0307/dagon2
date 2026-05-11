@@ -486,7 +486,7 @@ class ModelAsset: Asset, TriangleSet
     protected Entity readNode(const(aiNode)* node, Entity parent = null)
     {
         Entity e = New!Entity(this);
-        auto name = node.mName.data[0..node.mName.length].idup;
+        e.name = node.mName.data[0..node.mName.length].idup;
         
         aiVector3D scaling;
         aiQuaternion rotation;
