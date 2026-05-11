@@ -9,7 +9,6 @@ This is work-in-progress SDL3/Vulkan port of [Dagon Engine 1.0](https://github.c
 Screenshots
 -----------
 [![Car](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)
-[![Puddles](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-puddles1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-puddles1.jpg)
 [![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)
 [![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)
 
