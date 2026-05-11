@@ -75,7 +75,7 @@ layout(location = 0) out vec4 outColor;
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
-    const float maxDistance = 8.0;
+    const float maxDistance = 5.0;
     const int steps = 40;
     const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
@@ -186,7 +186,7 @@ void main()
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.015, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
+    float alpha = mix(0.01, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
 
     outColor = accumulatedReflection;
