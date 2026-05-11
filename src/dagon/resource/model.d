@@ -36,11 +36,14 @@ import dlib.core.stream;
 import dlib.container.array;
 import dlib.container.dict;
 import dlib.math.vector;
+import dlib.math.matrix;
+import dlib.geometry.triangle;
 import dlib.image.color;
 import dlib.filesystem.filesystem;
 import dlib.text.str;
 
 import dagon.core.logger;
+import dagon.core.time;
 import dagon.core.gpu;
 import dagon.core.assimp;
 import dagon.graphics.drawable;
@@ -152,7 +155,7 @@ extern(System) void vfsClose(aiFileIO* io, aiFile* f)
 }
 
 ///
-class ModelAsset: Asset
+class ModelAsset: Asset, TriangleSet
 {
     ///
     Entity rootEntity;
@@ -233,6 +236,16 @@ class ModelAsset: Asset
         {
             logError("Failed to load \"", filename, "\". ", aiGetErrorString().to!string);
             result = false;
+        }
+        
+        foreach(e; entities)
+        {
+            e.update(Time(0.0, 0.0));
+        }
+        
+        foreach(e; entities)
+        {
+            e.postUpdate(Time(0.0, 0.0));
         }
         
         return result;
@@ -328,6 +341,24 @@ class ModelAsset: Asset
         {
             metallicRoughnessTexturePath = texturePath.data[0..texturePath.length].idup;
             //logInfo("Metallic/roughness texture path: ", metallicRoughnessTexturePath);
+            if (metallicRoughnessTexturePath.length)
+            {
+                if (metallicRoughnessTexturePath in textureAssets)
+                {
+                    mat.roughnessMetallicTexture = textureAssets[metallicRoughnessTexturePath].texture;
+                }
+                else
+                {
+                    auto aMetallicRoughnessTexture = New!TextureAsset(gpu, this);
+                    aMetallicRoughnessTexture.creationOptions.generateMipmaps = true;
+                    aMetallicRoughnessTexture.creationOptions.repeatUV = true;
+                    aMetallicRoughnessTexture.creationOptions.anisotropicFiltering = true;
+                    // TODO: compression parameters
+                    textureAssets[normalTexturePath] = aMetallicRoughnessTexture;
+                    if (loadTextureAsset(aMetallicRoughnessTexture, fs, rootDir, metallicRoughnessTexturePath))
+                        mat.roughnessMetallicTexture = aMetallicRoughnessTexture.texture;
+                }
+            }
         }
         
         // TODO: other textures
@@ -495,5 +526,46 @@ class ModelAsset: Asset
         entities.insertBack(e);
         
         return e;
+    }
+    
+    /**
+     * Iterates over all triangles in the nodes.
+     *
+     * Params:
+     *   dg = Delegate to call for each triangle.
+     * Returns:
+     *   0 if completed, nonzero if interrupted.
+     */
+    int opApply(scope int delegate(Triangle t) dg)
+    {
+        int result = 0;
+        
+        foreach(entity; entities)
+        {
+            AssimpMesh mesh = cast(AssimpMesh)entity.drawable;
+            if (mesh)
+            {
+                foreach(i, ref f; mesh.indices)
+                {
+                    Triangle tri = mesh.getTriangle(i);
+                    
+                    Matrix4x4f mat = entity.modelMatrix;
+                    
+                    tri.v[0] = tri.v[0] * mat;
+                    tri.v[1] = tri.v[1] * mat;
+                    tri.v[2] = tri.v[2] * mat;
+                    tri.n[0] = mat.rotate(tri.n[0]);
+                    tri.n[1] = mat.rotate(tri.n[1]);
+                    tri.n[2] = mat.rotate(tri.n[2]);
+                    tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                    
+                    result = dg(tri);
+                    if (result)
+                        break;
+                }
+            }
+        }
+        
+        return result;
     }
 }

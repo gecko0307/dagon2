@@ -75,7 +75,7 @@ layout(location = 0) out vec4 outColor;
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
-    const float maxDistance = 4.0;
+    const float maxDistance = 8.0;
     const int steps = 40;
     const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
