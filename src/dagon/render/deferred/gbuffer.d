@@ -26,6 +26,8 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.render.deferred.gbuffer;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.image.color;
@@ -261,8 +263,16 @@ class GBuffer: Owner
         
         // Occlusion
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
-        textureCreateInfo.width = width / 2;
-        textureCreateInfo.height = height / 2;
+        if (gpu.application.supersampling > 1)
+        {
+            textureCreateInfo.width = cast(uint)ceil(width / gpu.application.supersampling);
+            textureCreateInfo.height = cast(uint)ceil(height / gpu.application.supersampling);
+        }
+        else
+        {
+            textureCreateInfo.width = width;
+            textureCreateInfo.height = height;
+        }
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         occlusionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         currentOcclusionBuffer = occlusionBuffer1;
@@ -270,8 +280,16 @@ class GBuffer: Owner
         
         // Reflection
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-        textureCreateInfo.width = width / 2;
-        textureCreateInfo.height = height / 2;
+        if (gpu.application.supersampling > 1)
+        {
+            textureCreateInfo.width = width; //cast(uint)ceil(width / gpu.application.supersampling);
+            textureCreateInfo.height = height; // cast(uint)ceil(height / gpu.application.supersampling);
+        }
+        else
+        {
+            textureCreateInfo.width = width;
+            textureCreateInfo.height = height;
+        }
         reflectionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         reflectionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         currentReflectionBuffer = reflectionBuffer1;

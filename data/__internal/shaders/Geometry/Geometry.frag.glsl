@@ -110,7 +110,7 @@ void main()
     vec4 roughnessMetallic = ubo.roughnessMetallic;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE) != 0)
         roughnessMetallic = texture(roughnessMetallicTexture, uv);
-    float roughness = roughnessMetallic.g;
+    float roughness = max(roughnessMetallic.g, 0.01);
     float metallic = roughnessMetallic.b;
     
     vec3 emission = ubo.emission.rgb;

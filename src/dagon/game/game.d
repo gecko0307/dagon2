@@ -214,6 +214,9 @@ class Game: BaseGame
         if ("tonemapping.look.saturation" in rendererConfig.props)
             renderer.tonemappingPass.tonemappingShader.look.saturation = rendererConfig.props["tonemapping.look.saturation"].toFloat;
         
+        if ("lensDistortion.enabled" in rendererConfig.props)
+            renderer.lensDistortionPass.active = cast(bool)(rendererConfig.props["lensDistortion.enabled"].toUInt);
+        
         if ("fxaa.enabled" in rendererConfig.props)
             renderer.fxaaPass.active = cast(bool)(rendererConfig.props["fxaa.enabled"].toUInt);
         

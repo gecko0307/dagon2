@@ -56,8 +56,9 @@ float ssaoPower = ubo.fparams[FPARAM_POWER];
 
 float ssao(in vec2 tcoord, in vec2 uv, in vec3 p, in vec3 cnorm)
 {
-    float depth = texture(depthBuffer, tcoord + uv).x;
-    vec3 ndc = vec3(tcoord + uv, depth);
+    vec2 uv2 = tcoord + uv;
+    float depth = texture(depthBuffer, uv2).x;
+    vec3 ndc = vec3(uv2, depth);
     ndc.y = 1.0 - ndc.y;
     vec3 pos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 diff = pos - p;
@@ -84,13 +85,13 @@ float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
         spiralUV.x = sin(rotatePhase);
         spiralUV.y = cos(rotatePhase);
         radius += rStep;
+        
         ao += ssao(uv, spiralUV * radius, p, n);
         rotatePhase += goldenAngle;
     }
     
     ao *= invSamples;
-    
-    return 1.0 - ao;
+    return (1.0 - ao);
 }
 
 void main()
@@ -120,7 +121,6 @@ void main()
         vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
         float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
         float velocityLength = length(uvVelocity);
-        //float alpha = mix(0.01, 1.0, clamp(velocityLength * 500.0, 0.0, 1.0));
         float alpha = mix(0.05, 1.0, clamp(velocityLength * 100.0, 0.0, 1.0));
         occlusion = mix(prevOcclusion, occlusion, alpha);
     }
