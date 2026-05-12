@@ -54,6 +54,7 @@ New features:
 - Many new DDS/DXGI formats support
 - Fog effect is now applied in a separate pass. Ground fog support
 - Radial optical distortion support
+- FXAA 3.11
 - Shadeless materials in deferred pipeline
 - Window minimize/restore events.
 
