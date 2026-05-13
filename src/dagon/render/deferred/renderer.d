@@ -100,12 +100,13 @@ class DeferredRenderer: Renderer
         sunLightPass = New!SunLightPass(this, gbuffer);
         lightVolumePass = New!LightVolumePass(this, gbuffer);
         fogPass = New!FogPass(this, gbuffer);
-        // TODO: forward pass
+        // TODO: transparent pass
         // TODO: particles pass
         bufferCopyPass = New!BufferCopyPass(this, ppContext);
         refractionPass = New!RefractionPass(this, ppContext);
         sslrPass = New!SSLRPass(this, ppContext);
         reflectionPass = New!ReflectionPass(this, ppContext);
+        // TODO: NPR pass
         motionBlurPass = New!MotionBlurPass(this, ppContext);
         lensDistortionPass = New!LensDistortionPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);
