@@ -233,7 +233,7 @@ class SSLRPass: RenderPass
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD; //SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
         colorTargetInfo.texture = gbuffer.currentReflectionBuffer;
         

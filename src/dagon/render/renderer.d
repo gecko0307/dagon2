@@ -207,20 +207,6 @@ abstract class Renderer: EventListener, Updateable
         invalidateBuffers = true;
     }
     
-    /*
-    override void onResize(int width, int height)
-    {
-        uint drawableWidth = gpu.application.drawableWidth;
-        uint drawableHeight = gpu.application.drawableHeight;
-        view.resize(drawableWidth, drawableHeight);
-        
-        foreach(pass; renderPasses)
-        {
-            pass.resize(drawableWidth, drawableHeight);
-        }
-    }
-    */
-    
     override void onMinimize()
     {
         active = false;

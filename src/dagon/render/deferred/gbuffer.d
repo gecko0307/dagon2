@@ -298,10 +298,10 @@ class GBuffer: Owner
         currentReflectionBuffer = reflectionBuffer1;
         previousReflectionBuffer = reflectionBuffer2;
         
-        // Clear reflection
+        // Clear temporal accumulation
         SDL_GPUCommandBuffer* clearCmd = SDL_AcquireGPUCommandBuffer(gpu.device);
-        SDL_GPUColorTargetInfo[2] clearTargets;
-        clearTargets[0].texture = reflectionBuffer1;
+        SDL_GPUColorTargetInfo[3] clearTargets;
+        clearTargets[0].texture = velocityBuffer;
         clearTargets[0].load_op = SDL_GPU_LOADOP_CLEAR;
         clearTargets[0].store_op = SDL_GPU_STOREOP_STORE;
         clearTargets[0].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -309,7 +309,11 @@ class GBuffer: Owner
         clearTargets[1].load_op = SDL_GPU_LOADOP_CLEAR;
         clearTargets[1].store_op = SDL_GPU_STOREOP_STORE;
         clearTargets[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        SDL_GPURenderPass* clearPass = SDL_BeginGPURenderPass(clearCmd, clearTargets.ptr, 2, null);
+        clearTargets[2].texture = reflectionBuffer2;
+        clearTargets[2].load_op = SDL_GPU_LOADOP_CLEAR;
+        clearTargets[2].store_op = SDL_GPU_STOREOP_STORE;
+        clearTargets[2].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        SDL_GPURenderPass* clearPass = SDL_BeginGPURenderPass(clearCmd, clearTargets.ptr, clearTargets.length, null);
         SDL_EndGPURenderPass(clearPass);
         SDL_SubmitGPUCommandBuffer(clearCmd);
     }
