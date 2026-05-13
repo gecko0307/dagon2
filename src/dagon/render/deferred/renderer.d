@@ -126,12 +126,12 @@ class DeferredRenderer: Renderer
         state.occlusionEnabled = ssaoPass.active;
     }
     
-    override void onResize(int width, int height)
+    override void resize()
     {
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
         gbuffer.resize(drawableWidth, drawableWidth);
         ppContext.resize(drawableWidth, drawableWidth);
-        super.onResize(width, height);
+        super.resize();
     }
 }

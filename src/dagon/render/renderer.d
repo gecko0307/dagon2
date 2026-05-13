@@ -85,6 +85,9 @@ abstract class Renderer: EventListener, Updateable
     ///
     bool active = true;
     
+    ///
+    bool invalidateBuffers = false;
+    
     /**
      * Constructs a renderer with the given GPU and event manager.
      *
@@ -172,6 +175,13 @@ abstract class Renderer: EventListener, Updateable
         }
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
+        
+        if (invalidateBuffers)
+        {
+            invalidateBuffers = false;
+            SDL_WaitForGPUIdle(gpu.device);
+            resize();
+        }
     }
     
     /// Override for custom post-update logic.
@@ -180,6 +190,24 @@ abstract class Renderer: EventListener, Updateable
         //
     }
     
+    void resize()
+    {
+        uint drawableWidth = gpu.application.drawableWidth;
+        uint drawableHeight = gpu.application.drawableHeight;
+        view.resize(drawableWidth, drawableHeight);
+        
+        foreach(pass; renderPasses)
+        {
+            pass.resize(drawableWidth, drawableHeight);
+        }
+    }
+    
+    override void onResize(int width, int height)
+    {
+        invalidateBuffers = true;
+    }
+    
+    /*
     override void onResize(int width, int height)
     {
         uint drawableWidth = gpu.application.drawableWidth;
@@ -191,6 +219,7 @@ abstract class Renderer: EventListener, Updateable
             pass.resize(drawableWidth, drawableHeight);
         }
     }
+    */
     
     override void onMinimize()
     {
