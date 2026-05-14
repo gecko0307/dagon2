@@ -248,7 +248,7 @@ class CSMPass: RenderPass
                 if (entity.visible &&
                     entity.castShadow &&
                     entity.layer == EntityLayer.Scene &&
-                    !entity.isDecal &&
+                    entity.type == EntityType.Default &&
                     entity.drawable)
                 {
                     state.entity = entity;

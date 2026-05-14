@@ -66,6 +66,13 @@ enum EntityLayer
     Foreground = 2
 }
 
+enum EntityType
+{
+    Default = 0,
+    Decal = 1,
+    NPRObject = 2
+}
+
 /**
  * Scene graph node with local and world transformations.
  *
@@ -139,7 +146,7 @@ class Entity: Owner, Updateable, GsObject
     bool dynamic = false;
 
     /// Mark entity as decal object.
-    bool isDecal = false;
+    EntityType type = EntityType.Default;
 
     /// Indicates local transform matrix is fresh and does not need recompute.
     bool transformationValid = false;

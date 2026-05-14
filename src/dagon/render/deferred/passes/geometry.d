@@ -327,7 +327,7 @@ class GeometryPass: RenderPass
         
         foreach(entity; state.scene.entities)
         {
-            if (entity.visible && !entity.isDecal && entity.drawable)
+            if (entity.visible && entity.type == EntityType.Default && entity.drawable)
             {
                 state.entity = entity;
                 if (entity.material)
