@@ -117,6 +117,7 @@ class TonemappingShader: Shader
     
    public:
     AgXLook look = AgXLookPreset.Punchy;
+    bool linearOutput = false;
     Texture colorLookupTable;
     
     this(GPU gpu, Owner owner)
@@ -177,6 +178,8 @@ class TonemappingShader: Shader
             fsUBO.flags[1] = 0;
             pass.bindDefault3DTexture(PipelineStage.Fragment, 1);
         }
+        
+        fsUBO.flags[2] = linearOutput;
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

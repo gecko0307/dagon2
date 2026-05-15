@@ -9,7 +9,7 @@ layout(set = 2, binding = 1) uniform sampler3D colorLookupTable;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
-    uvec4 flags;
+    uvec4 flags; // [0] - tonemapper function; [1] - color grading; [2] - gamma correction
     vec4 hdrClampingParams;
     vec4 agxOffset;
     vec4 agxSlope;
@@ -142,13 +142,19 @@ void main()
     else if (ubo.flags[0] == TONEMAPPER_AGX_CUSTOM)
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_CUSTOM);
     
-    // 2.2 gamma transfer function (next filters work in gamma space)
+    // 2.2 gamma transfer function (LUT color grading works in gamma space)
     outputColor = pow(outputColor, vec3(1.0 / 2.2));
     
     // Color grading
     if (ubo.flags[1] != 0)
     {
         outputColor = texture(colorLookupTable, outputColor).rgb;
+    }
+    
+    if (ubo.flags[2] != 0)
+    {
+        // Convert back to linear
+        outputColor = pow(outputColor, vec3(2.2));
     }
     
     outColor = vec4(outputColor, 1.0);
