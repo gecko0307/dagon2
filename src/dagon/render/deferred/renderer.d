@@ -125,7 +125,7 @@ class DeferredRenderer: Renderer
     override void onUpdate(Time t)
     {
         // Temporary: currently we only need gamma-correction in tonemapper for FXAA
-        tonemappingPass.tonemappingShader.enableGammaCorrection = fxaaPass.active;
+        //tonemappingPass.tonemappingShader.enableGammaCorrection = fxaaPass.active;
         state.occlusionEnabled = ssaoPass.active;
     }
     

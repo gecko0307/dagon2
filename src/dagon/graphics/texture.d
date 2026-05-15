@@ -151,7 +151,6 @@ class Texture: Owner
         
         SDL_UnmapGPUTransferBuffer(gpu.device, texTransferBuffer);
         
-        // TODO: compressed formats support
         if (buffer.format.isCubemap)
         {
             SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
@@ -261,10 +260,65 @@ class Texture: Owner
             
             SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
         }
+        else if (buffer.format.type == SDL_GPU_TEXTURETYPE_3D)
+        {
+            uint offset = 0;
+            uint levelWidth = buffer.size.width;
+            uint levelHeight = buffer.size.height;
+            uint levelDepth = buffer.size.depth;
+            
+            SDL_GPUCommandBuffer* texCopyCommandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
+            SDL_GPUCopyPass* texCopyPass = SDL_BeginGPUCopyPass(texCopyCommandBuffer);
+            
+            for (uint mipLevel = 0; mipLevel < buffer.mipLevels; mipLevel++)
+            {
+                uint levelSize;
+                if (buffer.format.blockSize > 0)
+                {
+                    levelSize =
+                         ((cast(uint)levelWidth + 3) / 4) *
+                         ((cast(uint)levelHeight + 3) / 4) *
+                         ((cast(uint)levelDepth + 3) / 4) *
+                         buffer.format.blockSize;
+                }
+                else
+                {
+                    levelSize = levelWidth * levelHeight * levelDepth * buffer.format.pixelSize;
+                }
+                
+                SDL_GPUTextureTransferInfo source = {
+                    transfer_buffer: texTransferBuffer,
+                    offset: offset,
+                };
+                SDL_GPUTextureRegion destination = {
+                    texture: texture,
+                    mip_level: mipLevel,
+                    layer: 0,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    w: levelWidth,
+                    h: levelHeight,
+                    d: levelDepth,
+                };
+                SDL_UploadToGPUTexture(texCopyPass, &source, &destination, false);
+                
+                offset += levelSize;
+                levelWidth = max2(1, levelWidth / 2);
+                levelHeight = max2(1, levelHeight / 2);
+                levelDepth = max2(1, levelDepth / 2);
+            }
+            
+            SDL_EndGPUCopyPass(texCopyPass);
+            
+            if (options.generateMipmaps && !buffer.format.isCompressed)
+                SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
+            
+            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
+        }
         else
         {
-            // TODO
-            logError("Uploading 3D textures is not supported yet, sorry");
+            logError("Uploading texture arrays is not supported yet, sorry");
             SDL_ReleaseGPUTransferBuffer(gpu.device, texTransferBuffer);
             valid = false;
             return valid;

@@ -35,6 +35,7 @@ public
     import dagon.graphics.entity;
     import dagon.graphics.envmap;
     import dagon.graphics.light;
+    import dagon.graphics.lut;
     import dagon.graphics.material;
     import dagon.graphics.mesh;
     import dagon.graphics.scene;

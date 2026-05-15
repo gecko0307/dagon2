@@ -5,6 +5,7 @@
 #define TONEMAPPER_AGX_CUSTOM 2
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
+layout(set = 2, binding = 1) uniform sampler3D colorLookupTable;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -141,10 +142,13 @@ void main()
     else if (ubo.flags[0] == TONEMAPPER_AGX_CUSTOM)
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_CUSTOM);
     
-    if (ubo.flags[1] > 0)
+    // 2.2 gamma transfer function (next filters work in gamma space)
+    outputColor = pow(outputColor, vec3(1.0 / 2.2));
+    
+    // Color grading
+    if (ubo.flags[1] != 0)
     {
-        // 2.2 gamma transfer function (next filters work in gamma space)
-        outputColor = pow(outputColor, vec3(1.0 / 2.2));
+        outputColor = texture(colorLookupTable, outputColor).rgb;
     }
     
     outColor = vec4(outputColor, 1.0);

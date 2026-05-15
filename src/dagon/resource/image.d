@@ -51,6 +51,7 @@ import dlib.core.stream;
 import dagon.core.sdl3;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
+import dagon.graphics.lut;
 
 /// List of file extensions supported by SDL3_Image.
 immutable string[] supportedImageFormats = [
@@ -98,6 +99,9 @@ struct ImageConversionOptions
     
     /// Target compression format (optional, uncompressed by default).
     TextureCompressionFormat compressionFormat;
+    
+    /// Source LUT format.
+    LUTFormat lutFormat = LUTFormat.Undefined;
 
     /// Loader-specific hint value.
     int hint;

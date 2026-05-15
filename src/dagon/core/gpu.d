@@ -84,8 +84,11 @@ class GPU: Owner
     /// The texture format used by the swapchain.
     SDL_GPUTextureFormat swapchainTextureFormat;
     
-    /// Default texture for fallback sampling operations.
+    /// Default 2D texture for fallback sampling operations.
     SDL_GPUTexture* defaultTexture;
+    
+    /// Default 3D texture for fallback sampling operations.
+    SDL_GPUTexture* default3DTexture;
     
     /// Default sampler for fallback sampling operations.
     SDL_GPUSampler* defaultSampler;
@@ -146,8 +149,8 @@ class GPU: Owner
             
             SDL_GPUTextureCreateInfo textureCreateInfo = {
                 type: SDL_GPU_TEXTURETYPE_2D,
-                width: 32,
-                height: 32,
+                width: 2,
+                height: 2,
                 layer_count_or_depth: 1,
                 format: SDL_GPU_TEXTUREFORMAT_R8_UNORM,
                 usage: SDL_GPU_TEXTUREUSAGE_SAMPLER,
@@ -155,6 +158,18 @@ class GPU: Owner
                 sample_count: SDL_GPU_SAMPLECOUNT_1
             };
             defaultTexture = SDL_CreateGPUTexture(device, &textureCreateInfo);
+            
+            SDL_GPUTextureCreateInfo texture3DCreateInfo = {
+                type: SDL_GPU_TEXTURETYPE_3D,
+                width: 2,
+                height: 2,
+                layer_count_or_depth: 2,
+                format: SDL_GPU_TEXTUREFORMAT_R8_UNORM,
+                usage: SDL_GPU_TEXTUREUSAGE_SAMPLER,
+                num_levels: 1,
+                sample_count: SDL_GPU_SAMPLECOUNT_1
+            };
+            default3DTexture = SDL_CreateGPUTexture(device, &texture3DCreateInfo);
             
             SDL_GPUSamplerCreateInfo samplerCreateInfo = {
                 min_filter: SDL_GPU_FILTER_NEAREST,

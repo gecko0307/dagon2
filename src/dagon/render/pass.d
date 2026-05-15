@@ -142,6 +142,16 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    void bindDefault3DTexture(PipelineStage stage, uint binding)
+    {
+        auto samplerBinding = SDL_GPUTextureSamplerBinding(renderer.gpu.default3DTexture, renderer.gpu.defaultSampler);
+        
+        if (stage == PipelineStage.Vertex)
+            SDL_BindGPUVertexSamplers(renderPass, binding, &samplerBinding, 1);
+        else if (stage == PipelineStage.Fragment)
+            SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
+    }
+    
     /**
      * Binds a texture and sampler to the specified pipeline stage and binding slot.
      *

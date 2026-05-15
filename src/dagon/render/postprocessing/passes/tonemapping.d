@@ -38,6 +38,7 @@ import dagon.core.crashhandler;
 import dagon.core.logger;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
+import dagon.graphics.texture;
 import dagon.graphics.shapes;
 import dagon.resource.shader;
 import dagon.render.renderer;
@@ -116,7 +117,7 @@ class TonemappingShader: Shader
     
    public:
     AgXLook look = AgXLookPreset.Punchy;
-    bool enableGammaCorrection = true;
+    Texture colorLookupTable;
     
     this(GPU gpu, Owner owner)
     {
@@ -160,13 +161,22 @@ class TonemappingShader: Shader
             fsUBO.hdrClampingParams = Vector4f(0.0f, gpu.application.hdrHeadroom, 0.0f, 0.0f);
         }
         
-        fsUBO.flags[1] = enableGammaCorrection;
-        
         fsUBO.agxOffset = Vector4f(look.offset.x, look.offset.y, look.offset.z, 0.0f);
         fsUBO.agxSlope = Vector4f(look.slope.x, look.slope.y, look.slope.z, 0.0f);
         fsUBO.agxPowerSat = Vector4f(look.power.x, look.power.y, look.power.z, look.saturation);
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        
+        if (colorLookupTable)
+        {
+            fsUBO.flags[1] = 1;
+            pass.bindTexture(PipelineStage.Fragment, 1, colorLookupTable);
+        }
+        else
+        {
+            fsUBO.flags[1] = 0;
+            pass.bindDefault3DTexture(PipelineStage.Fragment, 1);
+        }
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

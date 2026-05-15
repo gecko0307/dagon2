@@ -47,6 +47,7 @@ import dagon.core.bc7;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
 import dagon.graphics.texture;
+import dagon.graphics.lut;
 import dagon.resource.asset;
 import dagon.resource.image;
 import dagon.resource.dds;
@@ -83,6 +84,7 @@ class TextureAsset: Asset
         super(gpu, owner);
         conversionOptions.width = 0;
         conversionOptions.height = 0;
+        conversionOptions.lutFormat = LUTFormat.Undefined;
         conversionOptions.hint = 0;
     }
     
@@ -164,6 +166,24 @@ class TextureAsset: Asset
                         " and format ", textureFormatStr(buffer.format.format),
                         " is not supported");
                 }
+            }
+            
+            /*
+            if (lutFormat == LUTFormat.Hald && buffer.format.target != GL_TEXTURE_3D)
+                texture.createFromBuffer3D(buffer, resolution3D);
+            else if (lutFormat == LUTFormat.GPUImage && buffer.format.target != GL_TEXTURE_3D)
+                convertGPUImageLUTto3DTexture(buffer, texture);
+            else
+                texture.createFromBuffer(buffer, genMipmaps);
+            */
+            
+            if (conversionOptions.lutFormat == LUTFormat.Hald)
+            {
+                // TODO
+            }
+            else if (conversionOptions.lutFormat == LUTFormat.GPUImage)
+            {
+                convertGPUImageLUTto3DTexture(&buffer);
             }
             
             if (cache)
