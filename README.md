@@ -6,6 +6,10 @@ This is work-in-progress SDL3/Vulkan port of [Dagon Engine 1.0](https://github.c
 
 > Note: this project is not connected to Dagon engine by Senscape.
 
+[![DUB Package](https://img.shields.io/dub/v/dagon2.svg)](https://code.dlang.org/packages/dagon2)
+[![DUB Downloads](https://img.shields.io/dub/dt/dagon2.svg)](https://code.dlang.org/packages/dagon2)
+[![License](http://img.shields.io/badge/license-boost-blue.svg)](http://www.boost.org/LICENSE_1_0.txt)
+
 Screenshots
 -----------
 [![Car 1](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)
