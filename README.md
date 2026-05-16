@@ -38,6 +38,7 @@ Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are 
 - Stochastic screen-space reflections (SSSR) with importance sampling and temporal denoising
 - Temporal SSAO
 - Deferred decals with normal mapping and PBR material properties
+- Post-processing (lens distortion, motion blur, color correction, contrast adaptive sharpening)
 - Input from keyboard, mouse and up to 4 gamepads
 - Unicode text input
 - Ownership memory model
