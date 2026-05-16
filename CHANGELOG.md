@@ -6,6 +6,7 @@ Dagon 2.0.0 - TBD
   - BC4 texture compressor (original implementation)
   - Window minimize/restore events
 - **Assets**
+  - Assimp integration is now a core feature
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
   - Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`
   - KTX support is now a core feature
@@ -15,7 +16,8 @@ Dagon 2.0.0 - TBD
   - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
   - Renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
   - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
-  - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
+  - Stochastic screen-space reflections (SSSR) support
+  - 2x supersampling support
   - Experimental HDR (scRGB) output support
   - The renderer now uses separate irradiance cubemap
   - BRDF LUT is now generated at runtime instead of loading from data/__internal
@@ -25,6 +27,10 @@ Dagon 2.0.0 - TBD
 - **Graphics components**
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
   - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
+- **Post-processing**
+  - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
+  - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
+  - FXAA 3.11
 - **Physics**
   - Jolt Physics is now built-in as `dagon.jolt` package
 - **Scripting**
