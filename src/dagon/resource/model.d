@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.model;
 
+import std.math;
 import std.string;
 import std.path;
 import std.conv;
@@ -37,6 +38,7 @@ import dlib.container.array;
 import dlib.container.dict;
 import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.geometry.triangle;
 import dlib.image.color;
 import dlib.filesystem.filesystem;
@@ -488,14 +490,8 @@ class ModelAsset: Asset, TriangleSet
         Entity e = New!Entity(this);
         e.name = node.mName.data[0..node.mName.length].idup;
         
-        aiVector3D scaling;
-        aiQuaternion rotation;
-        aiVector3D position;
-        aiDecomposeMatrix(&node.mTransformation, &scaling, &rotation, &position);
-        
-        e.position = fromAssimpVector(position);
-        e.rotation = fromAssimpQuaternion(rotation);
-        e.scaling = fromAssimpVector(scaling);
+        e.transformation = fromAssimpMatrix(node.mTransformation);
+        e.transformMode = TransformMode.Matrix;
         
         if (parent)
             parent.addChild(e);
@@ -545,6 +541,7 @@ class ModelAsset: Asset, TriangleSet
             AssimpMesh mesh = cast(AssimpMesh)entity.drawable;
             if (mesh)
             {
+                // Single mesh
                 foreach(i, ref f; mesh.indices)
                 {
                     Triangle tri = mesh.getTriangle(i);
@@ -562,6 +559,36 @@ class ModelAsset: Asset, TriangleSet
                     result = dg(tri);
                     if (result)
                         break;
+                }
+            }
+            else
+            {
+                // Multiple meshes
+                DrawableGroup meshGroup = cast(DrawableGroup)entity.drawable;
+                if (meshGroup)
+                {
+                    foreach(drawable; meshGroup.drawables)
+                    {
+                        AssimpMesh m = cast(AssimpMesh)drawable;
+                        foreach(i, ref f; m.indices)
+                        {
+                            Triangle tri = m.getTriangle(i);
+                            
+                            Matrix4x4f mat = entity.modelMatrix;
+                            
+                            tri.v[0] = tri.v[0] * mat;
+                            tri.v[1] = tri.v[1] * mat;
+                            tri.v[2] = tri.v[2] * mat;
+                            tri.n[0] = mat.rotate(tri.n[0]);
+                            tri.n[1] = mat.rotate(tri.n[1]);
+                            tri.n[2] = mat.rotate(tri.n[2]);
+                            tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                            
+                            result = dg(tri);
+                            if (result)
+                                break;
+                        }
+                    }
                 }
             }
         }

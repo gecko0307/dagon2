@@ -296,7 +296,7 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.target_info.has_depth_stencil_target = true;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_BACK;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE; //SDL_GPU_CULLMODE_BACK;
         pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
         pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
         pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;

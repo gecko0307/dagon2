@@ -63,6 +63,7 @@ class Scene: Owner, GsObject
 {
     GPU gpu;
     Array!Entity entities;
+    Entity rootEntity;
     Camera activeCamera;
     Light sun;
     Color4f ambientColor = Color4f(0.5f, 0.5f, 0.5f, 1.0f);
@@ -90,9 +91,11 @@ class Scene: Owner, GsObject
     {
         super(owner);
         this.gpu = gpu;
-        sun = New!Light(gpu, LightType.Sun, this);
+        
+        rootEntity = addEntity();
+        
+        sun = addLight(LightType.Sun);
         sun.shadowEnabled = true;
-        entities.append(sun);
     }
     
     ~this()
@@ -107,6 +110,8 @@ class Scene: Owner, GsObject
         entities.append(e);
         if (parent)
             parent.addChild(e);
+        else if (rootEntity)
+            rootEntity.addChild(e);
         return e;
     }
     
@@ -114,6 +119,7 @@ class Scene: Owner, GsObject
     Entity useEntity(Entity e, bool useChildren = false)
     {
         entities.append(e);
+        rootEntity.addChild(e);
         if (useChildren)
         {
             foreach(child; e.children)
@@ -152,6 +158,8 @@ class Scene: Owner, GsObject
         entities.append(c);
         if (parent)
             parent.addChild(c);
+        else if (rootEntity)
+            rootEntity.addChild(c);
         return c;
     }
     
@@ -162,6 +170,8 @@ class Scene: Owner, GsObject
         entities.append(light);
         if (parent)
             parent.addChild(light);
+        else if (rootEntity)
+            rootEntity.addChild(light);
         return light;
     }
     

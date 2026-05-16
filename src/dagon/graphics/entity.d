@@ -74,6 +74,18 @@ enum EntityType
 }
 
 /**
+ * Specifies the transformation mode for an entity.
+ */
+enum TransformMode: int
+{
+    /// Use translation, rotation, scaling (separate).
+    TRS = 0,
+
+    /// Use a local transformation matrix directly.
+    Matrix = 1
+}
+
+/**
  * Scene graph node with local and world transformations.
  *
  * Entities can have parent-child relationships and optionally a controller.
@@ -148,6 +160,9 @@ class Entity: Owner, Updateable, GsObject
     /// Mark entity as decal object.
     EntityType type = EntityType.Default;
 
+    /// Transformation mode (TRS or Matrix).
+    TransformMode transformMode = TransformMode.TRS;
+
     /// Indicates local transform matrix is fresh and does not need recompute.
     bool transformationValid = false;
 
@@ -204,7 +219,8 @@ class Entity: Owner, Updateable, GsObject
         {
             if (!transformationValid)
             {
-                transformation = trsMatrix(position, rotation, scaling);
+                if (transformMode == TransformMode.TRS)
+                    transformation = trsMatrix(position, rotation, scaling);
                 invTransformation = transformation.inverse;
                 transformationValid = true;
                 modelMatricesValid = false;
