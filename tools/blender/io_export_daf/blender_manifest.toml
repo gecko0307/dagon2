@@ -1,0 +1,10 @@
+schema_version = "1.0.0"
+id = "dagon_daf_exporter"
+version = "1.0.0"
+name = "Dagon 2.0 Asset Format (DAF) Exporter"
+tagline = "Exports the scene to Dagon 2.0 Asset Format (DAF)"
+maintainer = "Timur Gafarov <gecko0307@gmail.com>"
+type = "add-on"
+blender_version_min = "5.0.0"
+tags = ["Import-Export", "Pipeline"]
+license = ["SPDX:BSL-1.0"]

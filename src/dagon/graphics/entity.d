@@ -289,14 +289,14 @@ class Entity: Owner, Updateable, GsObject
         return modelMatrix.forward;
     }
     
-    /// Local right vecto.
-    Vector3f right()
+    /// Local left vector.
+    Vector3f left()
     {
         return transformation.right;
     }
     
-    /// World-space right vector.
-    Vector3f rightWorld()
+    /// World-space left vector.
+    Vector3f leftWorld()
     {
         return modelMatrix.right;
     }
@@ -331,7 +331,7 @@ class Entity: Owner, Updateable, GsObject
         position += transformation.forward * speed;
     }
     
-    /// Strafes (moves to the right) by the given speed.
+    /// Strafes (moves to the left) by the given speed.
     void strafe(float speed)
     {
         position += transformation.right * speed;
@@ -411,8 +411,8 @@ class Entity: Owner, Updateable, GsObject
                 return GsDynamic(GsVector(scaling));
             case "direction":
                 return GsDynamic(GsVector(direction));
-            case "right":
-                return GsDynamic(GsVector(right));
+            case "left":
+                return GsDynamic(GsVector(left));
             case "up":
                 return GsDynamic(GsVector(up));
             default:

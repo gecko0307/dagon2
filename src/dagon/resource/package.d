@@ -31,6 +31,7 @@ public
     import dagon.resource.assetmanager;
     import dagon.resource.asset;
     import dagon.resource.cache;
+    import dagon.resource.daf;
     import dagon.resource.dds;
     import dagon.resource.image;
     import dagon.resource.model;
