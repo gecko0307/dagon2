@@ -4,17 +4,25 @@ An Entity (known as Object in some other engines) is a fundamental concept in Da
 
 ## Transformation Layout
 
-### Coordinate Systems
+### Transformation Spaces and Coordinate Systems
 
-Coordinate systems used for 3D transformations often cause confusion and are the root cause of many bugs and incompatibilities between different graphics pipelines. Dagon uses right-handed coordinate system in model/world space, where the positive X-axis points left, the positive Y-axis points up, and the positive Z-axis points forward. In eye space, positive Z-axis points out of the screen, towards the viewer (the camera looks down the negative Z-axis). The projection matrix flips the Z-axis, making depth values positive in normalized device coordinates (NDC).
+The internals of the engine work in three distinct transformation spaces: model space, world space, eye space and screen space.
 
-### Transformation Spaces
+Model space is the space where vertex coordinates are defined. It is relative to Entity transformation, thus enabling different Entities to use the same mesh data. In Dagon, transformation is always relative; if an Entity has a parent, it inherits the parent's transformation as a reference frame. Absolute reference frame, relative to which the root entities' transformation is defined, is called a world space.
 
-Model space is the space where vertex coordinates are defined. It is relative to Entity transformation, thus enabling different Entities to use the same mesh data.
+The rendering pipeline works in eye space, which means that the camera is fixed at (0, 0, 0). Moving and rotating the camera is accomplished by moving and rotating the entire scene in the opposite direction, which allows to avoid complex world-space perspective projection; the transition to screen space on GPU becomes simple and effective. Also doing all the lighting calculations in eye space guarantees highest floating-point precision near the camera.
 
-Entity transformation maps model space points to Entity's local space, often called a reference frame, or simply a frame, in theoretical mechanics. In Dagon, transformation is always relative; if an Entity has a parent, it inherits the parent's transformation as a reference frame. Absolute reference frame, relative to which the root entities' transformation is defined, is called a world space.
+In eye-space, Dagon sticks to the OpenGL's standard right-handed coordinate system, where the +X points right, +Y points up, and +Z points towards the viewer (out of the screen). This means that the camera looks down the negative Z-axis. The projection matrix flips Z-coordinates, making depth values positive in NDC.
 
-Transformation is stored as a combination of position, rotation, and scaling.
+Coordinate systems used for 3D transformations often cause confusion and are the root cause of many bugs and incompatibilities between different graphics pipelines. In computer graphics, the coordinate system choise is arbitrary. It doesn't matter what CS do you use as long as the data and math are consistent. Problems arise with assets imported from external tools with different CS. For example, here is the mapping between Blender's CS and Dagon's:
+
+- Blender's +X = Dagon's +X
+- Blender's +Y = Dagon's -Z
+- Blender's +Z = Dagon's +Y
+
+### Algebra of Transformations
+
+Transformation is stored as a composition of translation (position), rotation, and scaling.
 
 Position is an XYZ vector conventionally measured in meters.
 

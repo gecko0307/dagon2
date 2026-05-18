@@ -155,8 +155,8 @@ def _build_mesh_from_object(
 
         triangles.append((
             tri_indices[0],
-            tri_indices[2],
-            tri_indices[1]
+            tri_indices[1],
+            tri_indices[2]
         ))
 
         material_index = mesh.polygons[
