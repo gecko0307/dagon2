@@ -28,6 +28,11 @@ class DAFChunkType(enum.IntEnum):
     PoseTables = 5
 
 
+class BlendMode(enum.IntEnum):
+    Opaque = 0
+    Transparent = 1
+
+
 class DPropType(enum.IntEnum):
     Undefined = 0
     Number = 1
@@ -81,6 +86,31 @@ class DAFEntity:
 
 
 @dataclass
+class DAFMaterial:
+    name: str
+    class_names: Sequence[str] = field(default_factory=list)
+    flags: int = 0
+    baseColor: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
+    roughness: float = 0.5
+    metallic: float = 0.0
+    emissionColor: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
+    emissionEnergy: float = 0.0
+    ior: float = 1.5
+    iorLevel: float = 0.5
+    subsurfaceScattering: float = 0.0
+    opacity: float = 1.0
+    alphaClipThreshold: float = 0.5
+    shadeless: int = 0
+    blendMode: int = 0
+    baseColorTexture: int = -1
+    normalTexture: int = -1
+    heightTexture: int = -1
+    roughnessMetallicTexture: int = -1
+    emissionTexture: int = -1
+    user_data: Sequence[DAFUserDataEntry] = field(default_factory=list)
+
+
+@dataclass
 class DAFMesh:
     name: str
     vertices: Sequence[Tuple[float, float, float]]
@@ -111,7 +141,8 @@ class DAFFaceGroup:
 class DAFStringTable:
     def __init__(self) -> None:
         self._index: dict[str, int] = {}
-        self._data = bytearray()
+        #self._data = bytearray()
+        self._data = bytearray(b"\0")
 
     def add(self, text: Optional[str]) -> Tuple[int, int]:
         if not text:
@@ -166,6 +197,9 @@ class DAFAsset:
     def add_mesh(self, mesh: DAFMesh) -> None:
         self.meshes.append(mesh)
 
+    def add_material(self, material: DAFMaterial) -> None:
+        self.materials.append(material)
+
     def _pack_daf_string(self, text: Optional[str], string_table: DAFStringTable) -> Tuple[int, int]:
         return string_table.add(text)
 
@@ -190,7 +224,7 @@ class DAFAsset:
         for text in strings:
             offset, size = self._pack_daf_string(text, string_table)
             data.extend(struct.pack("<II", offset, size))
-        # Return offset and number of entries, which maps to numClasses in DAFMesh/DAFEntity
+        # Return offset and number of entries
         return buffers.add(bytes(data)), len(strings)
 
     def _pack_entity(self, entity: DAFEntity, string_table: DAFStringTable, buffers: DAFBufferSection) -> bytes:
@@ -297,6 +331,39 @@ class DAFAsset:
             user_data_size,
         )
 
+    def _pack_material(self, material: DAFMaterial, string_table: DAFStringTable, buffers: DAFBufferSection) -> bytes:
+        name_offset, name_size = self._pack_daf_string(material.name, string_table)
+        class_offset, num_classes = self._pack_string_array_buffer(material.class_names, string_table, buffers)
+        user_data_offset, user_data_size = self._pack_daf_user_data(material.user_data, string_table, buffers)
+
+        return struct.pack(
+            "<IIIII4fff4fffffffIIiiiiiII",
+            name_offset,
+            name_size,
+            class_offset,
+            num_classes,
+            material.flags,
+            *material.baseColor,
+            material.roughness,
+            material.metallic,
+            *material.emissionColor,
+            material.emissionEnergy,
+            material.ior,
+            material.iorLevel,
+            material.subsurfaceScattering,
+            material.opacity,
+            material.alphaClipThreshold,
+            material.shadeless,
+            material.blendMode,
+            material.baseColorTexture,
+            material.normalTexture,
+            material.heightTexture,
+            material.roughnessMetallicTexture,
+            material.emissionTexture,
+            user_data_offset,
+            user_data_size,
+        )
+
     def _pack_chunk_table_entry(self, chunk_type: DAFChunkType, offset: int, count: int, stride: int) -> bytes:
         return struct.pack("<IIII", int(chunk_type), offset, count, stride)
 
@@ -309,14 +376,17 @@ class DAFAsset:
         if self.entities:
             entity_bytes = b"".join(self._pack_entity(entity, string_table, buffers) for entity in self.entities)
             entity_bytes = align_bytes(entity_bytes)
-            # Entity struct size is 80 bytes per spec
             chunk_entries.append((DAFChunkType.Entities, entity_bytes, 80))
 
         if self.meshes:
             mesh_bytes = b"".join(self._pack_mesh(mesh, string_table, buffers) for mesh in self.meshes)
             mesh_bytes = align_bytes(mesh_bytes)
-            # Mesh struct size is 68 bytes per spec (17 uint fields)
             chunk_entries.append((DAFChunkType.Meshes, mesh_bytes, 68))
+
+        if self.materials:
+            material_bytes = b"".join(self._pack_material(material, string_table, buffers) for material in self.materials)
+            material_bytes = align_bytes(material_bytes)
+            chunk_entries.append((DAFChunkType.Materials, material_bytes, 120))
 
         chunk_table_offset = align(40)
         chunk_table_bytes = bytearray()

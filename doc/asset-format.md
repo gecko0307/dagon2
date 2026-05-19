@@ -191,7 +191,40 @@ struct DAFFaceGroup
 
 ## Materials
 
-TODO
+```
+enum BlendMode: uint
+{
+    Opaque = 0,
+    Transparent = 1
+}
+
+struct DAFMaterial
+{
+    DAFString name;
+    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
+    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
+    uint flags; // bit flags
+    float[4] baseColor;
+    float roughness;
+    float metallic;
+    float[4] emissionColor;
+    float emissionEnergy;
+    float ior;
+    float iorLevel;
+    float subsurfaceScattering;
+    float opacity;
+    float alphaClipThreshold;
+    uint shadeless;
+    BlendMode blendMode;
+    int baseColorTexture;
+    int normalTexture;
+    int heightTexture;
+    int roughnessMetallicTexture;
+    int emissionTexture;
+    uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
+    uint userDataSize; // size of the user property buffer, or 0 if the mesh has no properties (in this case, userDataBuffer should also be 0)
+}
+```
 
 ## User Data
 

@@ -52,6 +52,9 @@ enum BlendMode
 
 class Material: Owner
 {
+    /// Material name.
+    string name;
+    
     /// Base color (albedo) constant.
     Color4f baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
     

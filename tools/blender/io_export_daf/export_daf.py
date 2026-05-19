@@ -9,20 +9,14 @@ from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator
 from mathutils import Quaternion
 
-from .daf import DAFAsset, DAFEntity, DAFMesh
+from .daf import (
+    DAFAsset,
+    DAFEntity,
+    DAFMesh,
+    DAFMaterial,
+    BlendMode,
+)
 
-# Blender:
-# X = right
-# Y = forward
-# Z = up
-#
-# Dagon:
-# X = right
-# Y = up
-# Z = forward
-#
-# Conversion:
-# (x, y, z) -> (x, z, -y)
 
 _BASIS_MATRIX = Matrix((
     (1.0,  0.0,  0.0),
@@ -74,7 +68,8 @@ def _get_object_classes(obj: bpy.types.Object) -> List[str]:
 
 def _build_mesh_from_object(
     obj: bpy.types.Object,
-    mesh: bpy.types.Mesh
+    mesh: bpy.types.Mesh,
+    material_map: dict[bpy.types.Material, int]
 ) -> DAFMesh:
 
     mesh.calc_loop_triangles()
@@ -159,9 +154,20 @@ def _build_mesh_from_object(
             tri_indices[2]
         ))
 
-        material_index = mesh.polygons[
+        local_material_index = mesh.polygons[
             loop_tri.polygon_index
         ].material_index
+
+        if local_material_index < len(obj.material_slots):
+            blender_material = obj.material_slots[
+                local_material_index
+            ].material
+            if blender_material is not None:
+                material_index = material_map[blender_material]
+            else:
+                material_index = -1
+        else:
+            material_index = -1
 
         face_materials.append(material_index)
 
@@ -197,6 +203,57 @@ def _build_entity_from_object(index_map: dict[bpy.types.Object, int], obj: bpy.t
         user_data=[],
     )
 
+def _find_principled_bsdf(material: bpy.types.Material):
+    if not material.use_nodes:
+        return None
+
+    for node in material.node_tree.nodes:
+        if node.type == 'BSDF_PRINCIPLED':
+            return node
+
+    return None
+
+def linear_to_gamma22(rgba_tuple):
+    r, g, b, a = rgba_tuple
+    r_gamma = max(0.0, r) ** (1.0 / 2.2)
+    g_gamma = max(0.0, g) ** (1.0 / 2.2)
+    b_gamma = max(0.0, b) ** (1.0 / 2.2)
+    return (r_gamma, g_gamma, b_gamma, a)
+
+def _build_material_from_blender_material(material: bpy.types.Material) -> DAFMaterial:
+    base_color = (1.0, 1.0, 1.0, 1.0)
+    roughness = 0.5
+    metallic = 0.0
+    emission_color = (0.0, 0.0, 0.0, 1.0)
+    emission_energy = 0.0
+    opacity = 1.0
+    alpha_clip = 0.5
+    blend_mode = BlendMode.Opaque
+    principled = _find_principled_bsdf(material)
+    if principled is not None:
+        base_color = linear_to_gamma22(tuple(principled.inputs["Base Color"].default_value))
+        roughness = principled.inputs["Roughness"].default_value
+        metallic = principled.inputs["Metallic"].default_value
+        emission_color = linear_to_gamma22(tuple(principled.inputs["Emission Color"].default_value))
+        emission_energy = principled.inputs["Emission Strength"].default_value
+        opacity = principled.inputs["Alpha"].default_value
+
+    if material.blend_method in {'BLEND', 'HASHED'}:
+        blend_mode = BlendMode.Transparent
+
+    #TODO: textures
+
+    return DAFMaterial(
+        name=material.name,
+        baseColor=base_color,
+        roughness=roughness,
+        metallic=metallic,
+        emissionColor=emission_color,
+        emissionEnergy=emission_energy,
+        opacity=opacity,
+        alphaClipThreshold=alpha_clip,
+        blendMode=int(blend_mode),
+    )
 
 class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
     bl_idname = "export_scene.dagon_daf"
@@ -222,10 +279,22 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
     def execute(self, context):
         objects = context.selected_objects if self.export_selected_only else context.scene.objects
         mesh_objects = [obj for obj in objects if obj.type == 'MESH']
+        material_map: dict[bpy.types.Material, int] = {}
 
         if not mesh_objects:
             self.report({'WARNING'}, "No mesh objects found to export.")
             return {'CANCELLED'}
+
+        used_materials = []
+        for obj in mesh_objects:
+            for slot in obj.material_slots:
+                material = slot.material
+                if material is None:
+                    continue
+                if material not in material_map:
+                    material_index = len(used_materials)
+                    material_map[material] = material_index
+                    used_materials.append(material)
 
         try:
             asset = DAFAsset()
@@ -236,12 +305,15 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
                 mesh = obj_eval.to_mesh()
                 if mesh is None:
                     continue
-                asset.add_mesh(_build_mesh_from_object(obj, mesh))
+                asset.add_mesh(_build_mesh_from_object(obj, mesh, material_map))
                 obj_eval.to_mesh_clear()
 
             index_map = {obj: i for i, obj in enumerate(mesh_objects)}
             for obj in mesh_objects:
                 asset.add_entity(_build_entity_from_object(index_map, obj))
+
+            for material in used_materials:
+                asset.add_material(_build_material_from_blender_material(material))
 
             asset.write(self.filepath)
             self.report({'INFO'}, f"Export complete: {self.filepath}")

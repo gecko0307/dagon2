@@ -32,6 +32,7 @@ import std.path;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
+import dlib.image.color;
 import dlib.image.io.utils;
 import dlib.math.vector;
 import dlib.math.quaternion;
@@ -122,6 +123,33 @@ struct DAFMesh
     uint userDataSize;
 }
 
+struct DAFMaterial
+{
+    DAFString name;
+    uint classList;
+    uint numClasses;
+    uint flags;
+    Color4f baseColor;
+    float roughness;
+    float metallic;
+    Color4f emissionColor;
+    float emissionEnergy;
+    float ior;
+    float iorLevel;
+    float subsurfaceScattering;
+    float opacity;
+    float alphaClipThreshold;
+    uint shadeless;
+    BlendMode blendMode;
+    int baseColorTexture;
+    int normalTexture;
+    int heightTexture;
+    int roughnessMetallicTexture;
+    int emissionTexture;
+    uint userDataBuffer;
+    uint userDataSize;
+}
+
 struct DAFFaceGroup
 {
     int material;
@@ -144,6 +172,9 @@ class DagonAsset: Asset
     
     ///
     Array!Mesh meshes;
+    
+    ///
+    Array!Material materials;
     
     ///
     this(GPU gpu, Owner owner)
@@ -169,6 +200,7 @@ class DagonAsset: Asset
         }
         
         meshes.free();
+        materials.free();
         
         if (data.length)
             Delete(data);
@@ -229,16 +261,67 @@ class DagonAsset: Asset
         
         DAFEntity[] entities;
         DAFMesh[] meshes;
+        DAFMaterial[] materials;
         
         foreach(chunk; chunks)
         {
-            version(DAFDebug)
-                logDebug(chunk);
+            version(DAFDebug) logDebug(chunk);
             auto chunkData = data[chunk.offset..chunk.offset+chunk.stride*chunk.count];
             if (chunk.type == DAFChunkType.Entities)
                 entities = cast(DAFEntity[])chunkData;
             else if (chunk.type == DAFChunkType.Meshes)
                 meshes = cast(DAFMesh[])chunkData;
+            else if (chunk.type == DAFChunkType.Materials)
+                materials = cast(DAFMaterial[])chunkData;
+        }
+        
+        // Create materials
+        foreach(mat; materials)
+        {
+            string name = strings[mat.name.offset..mat.name.offset+mat.name.size];
+            version(DAFDebug)
+            {
+                logDebug("Material: ", name);
+                logDebug("  baseColor: ", mat.baseColor);
+                logDebug("  roughness: ", mat.roughness);
+                logDebug("  metallic: ", mat.metallic);
+                logDebug("  emissionColor: ", mat.emissionColor);
+                logDebug("  emissionEnergy: ", mat.emissionEnergy);
+                logDebug("  ior: ", mat.ior);
+                logDebug("  iorLevel: ", mat.iorLevel);
+                logDebug("  subsurfaceScattering: ", mat.subsurfaceScattering);
+                logDebug("  opacity: ", mat.opacity);
+                logDebug("  alphaClipThreshold: ", mat.alphaClipThreshold);
+                logDebug("  shadeless: ", mat.shadeless);
+                logDebug("  blendMode: ", mat.blendMode);
+                logDebug("  baseColorTexture: ", mat.baseColorTexture);
+                logDebug("  normalTexture: ", mat.normalTexture);
+                logDebug("  heightTexture: ", mat.heightTexture);
+                logDebug("  roughnessMetallicTexture: ", mat.roughnessMetallicTexture);
+                logDebug("  emissionTexture: ", mat.emissionTexture);
+            }
+            
+            Material material = New!Material(this);
+            material.name = name;
+            material.baseColor = mat.baseColor;
+            material.roughness = mat.roughness;
+            material.metallic = mat.metallic;
+            material.emissionColor = mat.emissionColor;
+            material.emissionEnergy = mat.emissionEnergy;
+            material.ior = mat.ior;
+            material.iorLevel = mat.iorLevel;
+            material.subsurfaceScattering = mat.subsurfaceScattering;
+            material.opacity = mat.opacity;
+            material.alphaClipThreshold = mat.alphaClipThreshold;
+            material.shadeless = cast(bool)mat.shadeless;
+            material.blendMode = mat.blendMode;
+            // TODO: material.baseColorTexture
+            // TODO: material.normalTexture
+            // TODO: material.heightTexture
+            // TODO: material.roughnessMetallicTexture
+            // TODO: material.emissionTexture
+            
+            this.materials.append(material);
         }
         
         // Create meshes
@@ -275,7 +358,11 @@ class DagonAsset: Asset
                     logDebug("    Indices buffer: ", mesh.indices[fg.firstTriangle..fg.firstTriangle+fg.numTriangles]);
                 }
                 
-                mesh.facegroups[i] = FaceGroup(fg.firstTriangle, fg.numTriangles, null, true);
+                Material material = null;
+                if (fg.material >= 0)
+                    material = this.materials[fg.material];
+                
+                mesh.facegroups[i] = FaceGroup(fg.firstTriangle, fg.numTriangles, material, true);
             }
             
             mesh.dataReady = true;
