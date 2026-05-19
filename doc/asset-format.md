@@ -203,7 +203,7 @@ struct DAFMaterial
     DAFString name;
     uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
     uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
-    uint flags; // bit flags
+    uint flags; // bit flags (reserved)
     float[4] baseColor;
     float roughness;
     float metallic;
