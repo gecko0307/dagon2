@@ -123,6 +123,13 @@ struct DAFMesh
     uint userDataSize;
 }
 
+struct DAFFaceGroup
+{
+    int material;
+    uint firstTriangle;
+    uint numTriangles;
+}
+
 struct DAFMaterial
 {
     DAFString name;
@@ -150,11 +157,34 @@ struct DAFMaterial
     uint userDataSize;
 }
 
-struct DAFFaceGroup
+enum DAFTextureSemantic: uint
 {
-    int material;
-    uint firstTriangle;
-    uint numTriangles;
+    Unspecified = 0,
+    BaseColor = 1,
+    Normal = 2,
+    Height = 3,
+    RoughnessMetallic = 4,
+    Emission = 5
+}
+
+enum DAFTextureFilter: uint
+{
+    Nearest: 0,
+    Linear: 1
+}
+
+struct DAFTexture
+{
+    DAFString filename;
+    uint classList;
+    uint numClasses;
+    uint flags;
+    DAFTextureFilter minFilter;
+    DAFTextureFilter magFilter;
+    DAFTextureFilter mipmapMode;
+    DAFTextureSemantic semantic;
+    uint userDataBuffer;
+    uint userDataSize;
 }
 
 version = DAFDebug;

@@ -41,9 +41,10 @@ enum DAFChunkType
     Entities = 0,
     Meshes = 1,
     Materials = 2,
-    Skeletons = 3,
-    Poses = 4,
-    PoseTables = 5
+    Textures = 3,
+    Skeletons = 4,
+    Poses = 5,
+    PoseTables = 6
 }
 
 struct DAFChunk
@@ -191,6 +192,8 @@ struct DAFFaceGroup
 
 ## Materials
 
+Standard chunk storing a list of materials.
+
 ```
 enum BlendMode: uint
 {
@@ -216,15 +219,57 @@ struct DAFMaterial
     float alphaClipThreshold;
     uint shadeless;
     BlendMode blendMode;
-    int baseColorTexture;
-    int normalTexture;
-    int heightTexture;
-    int roughnessMetallicTexture;
-    int emissionTexture;
+    int baseColorTexture; // offset of the base color DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no base color texture
+    int normalTexture; // offset of the normal DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no normal texture
+    int heightTexture; // offset of the height DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no height texture
+    int roughnessMetallicTexture; // offset of the roughness-metallic DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no roughness-metallic texture
+    int emissionTexture; // offset of the emission DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no emission texture
     uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
     uint userDataSize; // size of the user property buffer, or 0 if the mesh has no properties (in this case, userDataBuffer should also be 0)
 }
 ```
+
+## Textures
+
+Standard chunk storing a list of textures.
+
+```
+enum DAFTextureSemantic: uint
+{
+    Unspecified = 0,
+    BaseColor = 1,
+    Normal = 2,
+    Height = 3,
+    RoughnessMetallic = 4,
+    Emission = 5
+}
+
+enum DAFTextureFilter: uint
+{
+    Nearest: 0,
+    Linear: 1
+}
+
+struct DAFTexture
+{
+    DAFString filename;
+    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
+    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
+    uint flags; // bit flags
+    DAFTextureFilter minFilter;
+    DAFTextureFilter magFilter;
+    DAFTextureFilter mipmapMode;
+    DAFTextureSemantic semantic;
+    uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
+    uint userDataSize; // size of the user property buffer, or 0 if the texture has no properties (in this case, userDataBuffer should also be 0)
+}
+```
+
+Bit Flags:
+
+- `DAF_TEXTURE_FLAG_GENERATE_MIPMAPS = 0x01`. If this bit is set, the engine should generate a mip chain for the texture
+- `DAF_TEXTURE_FLAG_UV_REPEAT = 0x02`. Determines how to sample the texture when UV coordinates exceed the standard 0..1 range. If this bit is set, the texture is tiled over the surface, otherwise the outermost pixels are stretched to infinity
+- `DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING = 0x04`. If this bit is set, anisotropic filtering is enabled for the texture
 
 ## User Data
 
