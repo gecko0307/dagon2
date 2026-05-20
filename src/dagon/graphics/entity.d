@@ -233,30 +233,30 @@ class Entity: Owner, Updateable, GsObject
     {
         prevModelMatrix = modelMatrix;
         
-        if (modelMatricesValid)
-            return;
-
-        if (controller)
+        if (!modelMatricesValid)
         {
-            controller.postUpdate(t);
-        }
-        else if (parent)
-        {
-            modelMatrix = parent.modelMatrix * transformation;
-            invModelMatrix = modelMatrix.inverse;
-        }
-        else
-        {
-            modelMatrix = transformation;
-            invModelMatrix = invTransformation;
+            if (controller)
+            {
+                controller.postUpdate(t);
+            }
+            else if (parent)
+            {
+                modelMatrix = parent.modelMatrix * transformation;
+                invModelMatrix = modelMatrix.inverse;
+            }
+            else
+            {
+                modelMatrix = transformation;
+                invModelMatrix = invTransformation;
+            }
+            
+            modelMatricesValid = true;
         }
         
         foreach(child; children)
         {
             child.postUpdate(t);
         }
-        
-        modelMatricesValid = true;
         
         // For dynamic entities transformation is recalculated every frame
         transformationValid = !dynamic;

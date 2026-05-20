@@ -119,7 +119,8 @@ class Scene: Owner, GsObject
     Entity useEntity(Entity e, bool useChildren = false)
     {
         entities.append(e);
-        rootEntity.addChild(e);
+        if (e.parent is null && rootEntity)
+            rootEntity.addChild(e);
         if (useChildren)
         {
             foreach(child; e.children)

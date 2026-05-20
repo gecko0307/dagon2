@@ -148,6 +148,8 @@ class Game: BaseGame
             renderer.ssaoPass.ssaoShader.temporalAccumulation = cast(bool)(rendererConfig.props["ssao.temporalAccumulation"].toUInt);
         if ("ssao.denoise" in rendererConfig.props)
             renderer.ssaoDenoisePass.active = cast(bool)(rendererConfig.props["ssao.denoise"].toUInt);
+        if ("ssao.halfResolution" in rendererConfig.props)
+            renderer.gbuffer.halfResolutionOcclusion = cast(bool)(rendererConfig.props["ssao.halfResolution"].toUInt);
         
         if ("decals.enabled" in rendererConfig.props)
             renderer.decalPass.active = cast(bool)(rendererConfig.props["decals.enabled"].toUInt);
@@ -165,6 +167,8 @@ class Game: BaseGame
             renderer.sslrPass.active = cast(bool)(rendererConfig.props["sslr.enabled"].toUInt);
             renderer.reflectionPass.active = renderer.sslrPass.active;
         }
+        if ("sslr.halfResolution" in rendererConfig.props)
+            renderer.gbuffer.halfResolutionReflection = cast(bool)(rendererConfig.props["sslr.halfResolution"].toUInt);
         // TODO: other SSLR options
         
         if ("motionBlur.enabled" in rendererConfig.props)

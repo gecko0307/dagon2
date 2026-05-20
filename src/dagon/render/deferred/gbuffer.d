@@ -48,6 +48,9 @@ class GBuffer: Owner
     uint width;
     uint height;
     
+    bool halfResolutionOcclusion = false;
+    bool halfResolutionReflection = false;
+    
     SDL_GPUTexture* depthBuffer;
     SDL_GPUTexture* colorBuffer;
     SDL_GPUTexture* normalBuffer;
@@ -274,6 +277,11 @@ class GBuffer: Owner
             textureCreateInfo.width = width;
             textureCreateInfo.height = height;
         }
+        if (halfResolutionOcclusion)
+        {
+            textureCreateInfo.width /= 2;
+            textureCreateInfo.height /= 2;
+        }
         size_t occlusionBufferSize = (textureCreateInfo.width / 2) * (textureCreateInfo.height / 2) * 2;
         occlusionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         occlusionBuffer2 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
@@ -284,13 +292,18 @@ class GBuffer: Owner
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         if (gpu.application.supersampling > 1)
         {
-            textureCreateInfo.width = width; //cast(uint)ceil(width / gpu.application.supersampling);
-            textureCreateInfo.height = height; // cast(uint)ceil(height / gpu.application.supersampling);
+            textureCreateInfo.width = width;
+            textureCreateInfo.height = height;
         }
         else
         {
             textureCreateInfo.width = width;
             textureCreateInfo.height = height;
+        }
+        if (halfResolutionReflection)
+        {
+            textureCreateInfo.width /= 2;
+            textureCreateInfo.height /= 2;
         }
         uint reflectionBufferSize = (textureCreateInfo.width / 2) * (textureCreateInfo.height / 2) * 8;
         reflectionBuffer1 = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
