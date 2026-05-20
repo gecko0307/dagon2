@@ -115,7 +115,7 @@ void main()
     
     vec3 emission = ubo.emission.rgb;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
-        emission = textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[FPARAM_SKYBOX_MIP_LEVEL]).rgb;
+        emission *= textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[FPARAM_SKYBOX_MIP_LEVEL]).rgb;
     else if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
     {
         emission *= toLinear(texture(emissionTexture, uv).rgb);

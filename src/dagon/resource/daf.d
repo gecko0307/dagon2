@@ -169,8 +169,8 @@ enum DAFTextureSemantic: uint
 
 enum DAFTextureFilter: uint
 {
-    Nearest: 0,
-    Linear: 1
+    Nearest = 0,
+    Linear = 1
 }
 
 struct DAFTexture
