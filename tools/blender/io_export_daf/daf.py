@@ -9,6 +9,9 @@ DAF_MAGIC = b"DAF\0"
 DAF_FORMAT_VERSION = 100
 DAF_MESH_FLAG_ANIMATED = 0x01
 
+DAF_TEXTURE_FLAG_GENERATE_MIPMAPS = 0x01
+DAF_TEXTURE_FLAG_UV_REPEAT = 0x02
+DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING = 0x04
 
 def align(value: int, alignment: int = ALIGNMENT) -> int:
     return (value + alignment - 1) // alignment * alignment
@@ -23,14 +26,29 @@ class DAFChunkType(enum.IntEnum):
     Entities = 0
     Meshes = 1
     Materials = 2
-    Skeletons = 3
-    Poses = 4
-    PoseTables = 5
+    Textures = 3
+    Skeletons = 4
+    Poses = 5
+    PoseTables = 6
 
 
 class BlendMode(enum.IntEnum):
     Opaque = 0
     Transparent = 1
+
+
+class DAFTextureSemantic(enum.IntEnum):
+    Unspecified = 0
+    BaseColor = 1
+    Normal = 2
+    Height = 3
+    RoughnessMetallic = 4
+    Emission = 5
+
+
+class DAFTextureFilter(enum.IntEnum):
+    Nearest = 0
+    Linear = 1
 
 
 class DPropType(enum.IntEnum):
@@ -111,6 +129,22 @@ class DAFMaterial:
 
 
 @dataclass
+class DAFTexture:
+    filename: str
+    class_names: Sequence[str] = field(default_factory=list)
+    flags: int = (
+        DAF_TEXTURE_FLAG_GENERATE_MIPMAPS |
+        DAF_TEXTURE_FLAG_UV_REPEAT |
+        DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING
+    )
+    minFilter: int = DAFTextureFilter.Linear
+    magFilter: int = DAFTextureFilter.Linear
+    mipmapMode: int = DAFTextureFilter.Linear
+    semantic: int = 0
+    user_data: Sequence[DAFUserDataEntry] = field(default_factory=list)
+
+
+@dataclass
 class DAFMesh:
     name: str
     vertices: Sequence[Tuple[float, float, float]]
@@ -141,7 +175,6 @@ class DAFFaceGroup:
 class DAFStringTable:
     def __init__(self) -> None:
         self._index: dict[str, int] = {}
-        #self._data = bytearray()
         self._data = bytearray(b"\0")
 
     def add(self, text: Optional[str]) -> Tuple[int, int]:
@@ -186,7 +219,8 @@ class DAFAsset:
     def __init__(self) -> None:
         self.entities: List[DAFEntity] = []
         self.meshes: List[DAFMesh] = []
-        self.materials: List[Any] = []
+        self.materials: List[DAFMaterial] = []
+        self.textures: List[DAFTexture] = []
         self.skeletons: List[Any] = []
         self.poses: List[Any] = []
         self.pose_tables: List[Any] = []
@@ -199,6 +233,9 @@ class DAFAsset:
 
     def add_material(self, material: DAFMaterial) -> None:
         self.materials.append(material)
+
+    def add_texture(self, texture: DAFTexture) -> None:
+        self.textures.append(texture)
 
     def _pack_daf_string(self, text: Optional[str], string_table: DAFStringTable) -> Tuple[int, int]:
         return string_table.add(text)
@@ -331,6 +368,26 @@ class DAFAsset:
             user_data_size,
         )
 
+    def _pack_texture(self, texture: DAFTexture, string_table: DAFStringTable, buffers: DAFBufferSection) -> bytes:
+        filename_offset, filename_size = self._pack_daf_string(texture.filename, string_table)
+        class_offset, num_classes = self._pack_string_array_buffer(texture.class_names, string_table, buffers)
+        user_data_offset, user_data_size = self._pack_daf_user_data(texture.user_data, string_table, buffers)
+        
+        return struct.pack(
+            "<IIIIIIIIIII",
+            filename_offset,
+            filename_size,
+            class_offset,
+            num_classes,
+            texture.flags,
+            texture.minFilter,
+            texture.magFilter,
+            texture.mipmapMode,
+            texture.semantic,
+            user_data_offset,
+            user_data_size,
+        )
+
     def _pack_material(self, material: DAFMaterial, string_table: DAFStringTable, buffers: DAFBufferSection) -> bytes:
         name_offset, name_size = self._pack_daf_string(material.name, string_table)
         class_offset, num_classes = self._pack_string_array_buffer(material.class_names, string_table, buffers)
@@ -382,6 +439,11 @@ class DAFAsset:
             mesh_bytes = b"".join(self._pack_mesh(mesh, string_table, buffers) for mesh in self.meshes)
             mesh_bytes = align_bytes(mesh_bytes)
             chunk_entries.append((DAFChunkType.Meshes, mesh_bytes, 68))
+
+        if self.textures:
+            texture_bytes = b"".join(self._pack_texture(texture, string_table, buffers) for texture in self.textures)
+            texture_bytes = align_bytes(texture_bytes)
+            chunk_entries.append((DAFChunkType.Textures, texture_bytes, 44))
 
         if self.materials:
             material_bytes = b"".join(self._pack_material(material, string_table, buffers) for material in self.materials)

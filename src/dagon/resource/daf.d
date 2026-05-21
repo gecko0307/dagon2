@@ -50,6 +50,12 @@ import dagon.graphics.material;
 import dagon.resource.asset;
 import dagon.resource.texture;
 
+enum DAF_MESH_FLAG_ANIMATED = 0x01;
+
+enum DAF_TEXTURE_FLAG_GENERATE_MIPMAPS = 0x01;
+enum DAF_TEXTURE_FLAG_UV_REPEAT = 0x02;
+enum DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING = 0x04;
+
 struct DAFHeader
 {
     uint formatVersion;
@@ -68,9 +74,10 @@ enum DAFChunkType: uint
     Entities = 0,
     Meshes = 1,
     Materials = 2,
-    Skeletons = 3,
-    Poses = 4,
-    PoseTables = 5
+    Textures = 3,
+    Skeletons = 4,
+    Poses = 5,
+    PoseTables = 6
 }
 
 struct DAFChunk
@@ -292,6 +299,7 @@ class DagonAsset: Asset
         DAFEntity[] entities;
         DAFMesh[] meshes;
         DAFMaterial[] materials;
+        DAFTexture[] textures;
         
         foreach(chunk; chunks)
         {
@@ -303,6 +311,19 @@ class DagonAsset: Asset
                 meshes = cast(DAFMesh[])chunkData;
             else if (chunk.type == DAFChunkType.Materials)
                 materials = cast(DAFMaterial[])chunkData;
+            else if (chunk.type == DAFChunkType.Textures)
+                textures = cast(DAFTexture[])chunkData;
+        }
+        
+        // Create textures
+        foreach(tex; textures)
+        {
+            string texFilename = strings[tex.filename.offset..tex.filename.offset+tex.filename.size];
+            version(DAFDebug)
+            {
+                logDebug("Texture: ", texFilename);
+                logDebug("  semantic: ", tex.semantic);
+            }
         }
         
         // Create materials

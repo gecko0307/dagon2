@@ -14,6 +14,8 @@ from .daf import (
     DAFEntity,
     DAFMesh,
     DAFMaterial,
+    DAFTexture,
+    DAFTextureSemantic,
     BlendMode,
 )
 
@@ -220,8 +222,53 @@ def linear_to_gamma22(rgba_tuple):
     b_gamma = max(0.0, b) ** (1.0 / 2.2)
     return (r_gamma, g_gamma, b_gamma, a)
 
-def _build_material_from_blender_material(material: bpy.types.Material) -> DAFMaterial:
+def _find_image_texture_node(socket):
+    if socket is None or not socket.is_linked:
+        return None
+
+    for link in socket.links:
+        node = link.from_node
+
+        if node.type == 'TEX_IMAGE':
+            return node
+
+        # Normal Map node passthrough
+        if node.type == 'NORMAL_MAP':
+            return _find_image_texture_node(node.inputs.get("Color"))
+
+        # Separate RGB / reroutes / etc
+        for input_socket in node.inputs:
+            tex = _find_image_texture_node(input_socket)
+            if tex:
+                return tex
+
+    return None
+
+def _get_texture_index(texture_map, asset, image, semantic):
+    if image is None:
+        return -1
+
+    filepath = bpy.path.abspath(image.filepath)
+    filename = Path(filepath).name
+
+    key = (filename, semantic)
+
+    if key in texture_map:
+        return texture_map[key]
+
+    texture = DAFTexture(
+        filename=filename,
+        semantic=semantic,
+    )
+
+    index = len(asset.textures)
+    asset.add_texture(texture)
+    texture_map[key] = index
+    return index
+
+def _build_material_from_blender_material(material: bpy.types.Material, asset, texture_map) -> DAFMaterial:
     base_color = (1.0, 1.0, 1.0, 1.0)
+    base_color_texture = -1
     roughness = 0.5
     metallic = 0.0
     emission_color = (0.0, 0.0, 0.0, 1.0)
@@ -231,7 +278,13 @@ def _build_material_from_blender_material(material: bpy.types.Material) -> DAFMa
     blend_mode = BlendMode.Opaque
     principled = _find_principled_bsdf(material)
     if principled is not None:
-        base_color = linear_to_gamma22(tuple(principled.inputs["Base Color"].default_value))
+        base_color_input = principled.inputs["Base Color"]
+        tex_node = _find_image_texture_node(base_color_input)
+        if tex_node and tex_node.image:
+            base_color_texture = _get_texture_index(texture_map, asset, tex_node.image, DAFTextureSemantic.BaseColor)
+        else:
+            base_color = linear_to_gamma22(tuple(base_color_input.default_value))
+        
         roughness = principled.inputs["Roughness"].default_value
         metallic = principled.inputs["Metallic"].default_value
         emission_color = linear_to_gamma22(tuple(principled.inputs["Emission Color"].default_value))
@@ -253,6 +306,8 @@ def _build_material_from_blender_material(material: bpy.types.Material) -> DAFMa
         opacity=opacity,
         alphaClipThreshold=alpha_clip,
         blendMode=int(blend_mode),
+        baseColorTexture=base_color_texture
+        #TODO: other textures
     )
 
 class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
@@ -280,6 +335,7 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
         objects = context.selected_objects if self.export_selected_only else context.scene.objects
         mesh_objects = [obj for obj in objects if obj.type == 'MESH']
         material_map: dict[bpy.types.Material, int] = {}
+        texture_map = {}
 
         if not mesh_objects:
             self.report({'WARNING'}, "No mesh objects found to export.")
@@ -313,7 +369,7 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
                 asset.add_entity(_build_entity_from_object(index_map, obj))
 
             for material in used_materials:
-                asset.add_material(_build_material_from_blender_material(material))
+                asset.add_material(_build_material_from_blender_material(material, asset, texture_map))
 
             asset.write(self.filepath)
             self.report({'INFO'}, f"Export complete: {self.filepath}")
