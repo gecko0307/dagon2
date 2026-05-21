@@ -82,7 +82,7 @@ void main()
     
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_NORMAL_TEXTURE) != 0)
     {
-        mat3 tangentToEye = cotangentFrame(N, eyePosition, texCoords);
+        mat3 tangentToEye = cotangentFrame(N, eyePosition, uv);
         vec3 tanE = normalize(E * tangentToEye);
         tanE.y = -tanE.y;
         
