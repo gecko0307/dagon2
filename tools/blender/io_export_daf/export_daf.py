@@ -433,6 +433,7 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
     metallic = 0.0
     roughness_metallic_texture = -1
     emission_color = (0.0, 0.0, 0.0, 1.0)
+    emission_texture = -1
     emission_energy = 0.0
     opacity = 1.0
     alpha_clip = 0.5
@@ -465,8 +466,13 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
             roughness_metallic_image = _build_packed_roughness_metallic_texture(material, roughness_image, roughness, metallic_image, metallic, export_dir)
             roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic, export_dir)
         
-        emission_color = linear_to_gamma22(tuple(principled.inputs["Emission Color"].default_value))
-        #TODO: emission_texture
+        emission_input = principled.inputs["Emission Color"]
+        emission_image = _get_image_from_socket(emission_input)
+        if emission_image:
+            emission_texture = _get_texture_index(texture_map, asset, emission_image, DAFTextureSemantic.Emission, export_dir)
+            emission_color = (1.0, 1.0, 1.0, 1.0)
+        else:
+            emission_color = linear_to_gamma22(tuple(emission_input.default_value))
         
         emission_energy = principled.inputs["Emission Strength"].default_value
         opacity = principled.inputs["Alpha"].default_value
@@ -487,8 +493,8 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         baseColorTexture=base_color_texture,
         normalTexture=normal_texture,
         heightTexture=height_texture,
-        roughnessMetallicTexture=roughness_metallic_texture
-        #TODO: emission texture
+        roughnessMetallicTexture=roughness_metallic_texture,
+        emissionTexture=emission_texture
     )
 
 class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
