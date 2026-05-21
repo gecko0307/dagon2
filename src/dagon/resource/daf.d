@@ -195,7 +195,7 @@ struct DAFTexture
     uint userDataSize;
 }
 
-version = DAFDebug;
+//version = DAFDebug;
 
 class DagonAsset: Asset
 {
