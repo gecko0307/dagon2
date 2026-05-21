@@ -38,6 +38,7 @@ import dlib.math.vector;
 import dlib.math.quaternion;
 import dlib.container.array;
 import dlib.filesystem.filesystem;
+import dlib.text.str;
 
 import dagon.core.logger;
 import dagon.core.time;
@@ -214,6 +215,9 @@ class DagonAsset: Asset
     Array!Material materials;
     
     ///
+    Array!TextureAsset textureAssets;
+    
+    ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -238,6 +242,7 @@ class DagonAsset: Asset
         
         meshes.free();
         materials.free();
+        textureAssets.free();
         
         if (data.length)
             Delete(data);
@@ -323,7 +328,18 @@ class DagonAsset: Asset
             {
                 logDebug("Texture: ", texFilename);
                 logDebug("  semantic: ", tex.semantic);
+                logDebug("  generateMipmaps: ", cast(bool)(tex.flags & DAF_TEXTURE_FLAG_GENERATE_MIPMAPS));
+                logDebug("  repeatUV: ", cast(bool)(tex.flags & DAF_TEXTURE_FLAG_UV_REPEAT));
+                logDebug("  anisotropicFiltering: ", cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING));
             }
+            
+            auto aTexture = New!TextureAsset(gpu, this);
+            aTexture.creationOptions.generateMipmaps = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_GENERATE_MIPMAPS);
+            aTexture.creationOptions.repeatUV = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_UV_REPEAT);
+            aTexture.creationOptions.anisotropicFiltering = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING);
+            // TODO: compression parameters based on tex.semantic
+            loadTextureAsset(aTexture, fs, rootDir, texFilename);
+            textureAssets.append(aTexture);
         }
         
         // Create materials
@@ -366,11 +382,17 @@ class DagonAsset: Asset
             material.alphaClipThreshold = mat.alphaClipThreshold;
             material.shadeless = cast(bool)mat.shadeless;
             material.blendMode = mat.blendMode;
-            // TODO: material.baseColorTexture
-            // TODO: material.normalTexture
-            // TODO: material.heightTexture
-            // TODO: material.roughnessMetallicTexture
-            // TODO: material.emissionTexture
+            
+            if (mat.baseColorTexture >= 0)
+                material.baseColorTexture = textureAssets[mat.baseColorTexture].texture;
+            if (mat.normalTexture >= 0)
+                material.normalTexture = textureAssets[mat.normalTexture].texture;
+            if (mat.heightTexture >= 0)
+                material.heightTexture = textureAssets[mat.heightTexture].texture;
+            if (mat.roughnessMetallicTexture >= 0)
+                material.roughnessMetallicTexture = textureAssets[mat.roughnessMetallicTexture].texture;
+            if (mat.emissionTexture >= 0)
+                material.emissionTexture = textureAssets[mat.emissionTexture].texture;
             
             this.materials.append(material);
         }
@@ -461,5 +483,28 @@ class DagonAsset: Asset
         }
         
         return true;
+    }
+    
+    protected bool loadTextureAsset(TextureAsset asset, ReadOnlyFileSystem fs, string rootDir, string relPath)
+    {
+        String imgPath1 = String(rootDir);
+        imgPath1 ~= "/";
+        imgPath1 ~= relPath;
+        string assetPath1 = imgPath1.toString;
+        
+        bool res = false;
+        FileStat fstat;
+        if (fs.stat(assetPath1, fstat))
+        {
+            InputStream istrm = fs.openForInput(assetPath1);
+            res = asset.load(assetPath1, istrm, fs);
+            if (!res)
+                logError("Failed to load \"", assetPath1, "\"");
+            Delete(istrm);
+        }
+        
+        imgPath1.free();
+        
+        return res;
     }
 }

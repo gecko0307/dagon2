@@ -107,11 +107,8 @@ def _build_mesh_from_object(
         )
 
     for loop_tri in mesh.loop_triangles:
-
         tri_indices = []
-
         for loop_index in loop_tri.loops:
-
             loop = mesh.loops[loop_index]
             vertex = mesh.vertices[loop.vertex_index]
 
@@ -132,7 +129,7 @@ def _build_mesh_from_object(
             # UV
             if uv_layer is not None:
                 uv = uv_layer[loop_index].uv
-                texcoord = (uv.x, uv.y)
+                texcoord = (uv.x, 1.0 - uv.y)
             else:
                 texcoord = (0.0, 0.0)
 
@@ -142,9 +139,7 @@ def _build_mesh_from_object(
                 vertex_index = vertex_map[key]
             else:
                 vertex_index = len(vertices)
-
                 vertex_map[key] = vertex_index
-
                 vertices.append(pos)
                 normals.append(normal)
                 texcoords.append(texcoord)
@@ -157,14 +152,10 @@ def _build_mesh_from_object(
             tri_indices[2]
         ))
 
-        local_material_index = mesh.polygons[
-            loop_tri.polygon_index
-        ].material_index
+        local_material_index = mesh.polygons[loop_tri.polygon_index].material_index
 
         if local_material_index < len(obj.material_slots):
-            blender_material = obj.material_slots[
-                local_material_index
-            ].material
+            blender_material = obj.material_slots[local_material_index].material
             if blender_material is not None:
                 material_index = material_map[blender_material]
             else:
@@ -362,6 +353,8 @@ def _build_packed_roughness_metallic_texture(
 def _build_material_from_blender_material(material: bpy.types.Material, asset, texture_map, export_dir) -> DAFMaterial:
     base_color = (1.0, 1.0, 1.0, 1.0)
     base_color_texture = -1
+    normal_texture = -1
+    height_texture = -1
     roughness = 0.5
     metallic = 0.0
     roughness_metallic_texture = -1
@@ -379,6 +372,9 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
             base_color_texture = _get_texture_index(texture_map, asset, base_color_image, DAFTextureSemantic.BaseColor)
         else:
             base_color = linear_to_gamma22(tuple(base_color_input.default_value))
+        
+        normal_input = principled.inputs["Normal"]
+        #TODO
         
         roughness_input = principled.inputs["Roughness"]
         roughness_image = _get_image_from_socket(roughness_input)
@@ -414,8 +410,10 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         alphaClipThreshold=alpha_clip,
         blendMode=int(blend_mode),
         baseColorTexture=base_color_texture,
+        normalTexture=normal_texture
+        heightTexture=height_texture
         roughnessMetallicTexture=roughness_metallic_texture
-        #TODO: other textures
+        #TODO: emission texture
     )
 
 class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
