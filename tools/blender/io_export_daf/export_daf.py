@@ -1,4 +1,5 @@
 import sys
+import hashlib
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 from mathutils import Matrix, Quaternion
@@ -244,6 +245,14 @@ def _find_image_texture_node(socket):
 
     return None
 
+def _get_image_from_socket(socket):
+    tex_node = _find_image_texture_node(socket)
+
+    if tex_node is None:
+        return None
+
+    return tex_node.image
+
 def _get_texture_index(texture_map, asset, image, semantic):
     if image is None:
         return -1
@@ -266,35 +275,133 @@ def _get_texture_index(texture_map, asset, image, semantic):
     texture_map[key] = index
     return index
 
-def _build_material_from_blender_material(material: bpy.types.Material, asset, texture_map) -> DAFMaterial:
+def _make_packed_texture_filename(material_name, roughness_image, metallic_image):
+    roughness_name = (roughness_image.name if roughness_image else "constR")
+    metallic_name = (metallic_image.name if metallic_image else "constM")
+    source = f"{material_name}_{roughness_name}_{metallic_name}"
+    digest = hashlib.md5(
+        source.encode("utf-8")
+    ).hexdigest()[:8]
+    safe_name = material_name.replace(" ", "_")
+    return f"{safe_name}_rm_{digest}.png"
+
+def _build_packed_roughness_metallic_texture(
+    material,
+    roughness_image,
+    roughness_constant,
+    metallic_image,
+    metallic_constant,
+    export_dir
+):
+    # Determine final texture size
+    if roughness_image is not None:
+        width = roughness_image.size[0]
+        height = roughness_image.size[1]
+    elif metallic_image is not None:
+        width = metallic_image.size[0]
+        height = metallic_image.size[1]
+    else:
+        width = 1
+        height = 1
+
+    # Read source pixels or synthesize constant textures
+    if roughness_image is not None:
+        roughness_pixels = list(roughness_image.pixels)
+    else:
+        roughness_pixels = []
+        for _ in range(width * height):
+            roughness_pixels.extend([
+                roughness_constant,
+                roughness_constant,
+                roughness_constant,
+                1.0
+            ])
+
+    if metallic_image is not None:
+        metallic_pixels = list(metallic_image.pixels)
+    else:
+        metallic_pixels = []
+        for _ in range(width * height):
+            metallic_pixels.extend([
+                metallic_constant,
+                metallic_constant,
+                metallic_constant,
+                1.0
+            ])
+
+    packed = []
+
+    for i in range(0, len(roughness_pixels), 4):
+        roughness = roughness_pixels[i]
+        metallic = metallic_pixels[i]
+        packed.extend([1.0, roughness, metallic, 1.0])
+
+    filename = _make_packed_texture_filename(material.name, roughness_image, metallic_image)
+    
+    existing_image = bpy.data.images.get(filename)
+    if existing_image:
+        return existing_image
+
+    filepath = Path(export_dir) / filename
+
+    if filepath.exists():
+        return bpy.data.images.load(str(filepath))
+
+    image = bpy.data.images.new(
+        filename,
+        width=width,
+        height=height,
+        alpha=True
+    )
+    image.pixels = packed
+    image.filepath_raw = str(filepath)
+    image.file_format = 'PNG'
+    image.save()
+    return image
+
+def _build_material_from_blender_material(material: bpy.types.Material, asset, texture_map, export_dir) -> DAFMaterial:
     base_color = (1.0, 1.0, 1.0, 1.0)
     base_color_texture = -1
     roughness = 0.5
     metallic = 0.0
+    roughness_metallic_texture = -1
     emission_color = (0.0, 0.0, 0.0, 1.0)
     emission_energy = 0.0
     opacity = 1.0
     alpha_clip = 0.5
     blend_mode = BlendMode.Opaque
     principled = _find_principled_bsdf(material)
+    
     if principled is not None:
         base_color_input = principled.inputs["Base Color"]
-        tex_node = _find_image_texture_node(base_color_input)
-        if tex_node and tex_node.image:
-            base_color_texture = _get_texture_index(texture_map, asset, tex_node.image, DAFTextureSemantic.BaseColor)
+        base_color_image = _get_image_from_socket(base_color_input)
+        if base_color_image:
+            base_color_texture = _get_texture_index(texture_map, asset, base_color_image, DAFTextureSemantic.BaseColor)
         else:
             base_color = linear_to_gamma22(tuple(base_color_input.default_value))
         
-        roughness = principled.inputs["Roughness"].default_value
-        metallic = principled.inputs["Metallic"].default_value
+        roughness_input = principled.inputs["Roughness"]
+        roughness_image = _get_image_from_socket(roughness_input)
+        if roughness_image is None:
+            roughness = roughness_input.default_value
+        
+        metallic_input = principled.inputs["Metallic"]
+        metallic_image = _get_image_from_socket(metallic_input)
+        if metallic_image is None:
+            metallic = metallic_input.default_value
+        
+        if roughness_image is not None or metallic_image is not None:
+            roughness_metallic_image = _build_packed_roughness_metallic_texture(material, roughness_image, roughness, metallic_image, metallic, export_dir)
+            roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic)
+        
         emission_color = linear_to_gamma22(tuple(principled.inputs["Emission Color"].default_value))
+        #TODO: emission_texture
+        
         emission_energy = principled.inputs["Emission Strength"].default_value
         opacity = principled.inputs["Alpha"].default_value
 
     if material.blend_method in {'BLEND', 'HASHED'}:
         blend_mode = BlendMode.Transparent
-
-    #TODO: textures
 
     return DAFMaterial(
         name=material.name,
@@ -306,7 +413,8 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         opacity=opacity,
         alphaClipThreshold=alpha_clip,
         blendMode=int(blend_mode),
-        baseColorTexture=base_color_texture
+        baseColorTexture=base_color_texture,
+        roughnessMetallicTexture=roughness_metallic_texture
         #TODO: other textures
     )
 
@@ -332,6 +440,7 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
     )
 
     def execute(self, context):
+        export_dir = Path(self.filepath).parent
         objects = context.selected_objects if self.export_selected_only else context.scene.objects
         mesh_objects = [obj for obj in objects if obj.type == 'MESH']
         material_map: dict[bpy.types.Material, int] = {}
@@ -369,7 +478,7 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
                 asset.add_entity(_build_entity_from_object(index_map, obj))
 
             for material in used_materials:
-                asset.add_material(_build_material_from_blender_material(material, asset, texture_map))
+                asset.add_material(_build_material_from_blender_material(material, asset, texture_map, export_dir))
 
             asset.write(self.filepath)
             self.report({'INFO'}, f"Export complete: {self.filepath}")
