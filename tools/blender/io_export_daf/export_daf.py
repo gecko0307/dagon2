@@ -350,6 +350,26 @@ def _build_packed_roughness_metallic_texture(
     image.save()
     return image
 
+def _get_normal_texture_from_principled(principled):
+    normal_input = principled.inputs["Normal"]
+    if not normal_input.is_linked:
+        return None
+    
+    link = normal_input.links[0]
+    node = link.from_node
+
+    # CASE 1: Normal Map node
+    if node.type == 'NORMAL_MAP':
+        tex_input = node.inputs["Color"]
+        return _get_image_from_socket(tex_input)
+
+    # CASE 2: Bump node
+    #if node.type == 'BUMP':
+    #    tex_input = node.inputs["Height"]
+    #    return _get_image_from_socket(tex_input)
+
+    return None
+
 def _build_material_from_blender_material(material: bpy.types.Material, asset, texture_map, export_dir) -> DAFMaterial:
     base_color = (1.0, 1.0, 1.0, 1.0)
     base_color_texture = -1
@@ -373,8 +393,9 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         else:
             base_color = linear_to_gamma22(tuple(base_color_input.default_value))
         
-        normal_input = principled.inputs["Normal"]
-        #TODO
+        normal_image = _get_normal_texture_from_principled(principled)
+        if normal_image is not None:
+            normal_texture = _get_texture_index(texture_map, asset, normal_image, DAFTextureSemantic.Normal)
         
         roughness_input = principled.inputs["Roughness"]
         roughness_image = _get_image_from_socket(roughness_input)
@@ -410,8 +431,8 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         alphaClipThreshold=alpha_clip,
         blendMode=int(blend_mode),
         baseColorTexture=base_color_texture,
-        normalTexture=normal_texture
-        heightTexture=height_texture
+        normalTexture=normal_texture,
+        heightTexture=height_texture,
         roughnessMetallicTexture=roughness_metallic_texture
         #TODO: emission texture
     )
