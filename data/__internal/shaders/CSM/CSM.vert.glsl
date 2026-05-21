@@ -15,7 +15,7 @@ layout(location = 0) out vec2 texCoords;
 void main()
 {
     vec4 modelPosHmg = vec4(va_position, 1.0);
-    texCoords = va_texcoords; //(ubo.textureMatrix * vec3(va_Texcoord, 1.0)).xy;
+    texCoords = va_texcoords; //(ubo.textureMatrix * vec3(va_texcoords, 1.0)).xy;
     gl_Position = ubo.projectionMatrix * (ubo.modelViewMatrix * modelPosHmg);
     
     // Adapt to Vulkan

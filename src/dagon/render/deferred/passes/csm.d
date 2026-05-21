@@ -49,6 +49,7 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
+import dagon.render.deferred.passes.geometry;
 
 struct CSMShaderVertexUniformBuffer
 {
@@ -58,6 +59,9 @@ struct CSMShaderVertexUniformBuffer
 
 struct CSMShaderFragmentUniformBuffer
 {
+    Color4f baseColor;
+    Vector4f alphaOptions;
+    uint[4] flags;
 }
 
 class CSMShader: Shader
@@ -88,6 +92,9 @@ class CSMShader: Shader
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
         vsUBO.projectionMatrix = Matrix4x4f.identity;
+        
+        fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -102,8 +109,27 @@ class CSMShader: Shader
         vsUBO.modelViewMatrix = area.viewMatrix * entity.modelMatrix;
         vsUBO.projectionMatrix = area.projectionMatrix;
         
+        fsUBO.flags[GeometryFlags.Texture] = 0;
+        fsUBO.flags[GeometryFlags.Output] = 0;
+        fsUBO.flags[GeometryFlags.Entity] = 0;
+        fsUBO.flags[3] = 0;
+        fsUBO.baseColor = material.baseColor;
+        
+        fsUBO.alphaOptions.x = material.alphaClipThreshold;
+        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
+        fsUBO.alphaOptions.z = entity.motionBlurMask;
+        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
+        
+        if (material.baseColorTexture)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
+            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasBaseColorTexture;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 0);
+        
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
-        //pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
