@@ -244,20 +244,43 @@ def _get_image_from_socket(socket):
 
     return tex_node.image
 
-def _get_texture_index(texture_map, asset, image, semantic):
+def _resolve_image_source(image):
+    """
+    Returns:
+    - filepath (is image source is external)
+    - None (if image is packed/generated)
+    """
+    if image is None:
+        return None
+
+    if image.source == 'FILE' and image.filepath:
+        path = bpy.path.abspath(image.filepath)
+        if Path(path).exists():
+            return path
+
+    return None
+
+def _image_key(image):
+    if image.packed_file:
+        return f"packed:{image.name}:{image.size[0]}x{image.size[1]}"
+    src = _resolve_image_source(image)
+    if src:
+        return f"file:{src}"
+    return f"generated:{image.name}"
+
+def _get_texture_index(texture_map, asset, image, semantic, export_dir):
     if image is None:
         return -1
 
-    filepath = bpy.path.abspath(image.filepath)
-    filename = Path(filepath).name
-
-    key = (filename, semantic)
+    key = (_image_key(image), semantic)
 
     if key in texture_map:
         return texture_map[key]
 
+    export_path = _save_image(image, export_dir)
+
     texture = DAFTexture(
-        filename=filename,
+        filename=Path(export_path).name,
         semantic=semantic,
     )
 
@@ -345,10 +368,41 @@ def _build_packed_roughness_metallic_texture(
         alpha=True
     )
     image.pixels = packed
-    image.filepath_raw = str(filepath)
-    image.file_format = 'PNG'
-    image.save()
+    #image.filepath_raw = str(filepath)
+    #image.file_format = 'PNG'
+    #image.save()
     return image
+
+def _save_image(image, export_dir):
+    export_dir = Path(export_dir)
+    export_dir.mkdir(parents=True, exist_ok=True)
+    name = Path(image.name).stem
+    ext = "png"
+    filename = f"{name}.{ext}"
+    filepath = export_dir / filename
+    if filepath.exists():
+        return filepath
+
+    # CASE 1: image already has real file path
+    if image.source == 'FILE' and image.filepath:
+        src_path = Path(bpy.path.abspath(image.filepath))
+        if src_path.exists():
+            filepath.write_bytes(src_path.read_bytes())
+            return filepath
+
+    # CASE 2: packed image
+    if image.packed_file:
+        image.filepath_raw = str(filepath)
+        image.file_format = ext.upper()
+        image.save()
+        return filepath
+
+    # CASE 3: generated / render / missing file
+    image.filepath_raw = str(filepath)
+    image.file_format = ext.upper()
+    image.save()
+
+    return filepath
 
 def _get_normal_texture_from_principled(principled):
     normal_input = principled.inputs["Normal"]
@@ -389,13 +443,13 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         base_color_input = principled.inputs["Base Color"]
         base_color_image = _get_image_from_socket(base_color_input)
         if base_color_image:
-            base_color_texture = _get_texture_index(texture_map, asset, base_color_image, DAFTextureSemantic.BaseColor)
+            base_color_texture = _get_texture_index(texture_map, asset, base_color_image, DAFTextureSemantic.BaseColor, export_dir)
         else:
             base_color = linear_to_gamma22(tuple(base_color_input.default_value))
         
         normal_image = _get_normal_texture_from_principled(principled)
         if normal_image is not None:
-            normal_texture = _get_texture_index(texture_map, asset, normal_image, DAFTextureSemantic.Normal)
+            normal_texture = _get_texture_index(texture_map, asset, normal_image, DAFTextureSemantic.Normal, export_dir)
         
         roughness_input = principled.inputs["Roughness"]
         roughness_image = _get_image_from_socket(roughness_input)
@@ -409,7 +463,7 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         
         if roughness_image is not None or metallic_image is not None:
             roughness_metallic_image = _build_packed_roughness_metallic_texture(material, roughness_image, roughness, metallic_image, metallic, export_dir)
-            roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic)
+            roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic, export_dir)
         
         emission_color = linear_to_gamma22(tuple(principled.inputs["Emission Color"].default_value))
         #TODO: emission_texture
