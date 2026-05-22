@@ -242,7 +242,7 @@ class Entity: Owner, Updateable, GsObject
             else if (parent)
             {
                 modelMatrix = parent.modelMatrix * transformation;
-                invModelMatrix = modelMatrix.inverse;
+                invModelMatrix = invTransformation * parent.invModelMatrix;
             }
             else
             {
