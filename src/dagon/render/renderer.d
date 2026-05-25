@@ -61,6 +61,7 @@ import dagon.render.pass;
  */
 abstract class Renderer: EventListener, Updateable
 {
+   public:
     /// GPU object.
     GPU gpu;
     
@@ -82,12 +83,13 @@ abstract class Renderer: EventListener, Updateable
     /// Material used to render entities without a material.
     Material defaultMaterial;
     
-    ///
+    /// Inactive renderer does nothing in runtime.
     bool active = true;
     
-    ///
-    bool invalidateBuffers = false;
+   protected:
+    bool buffersInvalidated = false;
     
+   public:
     /**
      * Constructs a renderer with the given GPU and event manager.
      *
@@ -112,6 +114,12 @@ abstract class Renderer: EventListener, Updateable
     ~this()
     {
         renderPasses.free();
+    }
+    
+    ///
+    void invalidateBuffers()
+    {
+        buffersInvalidated = true;
     }
     
     /**
@@ -176,9 +184,9 @@ abstract class Renderer: EventListener, Updateable
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
         
-        if (invalidateBuffers)
+        if (buffersInvalidated)
         {
-            invalidateBuffers = false;
+            buffersInvalidated = false;
             SDL_WaitForGPUIdle(gpu.device);
             resize();
         }
@@ -204,7 +212,7 @@ abstract class Renderer: EventListener, Updateable
     
     override void onResize(int width, int height)
     {
-        invalidateBuffers = true;
+        buffersInvalidated = true;
     }
     
     override void onMinimize()

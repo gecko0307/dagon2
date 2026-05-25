@@ -3,7 +3,7 @@ Understanding Dagon's architecture and design principles will help you build bet
 
 ## Engine Architecture
 Dagon application is built on several API layers:
-- **World** - User-defined game logics. Dagon follows Inversion of Control principle: user logics happen in event handlers that are called automatically by the core framework.
+- **World** - User-defined game logics. Dagon follows Inversion of Control principle: user logics happen in event handlers that are called automatically by the core framework. The world is managed by the `Game` class.
 - **Game Subsystems** - Built-in managers. These include event manager, renderer, asset manager, shader compiler, scene hierarchy, scripting engine, physics engine, etc. User code works with them directly.
 - **Graphics** - Graphical data that include entities, meshes, materials, textures and specialized abstractions (lights, decals, shadow maps). The game creates and configures them to build virtual 3D worlds.
 - **SDL GPU / Vulkan** - GPU abstraction. User code is not required to work with the GPU directly, becase Dagon provides high-level API to create virtual worlds, although this is necessary to extend the engine.

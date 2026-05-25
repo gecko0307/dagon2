@@ -149,7 +149,10 @@ class Game: BaseGame
         if ("ssao.denoise" in rendererConfig.props)
             renderer.ssaoDenoisePass.active = cast(bool)(rendererConfig.props["ssao.denoise"].toUInt);
         if ("ssao.halfResolution" in rendererConfig.props)
+        {
             renderer.gbuffer.halfResolutionOcclusion = cast(bool)(rendererConfig.props["ssao.halfResolution"].toUInt);
+            renderer.invalidateBuffers();
+        }
         
         if ("decals.enabled" in rendererConfig.props)
             renderer.decalPass.active = cast(bool)(rendererConfig.props["decals.enabled"].toUInt);
@@ -168,7 +171,10 @@ class Game: BaseGame
             renderer.reflectionPass.active = renderer.sslrPass.active;
         }
         if ("sslr.halfResolution" in rendererConfig.props)
+        {
             renderer.gbuffer.halfResolutionReflection = cast(bool)(rendererConfig.props["sslr.halfResolution"].toUInt);
+            renderer.invalidateBuffers();
+        }
         // TODO: other SSLR options
         
         if ("motionBlur.enabled" in rendererConfig.props)

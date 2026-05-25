@@ -126,13 +126,13 @@ abstract class RenderPass: Owner
     }
     
     /**
-     * Binds the default texture and sampler to the specified pipeline stage and binding slot.
+     * Binds the default 2D texture and sampler to the specified pipeline stage and binding slot.
      *
      * Params:
      *   stage = The pipeline stage (Vertex or Fragment).
      *   binding = The binding slot index.
      */
-    void bindDefaultTexture(PipelineStage stage, uint binding)
+    void bindDefault2DTexture(PipelineStage stage, uint binding)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(renderer.gpu.defaultTexture, renderer.gpu.defaultSampler);
         
@@ -142,6 +142,16 @@ abstract class RenderPass: Owner
             SDL_BindGPUFragmentSamplers(renderPass, binding, &samplerBinding, 1);
     }
     
+    /// Ditto.
+    alias bindDefaultTexture = bindDefault2DTexture;
+    
+    /**
+     * Binds the default 3D texture and sampler to the specified pipeline stage and binding slot.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     */
     void bindDefault3DTexture(PipelineStage stage, uint binding)
     {
         auto samplerBinding = SDL_GPUTextureSamplerBinding(renderer.gpu.default3DTexture, renderer.gpu.defaultSampler);

@@ -4,7 +4,6 @@ Dagon integrates the Jolt Physics engine for realistic collision detection and d
 
 Jolt Physics provides:
 - **Rigid body dynamics**
-- **Collision detection**, discrete and continuous
 - **Constraints** (connections between bodies)
 - **Character controller**
 - **Vehicle controller**
