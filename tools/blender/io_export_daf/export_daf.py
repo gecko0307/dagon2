@@ -435,6 +435,7 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
     height_texture = -1
     roughness = 0.5
     metallic = 0.0
+    roughness_metallic_image = None
     roughness_metallic_texture = -1
     emission_color = (0.0, 0.0, 0.0, 1.0)
     emission_texture = -1
@@ -457,8 +458,17 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
             normal_texture = _get_texture_index(texture_map, asset, normal_image, DAFTextureSemantic.Normal, export_dir)
         
         roughness_input = principled.inputs["Roughness"]
-        roughness_image = _get_image_from_socket(roughness_input)
-        if roughness_image is None:
+        if roughness_input.is_linked:
+            linked_node = roughness_input.links[0].from_node
+            if linked_node.bl_idname == 'ShaderNodeSeparateColor':
+                color_input = linked_node.inputs['Color']
+                if color_input.is_linked:
+                    texture_node = color_input.links[0].from_node
+                    if texture_node.bl_idname == 'ShaderNodeTexImage':
+                        roughness_metallic_image = texture_node.image
+            else:
+                roughness_image = _get_image_from_socket(roughness_input)
+        else:
             roughness = roughness_input.default_value
         
         metallic_input = principled.inputs["Metallic"]
@@ -466,9 +476,9 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         if metallic_image is None:
             metallic = metallic_input.default_value
         
-        if roughness_image is not None or metallic_image is not None:
+        if roughness_metallic_image is None and (roughness_image is not None or metallic_image is not None):
             roughness_metallic_image = _build_packed_roughness_metallic_texture(material, roughness_image, roughness, metallic_image, metallic, export_dir)
-            roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic, export_dir)
+        roughness_metallic_texture = _get_texture_index(texture_map, asset, roughness_metallic_image, DAFTextureSemantic.RoughnessMetallic, export_dir)
         
         emission_input = principled.inputs["Emission Color"]
         emission_image = _get_image_from_socket(emission_input)
