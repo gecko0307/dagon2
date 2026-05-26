@@ -197,6 +197,7 @@ struct DAFTexture
 
 //version = DAFDebug;
 
+///
 class DagonAsset: Asset
 {
     ///

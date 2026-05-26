@@ -176,14 +176,21 @@ def _build_mesh_from_object(
         face_materials=face_materials,
     )
 
-def _build_entity_from_object(index_map: dict[bpy.types.Object, int], obj: bpy.types.Object) -> DAFEntity:
+def _build_entity_from_object(
+    index_map: dict[bpy.types.Object, int],
+    mesh_index_map: dict[bpy.types.Object, int],
+    obj: bpy.types.Object) -> DAFEntity:
+    
     rotation = _transform_quaternion(_get_object_quaternion(obj))
     position = _transform_position((obj.location.x, obj.location.y, obj.location.z))
     scale = _transform_scale((obj.scale.x, obj.scale.y, obj.scale.z))
     parent_index = -1
     if obj.parent in index_map:
         parent_index = index_map[obj.parent]
-
+    mesh_index= -1
+    if obj.type == 'MESH':
+        mesh_index = mesh_index_map[obj]
+    
     return DAFEntity(
         name=obj.name,
         class_names=_get_object_classes(obj),
@@ -192,7 +199,7 @@ def _build_entity_from_object(index_map: dict[bpy.types.Object, int], obj: bpy.t
         position=position,
         rotation=(rotation.x, rotation.y, rotation.z, rotation.w),
         scale=scale,
-        mesh=index_map[obj],
+        mesh=mesh_index,
         pose_table=-1,
         user_data=[],
     )
@@ -368,9 +375,6 @@ def _build_packed_roughness_metallic_texture(
         alpha=True
     )
     image.pixels = packed
-    #image.filepath_raw = str(filepath)
-    #image.file_format = 'PNG'
-    #image.save()
     return image
 
 def _save_image(image, export_dir):
@@ -514,23 +518,23 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
 
     export_selected_only: BoolProperty(
         name="Selected Objects",
-        description="Export only selected mesh objects",
+        description="Export only selected objects",
         default=False,
     )
 
     def execute(self, context):
         export_dir = Path(self.filepath).parent
         objects = context.selected_objects if self.export_selected_only else context.scene.objects
-        mesh_objects = [obj for obj in objects if obj.type == 'MESH']
+        #mesh_objects = [obj for obj in objects if obj.type == 'MESH']
         material_map: dict[bpy.types.Material, int] = {}
         texture_map = {}
 
-        if not mesh_objects:
-            self.report({'WARNING'}, "No mesh objects found to export.")
+        if not objects:
+            self.report({'WARNING'}, "No objects found to export.")
             return {'CANCELLED'}
 
         used_materials = []
-        for obj in mesh_objects:
+        for obj in objects:
             for slot in obj.material_slots:
                 material = slot.material
                 if material is None:
@@ -544,17 +548,22 @@ class EXPORT_SCENE_OT_dagon_daf(Operator, ExportHelper):
             asset = DAFAsset()
             depsgraph = context.evaluated_depsgraph_get()
 
-            for obj in mesh_objects:
-                obj_eval = obj.evaluated_get(depsgraph)
-                mesh = obj_eval.to_mesh()
-                if mesh is None:
-                    continue
-                asset.add_mesh(_build_mesh_from_object(obj, mesh, material_map))
-                obj_eval.to_mesh_clear()
+            mesh_index_map = {}
+            num_meshes = 0
+            for obj in objects:
+                if obj.type == 'MESH':
+                    obj_eval = obj.evaluated_get(depsgraph)
+                    mesh = obj_eval.to_mesh()
+                    if mesh is None:
+                        continue
+                    asset.add_mesh(_build_mesh_from_object(obj, mesh, material_map))
+                    obj_eval.to_mesh_clear()
+                    mesh_index_map[obj] = num_meshes
+                    num_meshes += 1
 
-            index_map = {obj: i for i, obj in enumerate(mesh_objects)}
-            for obj in mesh_objects:
-                asset.add_entity(_build_entity_from_object(index_map, obj))
+            index_map = {obj: i for i, obj in enumerate(objects)}
+            for obj in objects:
+                asset.add_entity(_build_entity_from_object(index_map, mesh_index_map, obj))
 
             for material in used_materials:
                 asset.add_material(_build_material_from_blender_material(material, asset, texture_map, export_dir))
