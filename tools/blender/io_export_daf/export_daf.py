@@ -435,6 +435,7 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
     height_texture = -1
     roughness = 0.5
     metallic = 0.0
+    roughness_image = None
     roughness_metallic_image = None
     roughness_metallic_texture = -1
     emission_color = (0.0, 0.0, 0.0, 1.0)
