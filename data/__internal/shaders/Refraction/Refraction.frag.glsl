@@ -49,9 +49,6 @@ vec3 sampleSpecularReflection(in vec3 wN, in float roughnessSqrt)
     {
         return ubo.ambientColor.rgb * ubo.ambientColor.a;
     }
-    
-    //float lod = roughnessSqrt * float(ubo.flags[FLAGS_MAX_SPECULAR_LOD_LEVEL]);
-    //return textureLod(specularTexture, wN, lod).rgb; // * ubo.ambientColor.a;
 }
 
 void main()
@@ -77,6 +74,8 @@ void main()
     vec3 reflection = sampleSpecularReflection(wR, 0.01);
     float fresnel = pow(1.0 - max(dot(E, N), 0.0), 5.0);
     
+    /*
+    // TODO
     const float ior = 1.5; //1.02;
     vec3 RR = refract(E, N, 1.0 / ior);
     const float refractionStrength = 0.1;
@@ -87,6 +86,9 @@ void main()
     refraction.r = texture(backgroundColorBuffer, refractedUV + offset * chromaticAberration).r;
     refraction.g = texture(backgroundColorBuffer, refractedUV).g;
     refraction.b = texture(backgroundColorBuffer, refractedUV - offset * chromaticAberration).b;
+    */
+    
+    vec3 refraction = texture(backgroundColorBuffer, gbufTexCoord).rgb;
     
     vec3 outputColor = mix(refraction * 0.5, reflection, fresnel);
     

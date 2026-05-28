@@ -252,7 +252,7 @@ class SunLightPass: RenderPass
         
         colorTargetInfo.texture = gbuffer.radianceBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SUN_LIGHT");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SUN LIGHT");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);

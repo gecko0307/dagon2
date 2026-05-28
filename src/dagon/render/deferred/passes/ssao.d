@@ -270,6 +270,7 @@ class SSAOPass: RenderPass
         gbuffer.swapOcclusionBuffers();
         colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SSAO");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -286,6 +287,7 @@ class SSAOPass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
     
     override void resize(uint width, uint height)

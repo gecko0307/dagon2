@@ -491,9 +491,9 @@ def _build_material_from_blender_material(material: bpy.types.Material, asset, t
         
         emission_energy = principled.inputs["Emission Strength"].default_value
         opacity = principled.inputs["Alpha"].default_value
-
-    if material.blend_method in {'BLEND', 'HASHED'}:
-        blend_mode = BlendMode.Transparent
+        
+        # TODO: check Alpha input and set blend_mode = BlendMode.Transparent if not 1.0
+        # TODO: support alpha clipping ("Greater than" node in Alpha input)
 
     return DAFMaterial(
         name=material.name,

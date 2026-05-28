@@ -102,9 +102,8 @@ class DeferredRenderer: Renderer
         sunLightPass = New!SunLightPass(this, gbuffer);
         lightVolumePass = New!LightVolumePass(this, gbuffer);
         fogPass = New!FogPass(this, gbuffer);
-        // TODO: transparent pass
-        // TODO: particles pass
         bufferCopyPass = New!BufferCopyPass(this, ppContext);
+        // TODO: particles pass
         refractionPass = New!RefractionPass(this, ppContext);
         sslrPass = New!SSLRPass(this, ppContext);
         reflectionPass = New!ReflectionPass(this, ppContext);

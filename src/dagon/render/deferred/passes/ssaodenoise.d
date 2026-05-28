@@ -224,6 +224,7 @@ class SSAODenoisePass: RenderPass
         gbuffer.swapOcclusionBuffers();
         colorTargetInfo.texture = gbuffer.currentOcclusionBuffer;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "SSAO DENOISE");
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
@@ -240,5 +241,6 @@ class SSAODenoisePass: RenderPass
         renderer.renderScreenQuad(state);
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
     }
 }

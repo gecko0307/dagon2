@@ -44,8 +44,10 @@ import dlib.core.ownership;
 
 import dagon.core.sdl3;
 import dagon.core.time;
-import dagon.graphics.texture;
 import dagon.graphics.state;
+import dagon.graphics.entity;
+import dagon.graphics.material;
+import dagon.graphics.texture;
 import dagon.resource.shader.shader;
 import dagon.resource.shader.shadermodule;
 import dagon.render.renderer;
@@ -355,5 +357,11 @@ abstract class RenderPass: Owner
     void resize(uint width, uint height)
     {
         //
+    }
+    
+    ///
+    bool shouldRenderMaterial(Material m)
+    {
+        return true;
     }
 }

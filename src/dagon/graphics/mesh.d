@@ -333,20 +333,24 @@ class Mesh: Owner, Drawable
                             else
                                 state.material = pass.renderer.defaultMaterial;
                             
-                            pass.shader.bindParameters(state);
-                            pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
+                            if (pass.shouldRenderMaterial(state.material))
+                            {
+                                pass.shader.bindParameters(state);
+                                pass.drawIndexedPrimitives(fg.numTriangles * 3, 1, fg.firstTriangle * 3, 0, 0);
+                            }
                         }
                     }
                 }
                 else
                 {
                     if (material)
-                    {
                         state.material = material;
-                        pass.shader.bindParameters(state);
-                    }
                     
-                    pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
+                    if (pass.shouldRenderMaterial(state.material))
+                    {
+                        pass.shader.bindParameters(state);
+                        pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
+                    }
                 }
             }
         }

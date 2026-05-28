@@ -295,6 +295,11 @@ class RefractionPass: RenderPass
         enableDepthTarget = true;
     }
     
+    override bool shouldRenderMaterial(Material m)
+    {
+        return m.blendMode == BlendMode.Transparent;
+    }
+    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
@@ -303,6 +308,7 @@ class RefractionPass: RenderPass
         colorTargetInfo.texture = ppContext.writeBuffer;
         depthTargetInfo.texture = gbuffer.depthBuffer;
         
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "REFRACTION");
         beginPass();
         
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
@@ -318,18 +324,17 @@ class RefractionPass: RenderPass
             {
                 state.entity = entity;
                 if (entity.material)
-                {
-                    if (entity.material.blendMode == BlendMode.Transparent)
-                    {
-                        state.material = entity.material;
-                        refractionShader.bindParameters(state);
-                        entity.drawable.render(state);
-                    }
-                }
+                    state.material = entity.material;
+                else
+                    state.material = renderer.defaultMaterial;
+                
+                refractionShader.bindParameters(state);
+                entity.drawable.render(state);
             }
         }
         
         endPass();
+        debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
         
         ppContext.swapTargets();
     }

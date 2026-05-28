@@ -268,7 +268,7 @@ class GeometryPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
         
         SDL_GPUVertexAttribute[3] vertexAttributes;
-    
+        
         // Position
         vertexAttributes[0].buffer_slot = VertexAttribute.Position;
         vertexAttributes[0].location = VertexAttribute.Position;
@@ -317,6 +317,11 @@ class GeometryPass: RenderPass
         enableDepthTarget = true;
     }
     
+    override bool shouldRenderMaterial(Material m)
+    {
+        return m.blendMode == BlendMode.Opaque;
+    }
+    
     override void render(GraphicsState* state)
     {
         if (state.scene is null)
@@ -334,11 +339,9 @@ class GeometryPass: RenderPass
                     state.material = entity.material;
                 else
                     state.material = renderer.defaultMaterial;
-                if (state.material.blendMode == BlendMode.Opaque)
-                {
-                    geometryShader.bindParameters(state);
-                    entity.drawable.render(state);
-                }
+                
+                geometryShader.bindParameters(state);
+                entity.drawable.render(state);
             }
         }
         
