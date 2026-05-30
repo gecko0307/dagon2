@@ -34,14 +34,27 @@ import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.graphics.texture;
 
+/// LUT storage format enumeration.
 enum LUTFormat
 {
+    /// Undefined/unknown.
     Undefined = 0,
+    
+    /// GPUImage LUT.
     GPUImage = 1,
+    
+    /// Hald LUT.
     Hald = 2,
+    
+    /// 3D texture.
     Texture3D = 3
 }
 
+/**
+ * Converts GPUImage LUT to 3D texture.
+ * GPUImage is a popular image processing framework for iOS and Android.
+ * Its LUT filter uses a 512x512 image to encode a color space transform.
+ */
 void convertGPUImageLUTto3DTexture(TextureBuffer* lut)
 {
     if (lut.size.width != 512 || lut.size.height != 512)
@@ -100,79 +113,3 @@ void convertGPUImageLUTto3DTexture(TextureBuffer* lut)
     
     *lut = lut3D;
 }
-
-/*
-void convertGPUImageLUTto3DTexture(TextureBuffer lut, Texture lutTexture)
-{
-    if (lut.size.width != 512 || lut.size.height != 512)
-    {
-        logError("GPUImage LUT size should be 512x512");
-        return;
-    }
-    
-    if (lut.format.format != SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
-    {
-        logError("GPUImage LUT should be SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM");
-        return;
-    }
-    
-    uint numChannels = lut.format.numChannels;
-    
-    TextureBuffer lut3D;
-    lut3D.size.width = 64;
-    lut3D.size.height = 64;
-    lut3D.size.depth = 64;
-    lut3D.format.type = SDL_GPU_TEXTURETYPE_3D;
-    lut3D.format.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-    lut3D.format.blockSize = 0;
-    lut3D.format.numChannels = 4;
-    lut3D.format.pixelSize = 4;
-    lut3D.mipLevels = 1;
-    lut3D.data = New!(ubyte[])(64 * 64 * 64 * 4);
-    
-    for (uint z = 0; z < 64; z++)
-    {
-        uint quadX = z % 8;
-        uint quadY = z / 8;
-        
-        for (uint y = 0; y < 64; y++)
-        {
-            for (uint x = 0; x < 64; x++)
-            {
-                uint px = quadX * 64 + x;
-                uint py = quadY * 64 + y;
-                
-                size_t offset = (py * 512 + px) * numChannels;
-                ubyte r = lut.data[offset];
-                ubyte g = lut.data[offset + 1];
-                ubyte b = lut.data[offset + 2];
-                
-                uint idx = ((z * 64 + y) * 64 + x) * 4;
-                lut3D.data[idx] = r;
-                lut3D.data[idx + 1] = g;
-                lut3D.data[idx + 2] = b;
-                lut3D.data[idx + 3] = 255;
-            }
-        }
-    }
-    
-    TextureCreationOptions options = {
-        generateMipmaps: false,
-        repeatUV: false,
-        anisotropicFiltering: false
-    };
-    if (!lutTexture.create(&lut3D, &options))
-    {
-        logError("Failed to create 3D LUT texture");
-    }
-    
-    Delete(lut3D.data);
-}
-
-Texture convertGPUImageLUTto3DTexture(GPU gpu, TextureBuffer lut, Owner textureOwner = null)
-{
-    Texture lutTexture = New!Texture(gpu, textureOwner);
-    convertGPUImageLUTto3DTexture(lut, lutTexture);
-    return lutTexture;
-}
-*/

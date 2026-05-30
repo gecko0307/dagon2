@@ -91,9 +91,16 @@ interface TriangleSet
  */
 struct FaceGroup
 {
+    /// First triangle index in Mesh.indices array.
     uint firstTriangle;
+    
+    /// Number of triangles in the face group.
     uint numTriangles;
+    
+    /// Material for the face group.
     Material material;
+    
+    /// Face group visibility flag.
     bool visible;
 }
 
@@ -109,7 +116,7 @@ class Mesh: Owner, Drawable
     /// Symbolic name.
     string name;
     
-    ///
+    /// GPU object.
     GPU gpu;
     
     /// True if mesh data is ready for rendering.
@@ -130,7 +137,7 @@ class Mesh: Owner, Drawable
     /// Array of triangle indices.
     uint[3][] indices;
     
-    /// Array of facegroups (optional).
+    /// Array of face groups (optional).
     FaceGroup[] facegroups;
     
     /// Axis-aligned bounding box for the mesh.
@@ -148,13 +155,14 @@ class Mesh: Owner, Drawable
     ///
     SDL_GPUBuffer* indexBuffer;
     
-    ///
+    /// Material for the mesh (optional).
     Material material;
     
     /**
      * Constructs a mesh with the given owner.
      *
      * Params:
+     *   gpu   = GPU object.
      *   owner = The owner object.
      */
     this(GPU gpu, Owner owner)
@@ -163,6 +171,7 @@ class Mesh: Owner, Drawable
         this.gpu = gpu;
     }
     
+    /// Destructor.
     ~this()
     {
         if (positionBuffer)

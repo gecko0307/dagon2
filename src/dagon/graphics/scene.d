@@ -53,7 +53,7 @@ import dagon.graphics.texture;
 import gscript;
 
 /**
- * Manages entities and environment for a 3D scene.
+ * Manages entities and environment for a scene.
  *
  * Description:
  * The `Scene` class provides methods for creating entities,
@@ -61,23 +61,58 @@ import gscript;
  */
 class Scene: Owner, GsObject
 {
+    /// GPU object.
     GPU gpu;
+    
+    /// List of scene's entities.
     Array!Entity entities;
+    
+    /// Scene's root Entity.
     Entity rootEntity;
+    
+    /// Camera that is used to render the scene.
     Camera activeCamera;
+    
+    /// Scene's directional light.
     Light sun;
+    
+    /**
+     * Ambient color is used as a fallback
+     * when specularTexture/irradianceTexture are not specified.
+     */
     Color4f ambientColor = Color4f(0.5f, 0.5f, 0.5f, 1.0f);
+    
+    /// Specular environment map.
     Texture specularTexture;
+    
+    /// Irradiance (diffuse) environment map.
     Texture irradianceTexture;
+    
+    /// BRDF LUT ().
     Texture brdfLUT;
+    
+    ///
     bool brdfLUTEnabled = true;
+    
+    ///
     float ambientEnergy = 1.0f;
     
+    ///
     Color4f fogColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+    
+    ///
     float fogEnergy = 1.0f;
+    
+    ///
     float fogStart = 0.0f;
+    
+    ///
     float fogEnd = 100.0f;
+    
+    ///
     float fogDensity = 1.0f;
+    
+    ///
     float groundFogDensity = 0.0f;
     
     /**
@@ -98,6 +133,7 @@ class Scene: Owner, GsObject
         sun.shadowEnabled = true;
     }
     
+    /// Destructor.
     ~this()
     {
         entities.free();
@@ -206,6 +242,12 @@ class Scene: Owner, GsObject
     {
         switch(key)
         {
+            case "rootEntity":
+                return GsDynamic(rootEntity);
+            case "activeCamera":
+                return GsDynamic(activeCamera);
+            case "sun":
+                return GsDynamic(sun);
             case "entities":
                 return GsDynamic(entities.data);
             case "entityByName":

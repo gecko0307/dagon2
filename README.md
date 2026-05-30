@@ -71,6 +71,7 @@ Major changes from Dagon 0.x/1.x:
 - Assimp integration is now a core feature
 - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
 - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
+- `Environment` class is gone, all environment properties are now part of the `Scene` class
 - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh
 - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)

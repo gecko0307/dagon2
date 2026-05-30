@@ -138,9 +138,12 @@ class Material: Owner
      */
     bool outputDepth = true;
     
-    ///
+    /// Blend mode of the surface.
     BlendMode blendMode = BlendMode.Opaque;
     
+    /**
+     * Constructor.
+     */
     this(Owner owner)
     {
         super(owner);
