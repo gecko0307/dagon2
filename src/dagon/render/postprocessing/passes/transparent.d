@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.postprocessing.passes.refraction;
+module dagon.render.postprocessing.passes.transparent;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -50,7 +50,7 @@ import dagon.render.deferred.passes.geometry;
 import dagon.render.deferred.passes.ambient;
 import dagon.render.postprocessing.context;
 
-struct RefractionShaderVertexUniformBuffer
+struct TransparentShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
@@ -58,7 +58,7 @@ struct RefractionShaderVertexUniformBuffer
     Matrix4x4f prevModelViewMatrix;
 }
 
-struct RefractionShaderFragmentUniformBuffer
+struct TransparentShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
     //Vector4f baseColor;
@@ -70,14 +70,14 @@ struct RefractionShaderFragmentUniformBuffer
     Vector4f resolution;
 }
 
-enum RefractionFlags: uint
+enum TransparentFlags: uint
 {
     Texture = 0,
     MaxSpecularMipLevel = 1,
     Entity = 2
 }
 
-enum RefractionTextureFlags: uint
+enum TransparentTextureFlags: uint
 {
     HasBaseColorTexture = 1 << 0,
     HasNormalTexture = 1 << 1,
@@ -85,16 +85,16 @@ enum RefractionTextureFlags: uint
     HasSpecularTexture = 1 << 3
 }
 
-enum RefractionEntityFlags: uint
+enum TransparentEntityFlags: uint
 {
     Static = 1 << 0
 }
 
-class RefractionShader: Shader
+class TransparentShader: Shader
 {
    protected:
-    RefractionShaderVertexUniformBuffer vsUBO;
-    RefractionShaderFragmentUniformBuffer fsUBO;
+    TransparentShaderVertexUniformBuffer vsUBO;
+    TransparentShaderFragmentUniformBuffer fsUBO;
     
    public:
     bool enableGammaCorrection = true;
@@ -104,16 +104,16 @@ class RefractionShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Refraction.vert.glsl", "data/__internal/shaders/Refraction/Refraction.vert.glsl",
+        vertexModule.create("Transparent.vert.glsl", "data/__internal/shaders/Transparent/Transparent.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Refraction.frag.glsl", "data/__internal/shaders/Refraction/Refraction.frag.glsl",
+        fragmentModule.create("Transparent.frag.glsl", "data/__internal/shaders/Transparent/Transparent.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create RefractionShader");
+            exitWithError("Failed to create TransparentShader");
         }
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
@@ -143,7 +143,7 @@ class RefractionShader: Shader
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         
         if (!entity.dynamic && entity.receiveDecals)
-            fsUBO.flags[RefractionFlags.Entity] |= RefractionEntityFlags.Static;
+            fsUBO.flags[TransparentFlags.Entity] |= TransparentEntityFlags.Static;
         
         fsUBO.ambientColor = scene.ambientColor;
         fsUBO.ambientColor.a = scene.ambientEnergy;
@@ -161,13 +161,13 @@ class RefractionShader: Shader
         if (specularTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, specularTexture);
-            fsUBO.flags[RefractionFlags.Texture] |= RefractionTextureFlags.HasSpecularTexture;
-            fsUBO.flags[RefractionFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
+            fsUBO.flags[TransparentFlags.Texture] |= TransparentTextureFlags.HasSpecularTexture;
+            fsUBO.flags[TransparentFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
         }
         else
         {
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
-            fsUBO.flags[RefractionFlags.MaxSpecularMipLevel] = 0;
+            fsUBO.flags[TransparentFlags.MaxSpecularMipLevel] = 0;
         }
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
@@ -175,12 +175,12 @@ class RefractionShader: Shader
     }
 }
 
-class RefractionPass: RenderPass
+class TransparentPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
     PostProcessingContext ppContext;
-    RefractionShader refractionShader;
+    TransparentShader transparentShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     SDL_GPUDepthStencilTargetInfo depthTargetInfo;
     
@@ -191,12 +191,12 @@ class RefractionPass: RenderPass
         this.gbuffer = ppContext.gbuffer;
         this.ppContext = ppContext;
         
-        refractionShader = New!RefractionShader(gpu, this);
-        shader = refractionShader;
+        transparentShader = New!TransparentShader(gpu, this);
+        shader = transparentShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = refractionShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = refractionShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = transparentShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = transparentShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[3] vbDescriptions;
@@ -308,7 +308,7 @@ class RefractionPass: RenderPass
         colorTargetInfo.texture = ppContext.writeBuffer;
         depthTargetInfo.texture = gbuffer.depthBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "REFRACTION");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "TRANSPARENT");
         beginPass();
         
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
@@ -328,7 +328,7 @@ class RefractionPass: RenderPass
                 else
                     state.material = renderer.defaultMaterial;
                 
-                refractionShader.bindParameters(state);
+                transparentShader.bindParameters(state);
                 entity.drawable.render(state);
             }
         }

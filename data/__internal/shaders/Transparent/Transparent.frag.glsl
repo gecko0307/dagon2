@@ -1,5 +1,10 @@
 #version 460
 
+float fresnel(float cosTheta, float f0)
+{
+    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
 layout(set = 2, binding = 0) uniform sampler2D backgroundColorBuffer;
 layout(set = 2, binding = 1) uniform samplerCube specularTexture;
 
@@ -72,7 +77,7 @@ void main()
     vec3 wR = reflect(wE, wN);
     
     vec3 reflection = sampleSpecularReflection(wR, 0.01);
-    float fresnel = pow(1.0 - max(dot(E, N), 0.0), 5.0);
+    float fresnel = clamp(fresnel(dot(N, E), 0.04), 0.0, 1.0);
     
     /*
     // TODO
@@ -88,9 +93,11 @@ void main()
     refraction.b = texture(backgroundColorBuffer, refractedUV - offset * chromaticAberration).b;
     */
     
+    vec3 baseColor = vec3(1.0, 1.0, 1.0);
+    
     vec3 refraction = texture(backgroundColorBuffer, gbufTexCoord).rgb;
     
-    vec3 outputColor = mix(refraction * 0.5, reflection, fresnel);
+    vec3 outputColor = mix(refraction * baseColor, reflection, fresnel);
     
     float motionBlurMask = ubo.alphaOptions.z;
     float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
