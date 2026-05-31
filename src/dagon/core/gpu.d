@@ -47,7 +47,7 @@ import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.logger;
 
-/// Supported GPU backends. Only Vulkan is supported at the moment.
+/// Supported GPU API backends. Only Vulkan is supported at the moment.
 enum GPUBackend
 {
     Vulkan = 0

@@ -59,7 +59,6 @@ import dagon.core.application;
 //import dagon.core.input;
 import dagon.core.logger;
 import dagon.core.messaging;
-//import dagon.core.graphicstablet;
 
 /**
  * Maximum number of simultaneous game input devices.

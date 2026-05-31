@@ -36,7 +36,10 @@ import dlib.image.color;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 
-///
+/**
+ * Geometry buffer class.
+ * A set of textures that store geometric data for deferred rendering.
+ */
 class GBuffer: Owner
 {
     GPU gpu;
