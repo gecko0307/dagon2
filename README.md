@@ -111,7 +111,8 @@ Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux
 
 Known Limitations
 -----------------
-- The engine doesn't support macOS yet. Although SDL GPU is a multi-backend API, Dagon 2 currently targets only Vulkan backend.
+- The engine doesn't support macOS yet
+- Although SDL GPU is a multi-backend API, Dagon 2 currently targets only Vulkan backend.
 
 Documentation
 -------------
