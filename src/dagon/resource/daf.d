@@ -338,6 +338,7 @@ class DagonAsset: Asset
             aTexture.creationOptions.generateMipmaps = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_GENERATE_MIPMAPS);
             aTexture.creationOptions.repeatUV = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_UV_REPEAT);
             aTexture.creationOptions.anisotropicFiltering = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING);
+            aTexture.cache = cache;
             // TODO: compression parameters based on tex.semantic
             loadTextureAsset(aTexture, fs, rootDir, texFilename);
             textureAssets.append(aTexture);
