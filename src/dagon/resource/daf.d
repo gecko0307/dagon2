@@ -50,6 +50,7 @@ import dagon.graphics.mesh;
 import dagon.graphics.material;
 import dagon.resource.asset;
 import dagon.resource.texture;
+import dagon.resource.image;
 
 enum DAF_MESH_FLAG_ANIMATED = 0x01;
 
@@ -219,6 +220,9 @@ class DagonAsset: Asset
     Array!TextureAsset textureAssets;
     
     ///
+    bool compressTextures = false;
+    
+    ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -339,7 +343,19 @@ class DagonAsset: Asset
             aTexture.creationOptions.repeatUV = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_UV_REPEAT);
             aTexture.creationOptions.anisotropicFiltering = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING);
             aTexture.cache = cache;
-            // TODO: compression parameters based on tex.semantic
+            if (compressTextures)
+            {
+                if (tex.semantic == DAFTextureSemantic.BaseColor)
+                    aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.BC1;
+                else if (tex.semantic == DAFTextureSemantic.Height)
+                    aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.BC4;
+                else
+                    aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.None;
+            }
+            else
+            {
+                aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.None;
+            }
             loadTextureAsset(aTexture, fs, rootDir, texFilename);
             textureAssets.append(aTexture);
         }
