@@ -266,4 +266,41 @@ class BRDFLUTRenderer: Renderer
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
     }
+    
+    /**
+     * Allocates and generates a BRDF LUT.
+     */
+    Texture generateTexture(uint resolution, Owner textureOwner)
+    {
+        TextureBuffer buffer = {
+            format: {
+                type: SDL_GPU_TEXTURETYPE_2D,
+                format: SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
+                blockSize: 0,
+                cubeFaces: CubeFaceBit.None,
+                numChannels: 2,
+                pixelSize: 4
+            },
+            size: {
+                width: resolution,
+                height: resolution,
+                depth: 1
+            },
+            mipLevels: 1,
+            data: []
+        };
+        
+        TextureCreationOptions options = {
+            generateMipmaps: false,
+            repeatUV: false,
+            anisotropicFiltering: false
+        };
+        
+        Texture brdfLut = New!Texture(gpu, textureOwner);
+        brdfLut.create(&buffer, &options);
+        
+        generateTexture(brdfLut);
+        
+        return brdfLut;
+    }
 }

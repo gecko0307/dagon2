@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.graphics.envmap;
 
+import std.math;
 import std.traits;
 
 import dlib.core.memory;
@@ -46,6 +47,21 @@ import dagon.graphics.state;
 import dagon.resource.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
+
+/**
+ * A structure that holds environment maps for image-based lighting.
+ */
+struct IBLData
+{
+    /// Irradiance cubemap for diffuse lighting.
+    Texture irradianceCubemap;
+    
+    /// Specular cubemap for reflective lighting.
+    Texture specularCubemap;
+    
+    /// BRDF lookup table (aka BRDF integration map).
+    Texture brdfLUT;
+}
 
 /**
  * Returns the transformation matrix for a cubemap face.
@@ -738,5 +754,60 @@ class CubemapRenderer: Renderer
         }
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
+    }
+    
+    IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
+    {
+        TextureBuffer buffer = {
+            format: {
+                type: SDL_GPU_TEXTURETYPE_CUBE,
+                format: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
+                blockSize: 0,
+                cubeFaces: CubeFaceBit.All,
+                numChannels: 4,
+                pixelSize: 8
+            },
+            size: {
+                width: specularResolution,
+                height: specularResolution,
+                depth: 1
+            },
+            mipLevels: 1,
+            data: []
+        };
+        
+        TextureCreationOptions options = {
+            generateMipmaps: true,
+            repeatUV: false,
+            anisotropicFiltering: false
+        };
+        
+        Texture inputCubemap = New!Texture(gpu, null);
+        inputCubemap.create(&buffer, &options);
+        generateCubemap(inputEnvmap, inputCubemap);
+        
+        options.generateMipmaps = false;
+        
+        TextureBuffer irrBuffer = buffer;
+        irrBuffer.size.width = 32;
+        irrBuffer.size.height = 32;
+        Texture irradianceCubemapCoarse = New!Texture(gpu, null);
+        irradianceCubemapCoarse.create(&irrBuffer, &options);
+        prefilterCubemapIrradiance(inputCubemap, irradianceCubemapCoarse);
+        
+        Texture irradianceCubemap = New!Texture(gpu, cubemapsOwner);
+        irradianceCubemap.create(&irrBuffer, &options);
+        prefilterCubemapIrradiance(irradianceCubemapCoarse, irradianceCubemap);
+        
+        buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
+        Texture specularCubemap = New!Texture(gpu, cubemapsOwner);
+        specularCubemap.create(&buffer, &options);
+        
+        prefilterCubemap(inputCubemap, specularCubemap);
+        
+        Delete(irradianceCubemapCoarse);
+        Delete(inputCubemap);
+        
+        return IBLData(irradianceCubemap, specularCubemap, null);
     }
 }

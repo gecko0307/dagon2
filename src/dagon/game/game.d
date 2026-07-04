@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Core game logic for Dagon-based applications.
+ * Core game logic for Dagon-based games.
  *
  * Description:
  * The `dagon.game.game` module defines the `Game` class, which serves
@@ -60,28 +60,13 @@ import dagon.render.deferred;
 import dagon.render.postprocessing;
 
 /**
- * A structure that holds environment maps for image-based lighting.
- */
-struct IBLData
-{
-    /// Irradiance cubemap for diffuse lighting.
-    Texture irradianceCubemap;
-    
-    /// Specular cubemap for reflective lighting.
-    Texture specularCubemap;
-    
-    /// BRDF lookup table (aka BRDF integration map).
-    Texture brdfLUT;
-}
-
-/**
- * Main game class for Dagon applications.
+ * Core game class that uses Dagon's built-in deferred renderer.
  *
  * Description:
  * Manages rendering. The `Game` class is a subclass
  * of `Application` and provides a framework for creating games
- * that use Dagon's deferred renderer. It also provides functions
- * for IBL cubemaps generation.
+ * that use Dagon's deferred renderer.
+ * If you want to implement a custom renderer, use BaseGame instead.
  */
 class Game: BaseGame
 {
@@ -238,6 +223,7 @@ class Game: BaseGame
     
     /**
      * Generates IBL cubemaps from an equirectangular environment map.
+     * A shorthand for cubemapRenderer.generateCubemaps.
      *
      * Params:
      *   inputEnvmap = Input environment texture
@@ -248,61 +234,14 @@ class Game: BaseGame
      */
     IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
     {
-        TextureBuffer buffer = {
-            format: {
-                type: SDL_GPU_TEXTURETYPE_CUBE,
-                format: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
-                blockSize: 0,
-                cubeFaces: CubeFaceBit.All,
-                numChannels: 4,
-                pixelSize: 8
-            },
-            size: {
-                width: specularResolution,
-                height: specularResolution,
-                depth: 1
-            },
-            mipLevels: 1,
-            data: []
-        };
-        
-        TextureCreationOptions options = {
-            generateMipmaps: true,
-            repeatUV: false,
-            anisotropicFiltering: false
-        };
-        
-        Texture inputCubemap = New!Texture(gpu, null);
-        inputCubemap.create(&buffer, &options);
-        cubemapRenderer.generateCubemap(inputEnvmap, inputCubemap);
-        
-        options.generateMipmaps = false;
-        
-        TextureBuffer irrBuffer = buffer;
-        irrBuffer.size.width = 32;
-        irrBuffer.size.height = 32;
-        Texture irradianceCubemapCoarse = New!Texture(gpu, null);
-        irradianceCubemapCoarse.create(&irrBuffer, &options);
-        cubemapRenderer.prefilterCubemapIrradiance(inputCubemap, irradianceCubemapCoarse);
-        
-        Texture irradianceCubemap = New!Texture(gpu, cubemapsOwner);
-        irradianceCubemap.create(&irrBuffer, &options);
-        cubemapRenderer.prefilterCubemapIrradiance(irradianceCubemapCoarse, irradianceCubemap);
-        
-        buffer.mipLevels = 1 + cast(uint)floor(log2(cast(double)buffer.size.width));
-        Texture specularCubemap = New!Texture(gpu, cubemapsOwner);
-        specularCubemap.create(&buffer, &options);
-        
-        cubemapRenderer.prefilterCubemap(inputCubemap, specularCubemap);
-        
-        Delete(irradianceCubemapCoarse);
-        Delete(inputCubemap);
-        
-        return IBLData(irradianceCubemap, specularCubemap, brdfLUT);
+        IBLData ibl = cubemapRenderer.generateCubemaps(inputEnvmap, specularResolution, cubemapsOwner);
+        ibl.brdfLUT = brdfLUT;
+        return ibl;
     }
     
     /**
      * Generates BRDF lookup table.
+     * A shorthand for brdflutRenderer.generateTexture.
      *
      * Params:
      *   resolution = Texture resolution
@@ -312,36 +251,7 @@ class Game: BaseGame
      */
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)
     {
-        TextureBuffer buffer = {
-            format: {
-                type: SDL_GPU_TEXTURETYPE_2D,
-                format: SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT,
-                blockSize: 0,
-                cubeFaces: CubeFaceBit.None,
-                numChannels: 2,
-                pixelSize: 4
-            },
-            size: {
-                width: resolution,
-                height: resolution,
-                depth: 1
-            },
-            mipLevels: 1,
-            data: []
-        };
-        
-        TextureCreationOptions options = {
-            generateMipmaps: false,
-            repeatUV: false,
-            anisotropicFiltering: false
-        };
-        
-        Texture brdfLut = New!Texture(gpu, textureOwner);
-        brdfLut.create(&buffer, &options);
-        
-        brdflutRenderer.generateTexture(brdfLut);
-        
-        return brdfLut;
+        return brdflutRenderer.generateTexture(resolution, textureOwner);
     }
     
     /**
