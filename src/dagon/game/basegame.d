@@ -81,6 +81,9 @@ class BaseGame: Application, GsObject
     /// GScript properties global to the game object.
     Dict!(GsDynamic, string) gsProperties;
     
+    /// Command line arguments as an array of GsDynamic.
+    GsDynamic[] gsArgs;
+    
     /// Arguments array for calling script event handlers.
     GsDynamic[4] gsEventHandlerArgs;
     
@@ -110,8 +113,23 @@ class BaseGame: Application, GsObject
         vm.set("send", GsDynamic(&vmSend));
         vm.set("game", GsDynamic(this));
         
-        gsProperties = dict!(GsDynamic, string);
         gsEventHandlerArgs[0] = this;
+        gsProperties = dict!(GsDynamic, string);
+        gsProperties["configFilename"] = GsDynamic(configFilename);
+        gsProperties["logLevel"] = GsDynamic(logLevel);
+        if (args.length)
+        {
+            gsArgs = New!(GsDynamic[])(args.length);
+            foreach(i, v; args)
+            {
+                gsArgs[i] = GsDynamic(v);
+            }
+        }
+        gsProperties["args"] = GsDynamic(gsArgs);
+        gsProperties["path"] = GsDynamic(path);
+        gsProperties["directory"] = GsDynamic(directory);
+        gsProperties["appDataFolderName"] = GsDynamic(appDataFolderName);
+        gsProperties["customMountPaths"] = GsDynamic(customMountPaths);
         
         if ("mainScript.path" in config.props)
             mainScriptPath = config.props["mainScript.path"].toString;
@@ -153,6 +171,8 @@ class BaseGame: Application, GsObject
         if (mainScriptBytecode.length)
             Delete(mainScriptBytecode);
         Delete(gsProperties);
+        if (gsArgs.length)
+            Delete(gsArgs);
     }
     
     /// Adds a world object to the worlds array.
