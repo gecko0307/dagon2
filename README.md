@@ -55,13 +55,10 @@ New features:
 - Experimental HDR (scRGB) output support
 - 2x supersampling support
 - Temporal SSAO support
-- BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
-- BC4 texture compressor (original implementation)
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
 - Fog effect is now applied in a separate pass. Ground fog support
 - Radial optical distortion support
-- FXAA 3.11
 - Shadeless materials in deferred pipeline
 - Window minimize/restore events.
 
