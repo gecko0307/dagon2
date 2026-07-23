@@ -36,6 +36,16 @@ import dlib.image.color;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 
+struct GBufferConfig
+{
+    SDL_GPUTextureFormat colorTargetFormat;
+    SDL_GPUTextureFormat normalTargetFormat;
+    SDL_GPUTextureFormat roughnessMetallicTargetFormat;
+    SDL_GPUTextureFormat emissionTargetFormat;
+    SDL_GPUTextureFormat velocityTargetFormat;
+    SDL_GPUTextureFormat radianceTargetFormat;
+}
+
 /**
  * Geometry buffer class.
  * A set of textures that store geometric data for deferred rendering.
@@ -73,7 +83,7 @@ class GBuffer: Owner
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
     
-    this(GPU gpu, Owner owner)
+    this(GPU gpu, GBufferConfig* config, Owner owner)
     {
         super(owner);
         this.gpu = gpu;
@@ -108,7 +118,7 @@ class GBuffer: Owner
         depthStencilTargetInfo.texture = depthBuffer;
         
         // Color target 0 - color buffer
-        colorTargetsDescription[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[0].format = config.colorTargetFormat;
         colorTargetsDescription[0].blend_state = blendState;
         colorTargetsInfo[0].clear_color = SDL_FColor(
             colorBufferClearColor.r,
@@ -119,7 +129,7 @@ class GBuffer: Owner
         colorTargetsInfo[0].texture = colorBuffer;
         
         // Target 1 - normal buffer
-        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[1].format = config.normalTargetFormat;
         colorTargetsDescription[1].blend_state = blendState;
         colorTargetsInfo[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[1].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -127,7 +137,7 @@ class GBuffer: Owner
         colorTargetsInfo[1].texture = normalBuffer;
         
         // Target 2 - roughness/metallic buffer
-        colorTargetsDescription[2].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[2].format = config.roughnessMetallicTargetFormat;
         colorTargetsDescription[2].blend_state = blendState;
         colorTargetsInfo[2].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[2].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -135,7 +145,7 @@ class GBuffer: Owner
         colorTargetsInfo[2].texture = roughnessMetallicBuffer;
         
         // Target 3 - emission buffer
-        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[3].format = config.emissionTargetFormat;
         colorTargetsDescription[3].blend_state = blendState;
         colorTargetsInfo[3].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[3].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -143,7 +153,7 @@ class GBuffer: Owner
         colorTargetsInfo[3].texture = emissionBuffer;
         
         // Target 4 - velocity buffer
-        colorTargetsDescription[4].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[4].format = config.velocityTargetFormat;
         colorTargetsDescription[4].blend_state = blendState;
         colorTargetsInfo[4].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetsInfo[4].load_op = SDL_GPU_LOADOP_CLEAR;
@@ -151,7 +161,7 @@ class GBuffer: Owner
         colorTargetsInfo[4].texture = velocityBuffer;
         
         // Target 5 - radiance buffer
-        colorTargetsDescription[5].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[5].format = config.radianceTargetFormat;
         colorTargetsDescription[5].blend_state = blendState;
         colorTargetsInfo[5].clear_color = SDL_FColor(
             colorBufferClearColor.r,

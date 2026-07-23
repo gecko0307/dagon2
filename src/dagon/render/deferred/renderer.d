@@ -30,6 +30,7 @@ import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.image.color;
 
+import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.core.event;
@@ -89,7 +90,17 @@ class DeferredRenderer: Renderer
     this(GPU gpu, EventManager eventManager)
     {
         super(gpu, eventManager);
-        gbuffer = New!GBuffer(gpu, this);
+        
+        GBufferConfig gbufferConfig = {
+            colorTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+            normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM, //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT
+            roughnessMetallicTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+            emissionTargetFormat: SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT, //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT
+            velocityTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
+            radianceTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT
+        };
+        
+        gbuffer = New!GBuffer(gpu, &gbufferConfig, this);
         ppContext = New!PostProcessingContext(gpu, gbuffer, this);
         
         csmPass = New!CSMPass(this, gbuffer);

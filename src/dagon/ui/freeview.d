@@ -200,8 +200,8 @@ class FreeviewController: EntityController
         {
             if (eventManager.mouseButtonPressed[MB_RIGHT] && enableMouseTranslation)
             {
-                float shiftx = (eventManager.mouseX - prevMouseX) * mouseTranslationSensibility;
-                float shifty = -(eventManager.mouseY - prevMouseY) * mouseTranslationSensibility;
+                float shiftx = eventManager.mouseRelX * mouseTranslationSensibility;
+                float shifty = -eventManager.mouseRelY * mouseTranslationSensibility;
                 Vector3f trans = up * shifty + right * shiftx;
                 target += trans;
                 if (abs(shiftx) > 0.0f || abs(shifty) > 0.0f)
@@ -209,16 +209,16 @@ class FreeviewController: EntityController
             }
             else if (eventManager.mouseButtonPressed[MB_LEFT] && eventManager.keyPressed[KEY_LCTRL] && enableMouseZoom)
             {
-                float shiftx = (eventManager.mouseX - prevMouseX) * mouseZoomSensibility;
-                float shifty = (eventManager.mouseY - prevMouseY) * mouseZoomSensibility;
+                float shiftx = eventManager.mouseRelX * mouseZoomSensibility;
+                float shifty = eventManager.mouseRelY * mouseZoomSensibility;
                 zoom(shiftx + shifty);
                 if (abs(shiftx) > 0.0f || abs(shifty) > 0.0f)
                     isMoving = true;
             }
             else if (eventManager.mouseButtonPressed[MB_LEFT] && enableMouseRotation)
             {
-                float turn = (eventManager.mouseX - prevMouseX) * mouseRotationSensibility;
-                float pitch = (eventManager.mouseY - prevMouseY) * mouseRotationSensibility;
+                float turn = eventManager.mouseRelX * mouseRotationSensibility;
+                float pitch = eventManager.mouseRelY * mouseRotationSensibility;
                 
                 rotation.x += pitch;
                 rotation.y += turn;
