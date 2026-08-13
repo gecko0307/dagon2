@@ -52,9 +52,9 @@ New features:
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
 - Screen-space reflections
-- Experimental HDR (scRGB) output support
+- HDR (scRGB) output support
 - 2x supersampling support
-- Temporal SSAO support
+- Temporal SSAO
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
 - Fog effect is now applied in a separate pass. Ground fog support
