@@ -5,8 +5,8 @@ DAF is a binary serialization format for meshes and associated data, introduced 
 - Maximum deserialization efficiency. glTF requires JSON parsing and dynamic construction of fairly complex objects in memory (lists, dictionaries), while loading DAF is simply reinterpretation of byte buffer slices into arrays of POD structures. DAF saves memory and reduces the risk of memory leaks because it doesn't require much allocations.
 - Partial deserialization. The decoder can read only the data it needs from DAF without decoding the rest.
 - All-in-one format. A DAF file can store both a single model and a scene. All format structures support user properties, allowing editor metadata to be stored in DAF. In fact, DAF can be used as a simple NoSQL database for various purposes.
-- Data semantics support. All objects have a list of classes, allowing the engine to group them for game logic purposes. All textures are tagged as baseColor, normal, height, roughness-metallic, and emission, so the engine can select the optimal BCn compression format.
-- Storing physics and collision detection data.
+- Data semantics support. All objects have a list of classes, allowing the engine to group them for game logic purposes. All textures are tagged as baseColor, normal, height, roughnessMetallic, and emission, so the engine can select the optimal BCn compression format.
+- Storing physics and collision detection data (WIP).
 
 DAF is an extensible format in which any additional data structures and even dynamic properties can be declared without breaking backward compatibility.
 
@@ -31,7 +31,7 @@ struct DAFHeader
 
 ## Chunk Table
 
-Data in DAF is stored as arrays of structures (each structure must be aligned to the multiple of 4 bytes). Each such array is called a chunk. The element structures of a chunk encode asset objects. The core format defines several standard chunks: Entities, Meshes, Materials, etc. All chunks are optional. Objects in chunks can reference other objects by indices.
+Data in DAF is stored as arrays of structures (each structure must be 4-byte aligned). Each such array is called a chunk. The element structures of a chunk encode asset objects. The core format defines several standard chunks: Entities, Meshes, Materials, etc. All chunks are optional. Objects in chunks can reference other objects by indices.
 
 The chunk table is the global scene index, an array of DAFChunk structures. Each DAFChunk points to the location of a chunk in the file.
 
@@ -64,7 +64,7 @@ Text data in DAF is stored as a string table—a list of zero-terminated UTF-8 s
 [\0string1\0string2\0string3\0...]
 ```
 
-Null-terminated strings are introduced for direct compatibility with C libraries. The string array size must be aligned to the multiple of 4 bytes.
+Null-terminated strings are introduced for direct compatibility with C libraries. The string array size must be 4-byte aligned.
 
 In chunk structures, string references are stored as a slice of this array:
 
@@ -80,7 +80,7 @@ An empty string is encoded as `DAFString(0, 0)`.
 
 ## Buffers
 
-Binary data, including that uploaded to the GPU, is stored as buffers in a buffer file section. Each buffer must be aligned to the multiple of 4 bytes.
+Binary data, including that uploaded to the GPU, is stored as buffers in a buffer file section. Each buffer must be 4-byte aligned.
 
 ## Entities
 
