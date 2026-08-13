@@ -346,7 +346,7 @@ class DagonAsset: Asset
             if (compressTextures)
             {
                 if (tex.semantic == DAFTextureSemantic.BaseColor)
-                    aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.BC1;
+                    aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.BC3;
                 else if (tex.semantic == DAFTextureSemantic.Height)
                     aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.BC4;
                 else

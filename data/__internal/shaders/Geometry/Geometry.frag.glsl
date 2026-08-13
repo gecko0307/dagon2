@@ -15,6 +15,7 @@ mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
 }
 */
 
+/*
 mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
 {
     vec3 dp1 = dFdx(p);
@@ -27,6 +28,27 @@ mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
     
     vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
     vec3 B = dp2perp * duv1.y + dp1perp * -duv2.y;
+    
+    float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
+    return mat3(T * invmax, B * invmax, N);
+}
+*/
+
+mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
+{
+    vec3 dp1 = dFdx(p);
+    vec3 dp2 = dFdy(p);
+    vec2 duv1 = dFdx(uv);
+    vec2 duv2 = dFdy(uv);
+    
+    dp2 = -dp2;
+    duv2 = -duv2;
+
+    vec3 dp2perp = cross(dp2, N);
+    vec3 dp1perp = cross(N, dp1);
+    
+    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
     
     float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
     return mat3(T * invmax, B * invmax, N);
@@ -89,7 +111,7 @@ layout(location = 4) out vec4 outVelocity;
 
 out float gl_FragDepth;
 
-const float ysign = -1.0;
+const float ySign = -1.0;
 
 const float parallaxScale = 0.03;
 const float parallaxBias = -0.01;
@@ -114,7 +136,7 @@ void main()
         }
         
         vec3 tanN = normalize(texture(normalTexture, uv).rgb * 2.0 - 1.0);
-        tanN.y *= ysign;
+        tanN.y *= ySign;
         N = normalize(tangentToEye * tanN);
     }
     
