@@ -20,14 +20,14 @@
         "src"
     ],
     
-     "sourcePaths": [
+    "sourcePaths": [
         "src"
     ],
     
     "stringImportPaths": ["data/__internal"],
     
     "dependencies": {
-        "dlib": "~>1.4.1",
+        "dlib": "~>1.6.0",
         "bindbc-glslang": "~>0.1.0",
         "bindbc-sdl": "~>2.3.4",
         "bindbc-spirvcross": "~>0.1.1",
