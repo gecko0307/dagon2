@@ -1,7 +1,7 @@
 # Credits
 
 ## Authors
-* Core engine, GScript3 runtime, Jolt Physics binding, ImGui extension, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
+* Core engine, GScript3 runtime, Jolt Physics binding, ImGui extension, PhysFS extension, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
 
 ## Contributors
 * OBJ group parser - [Vlad Davydov aka Tynuk](https://github.com/Tynukua)
@@ -28,4 +28,5 @@ Dagon 2 uses the following libraries:
 * [libktx](https://github.com/KhronosGroup/KTX-Software)
 * [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
 * [Open Asset Import Library (Assimp)](https://github.com/assimp/assimp)
+* [PhysFS](https://github.com/icculus/physfs)
 * [cimgui](https://github.com/cimgui/cimgui)
