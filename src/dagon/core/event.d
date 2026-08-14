@@ -414,6 +414,9 @@ class EventManager: Owner
     /// Time in milliseconds since the last `updateTimer` call.
     ulong deltaTimeMs = 0;
     
+    /// Time in nanoseconds since the last `updateTimer` call.
+    ulong deltaTimeNs = 0;
+    
     /// Width of the screen.
     uint displayWidth;
     
@@ -557,7 +560,7 @@ class EventManager: Owner
         
         SDL_SetGamepadEventsEnabled(true);
         
-        lastTime = SDL_GetTicks();
+        lastTime = SDL_GetTicksNS();
     }
     
     /// Destructor. Cleans up resources.
@@ -1200,10 +1203,11 @@ class EventManager: Owner
     /// Updates the internal timer and computes delta time.
     void updateTimer()
     {
-        ulong currentTime = SDL_GetTicks();
-        deltaTimeMs = currentTime - lastTime;
+        ulong currentTime = SDL_GetTicksNS();
+        deltaTimeNs = currentTime - lastTime;
         lastTime = currentTime;
-        deltaTime = cast(double)(deltaTimeMs) * 0.001;
+        deltaTimeMs = cast(ulong)(cast(double)deltaTimeNs * 0.000001);
+        deltaTime = cast(double)(deltaTimeNs) * 0.000000001;
     }
     
     /**
