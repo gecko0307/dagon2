@@ -98,7 +98,12 @@ Runtime Dependencies
 - [GLSLang](https://github.com/khronosGroup/glslang)
 - [SPIRV-Cross](https://github.com/khronosgroup/spirv-cross)
 - [Assimp](https://github.com/assimp/assimp)
+- [libktx](https://github.com/KhronosGroup/KTX-Software)
 - [Jolt Physics](https://github.com/jrouwe/JoltPhysics) via [joltc](https://github.com/amerkoleci/joltc) wrapper
+- [libwebp](https://chromium.googlesource.com/webm/libwebp) for WebP support (optional)
+- [libtiff](https://libtiff.gitlab.io/libtiff/) for TIFF support (optional)
+- [Dear ImGui](https://github.com/ocornut/imgui) via [cimgui](https://github.com/cimgui/cimgui) wrapper (optional)
+- [PhysFS](https://github.com/icculus/physfs) (optional)
 
 Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux, if you want to use local libraries in Windows way (from application's working directory rather than from the system), add the following to your `dub.json`:
 
