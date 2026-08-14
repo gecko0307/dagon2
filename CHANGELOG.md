@@ -5,6 +5,8 @@ Dagon 2.0.0 - TBD
   - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
   - BC4 texture compressor (original implementation)
   - Window minimize/restore events
+  - Nanosecond-precision timer
+  - Mailbox Vsync support
 - **Assets**
   - Assimp integration is now a core feature
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
@@ -30,11 +32,143 @@ Dagon 2.0.0 - TBD
 - **Post-processing**
   - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
   - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
-  - FXAA 3.11
 - **Physics**
   - Jolt Physics is now built-in as `dagon.jolt` package
 - **Scripting**
   - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API.
+
+Dagon 1.6.0 - 10 Aug, 2026
+--------------------------
+- **Core**
+  - Fix `Application.takeScreenshot`
+  - Fix broken first record for log file output
+- **Extensions**
+  - New extension `dagon:server`, a UDP/ENet-based game server framework.
+- **Misc**
+  - Dagon now uses dlib 1.6.0.
+
+Dagon 1.5.0 - 4 Aug, 2026
+-------------------------
+- **Core**
+  - `Application.takeScreenshot` is now GC-free
+- **Graphics components**
+  - Cubemap processing functionality moved to a separate module, `dagon.graphics.cubemap`
+- **Extensions**
+  - New extension `dagon:network` based on [ENet](http://enet.bespin.org/) library, providing a network manager and an asynchronous client that works with the core messaging system
+  - New extension `dagon:security` that provides an encrypted messaging protocol.
+
+Dagon 1.4.0 - 23 Jul, 2026
+--------------------------
+- **Core**
+  - Fix a bug with `Application.fullscreen` property not set according to the config
+- **Graphics components**
+  - `prefilterCubemap` now accepts optional `lumaScale` parameter to scale the input cubemap values. It is `2.0` by default for backwards compatibility
+- **Assets**
+  - BC4 and BC7 texture compression support. New property `TextureAsset.compressionFormat`
+  - `dagon.resource.sdlimage` module merged with `dagon.resource.texture`.
+
+Dagon 1.3.2 - 19 Jul, 2026
+--------------------------
+- **Misc**
+  - Dagon now uses dlib 1.5.1.
+
+Dagon 1.3.1 - 14 Jul, 2026
+--------------------------
+- **Core**
+  - `sampleRatio` moved to `Application` class
+- **Post-processing**
+  - `sampleRadio` is now used to scale normalized glow radius.
+
+Dagon 1.3.0 - 10 Jul, 2026
+--------------------------
+- **Core**
+  - Re-render a frame in `Application.takeScreenshot`, so that any previous state changes take effect
+- **Graphics components**
+  - New methods `Material.copyTo`, `Material.copyFrom`
+  - New property `Entity.blurOnlyRotation`
+- **Rendering**
+  - Smoothly fade out decals on non-coplanar surfaces
+  - New render.conf options: `glow.softKnee`, `glow.maxEnergy`
+- **Post-processing**
+  - Soft knee in bright pass shader.
+
+Dagon 1.2.3 - 10 Jul, 2026
+--------------------------
+- **Extensions**
+  - `dagon:newton`:
+    - Fix NewtonCollisionShape destruction.
+
+Dagon 1.2.2 - 9 Jul, 2026
+-------------------------
+- **Rendering**
+  - Fix decal shader output for PBR buffer.
+
+Dagon 1.2.1 - 3 Jul, 2026
+-------------------------
+- **Graphics components**
+  - New property `Entity.blurMaxVelocity` for clamping screen-space motion vectors and, effectively, reduce motion blur for the entity.
+
+Dagon 1.2.0 - 2 Jul, 2026
+-------------------------
+- **Core**
+  - Fix a severe bug in multi-controller logic of `EventManager`
+  - Fix game stuttering when using `InputManager` for controller axis query
+  - Fix memory leak in `Application.takeScreenshot`
+  - Fix destructors order for `Application` internals
+  - New properties `GameInputDevice.active`, `GameInputDevice.instanceId`, `GameInputDevice.axisValues`
+- **Rendering**
+  - Supersampling suppport (`ss.sampleRatio` in render.conf)
+- **Post-processing**
+  - FXAA 3.11
+  - Resolution-independent glow radius (`glow.normalizedRadius` in render.conf). If specified, the post-processing pipeline will determine blur radius dynamically based on a fraction (`0.0`..`1.0`) of the game window's height. For example, for `0.005` at 1080p rendering actual blur radius will be 6 pixels.
+
+Dagon 1.1.1 - 29 Jun, 2026
+--------------------------
+- **Assets**
+  - New property `GLTFMeshPrimitive.materialIndex` (as it appears in glTF file). It is passed to the outgoing `Triangle` structure when iterating faces with `GLTFAsset.opApply`, which allows to pass material data elsewhere. Main use case for this feature is accounting for face materials in collision detection and raycasting
+- **Extensions**
+  - `dagon:newton`:
+    - Support material indices for triangles in `NewtonMeshShape`
+    - Breaking change: `NewtonRaycaster.onRayHit` now requires `long id` parameter for material IDs.
+
+Dagon 1.1.0 - 19 Jun, 2026
+--------------------------
+- **Game**
+  - 2D game module, `dagon.game.game2d`
+- **Assets**
+  - New method `AssetManager.preloadExternalAsset`
+- **Rendering**
+  - Subroutines in built-in shaders were replaced with uniform branching due to AMD issues
+  - Support framebuffer clearing in HUD renderer
+- **Graphics components**
+  - New property `Entity.name`
+  - Bounding boxes are now calculated for built-in shapes
+- **Collision**
+  - 2D collision module (`dagon.collision.collision2d`)
+- **Editor**
+  - Started working on a scene editor for the engine.
+
+Dagon 1.0.3 - 10 Jun, 2026
+--------------------------
+- **Core**
+  - VSync is now disabled by default
+- **Extensions**
+  - `dagon:jolt`:
+    - `JoltPhysicsWorld.collideShape`.
+
+Dagon 1.0.2 - 3 Jun, 2026
+-------------------------
+- **Assets**
+  - `Scene.onPauseUpdate`
+- **Rendering**
+  - Support UV transformation in HUD shader.
+
+Dagon 1.0.1 - 2 Jun, 2026
+-------------------------
+- **Assets**
+  - `baseColorFactor` from glTF is now converted to gamma space for storage
+- **Graphics components**
+  - Fix some error messages for the `Shader` class.
 
 Dagon 1.0.0 - 24 Apr, 2026
 --------------------------
