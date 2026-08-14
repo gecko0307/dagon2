@@ -154,6 +154,22 @@ class GPU: Owner
                 }
             }
             
+            if (application.vsync == VSyncMode.Enabled)
+            {
+                if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_VSYNC))
+                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_VSYNC);
+            }
+            else if (application.vsync == VSyncMode.Disabled)
+            {
+                if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_IMMEDIATE))
+                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_IMMEDIATE);
+            }
+            else if (application.vsync == VSyncMode.Mailbox)
+            {
+                if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_MAILBOX))
+                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
+            }
+            
             swapchainTextureFormat = SDL_GetGPUSwapchainTextureFormat(device, application.window);
             
             SDL_GPUTextureCreateInfo textureCreateInfo = {
