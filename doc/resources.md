@@ -19,5 +19,5 @@ vertexModule.create("filename.vert.glsl", "shaders/filename.vert.glsl",
 ## Textures
 TODO
 
-## Models
+## 3D Models
 TODO
