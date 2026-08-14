@@ -1,12 +1,11 @@
 Dagon 2.0.0 - TBD
 -----------------
 - **Core**
-  - 2x supersampling support
   - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
   - BC4 texture compressor (original implementation)
   - Window minimize/restore events
   - Nanosecond-precision timer
-  - Mailbox Vsync support
+  - Mailbox Vsync support, significantly reducing input lag
 - **Assets**
   - Assimp integration is now a core feature
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
@@ -19,8 +18,7 @@ Dagon 2.0.0 - TBD
   - Renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
   - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
   - Stochastic screen-space reflections (SSSR) support
-  - 2x supersampling support
-  - Experimental HDR (scRGB) output support
+  - HDR (scRGB) output support
   - The renderer now uses separate irradiance cubemap
   - BRDF LUT is now generated at runtime instead of loading from data/__internal
   - Temporal SSAO support

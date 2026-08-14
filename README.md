@@ -20,7 +20,7 @@ Screenshots
 
 Features
 --------
-Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are ported yet.
+Note: Dagon 2 is still in active development. Not all features and extensions of Dagon 1.0 are ported yet.
 
 - Scene graph
 - Virtual file system
@@ -45,6 +45,7 @@ Note: Dagon 2 is still in active development. Not all features of Dagon 1.0 are 
 - Ownership memory model
 - Built-in camera logics for easy navigation: freeview and first person views
 - Rigid body physics using [Jolt](https://github.com/jrouwe/JoltPhysics) physics engine. Built-in character controller
+- GUI extension based on [Dear ImGui](https://github.com/ocornut/imgui)
 - Native file open/save dialogs (for Windows, GTK, and Qt).
 
 New features:
@@ -53,7 +54,6 @@ New features:
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
 - Screen-space reflections
 - HDR (scRGB) output support
-- 2x supersampling support
 - Temporal SSAO
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
