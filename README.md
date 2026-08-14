@@ -2,7 +2,7 @@ Dagon Engine 2
 --------------
 Feature-rich, performant, easy to use, extensible desktop game development framework for [D language](https://dlang.org/) aiming photorealistic 3D graphics. Works on Windows and Linux.
 
-This is work-in-progress SDL3/Vulkan port of [Dagon Engine 1.0](https://github.com/gecko0307/dagon).
+This is a work-in-progress SDL3/Vulkan port of [Dagon Engine 1.x](https://github.com/gecko0307/dagon).
 
 > Note: this project is not connected to Dagon engine by Senscape.
 
