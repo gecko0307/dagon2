@@ -182,6 +182,13 @@ abstract class Renderer: EventListener, Updateable
         
         commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
         
+        SDL_WaitAndAcquireGPUSwapchainTexture(
+            commandBuffer,
+            gpu.application.window,
+            &swapchainTexture,
+            &swapchainWidth,
+            &swapchainHeight);
+        
         foreach(i, pass; renderPasses)
         {
             if (pass.active)

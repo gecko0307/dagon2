@@ -193,12 +193,6 @@ class PresentPass: RenderPass
         if (state.scene is null)
             return;
         
-        SDL_WaitAndAcquireGPUSwapchainTexture(
-            renderer.commandBuffer,
-            renderer.gpu.application.window,
-            &renderer.swapchainTexture,
-            &renderer.swapchainWidth,
-            &renderer.swapchainHeight);
         colorTargetInfo.texture = renderer.swapchainTexture;
         
         beginPass();
