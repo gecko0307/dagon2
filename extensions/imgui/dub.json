@@ -1,0 +1,28 @@
+{
+    "name": "imgui",
+    "importPaths": [
+        "thirdparty/bindbc-imgui-0.7.0/source",
+        "src"
+    ],
+    "sourcePaths": [
+        "thirdparty/bindbc-imgui-0.7.0/source",
+        "src"
+    ],
+    "dependencies": {
+        "dagon2": "*"
+    },
+    
+    "versions": [
+        "USE_SDL2"
+    ],
+    
+    "copyFiles": ["license", "data"],
+    
+    "copyFiles-windows-x86_64": [
+        "lib/windows-x64/*"
+    ],
+    
+    "copyFiles-linux-x86_64": [
+        "lib/linux-x64/*"
+    ]
+}

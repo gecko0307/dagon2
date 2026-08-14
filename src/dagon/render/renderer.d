@@ -86,6 +86,15 @@ abstract class Renderer: EventListener, Updateable
     /// Inactive renderer does nothing in runtime.
     bool active = true;
     
+    ///
+    SDL_GPUTexture* swapchainTexture;
+    
+    ///
+    uint swapchainWidth;
+    
+    ///
+    uint swapchainHeight;
+    
    protected:
     bool buffersInvalidated = false;
     

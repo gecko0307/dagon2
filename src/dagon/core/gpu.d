@@ -120,11 +120,20 @@ class GPU: Owner
         {
             string backendStr;
             if (backend == GPUBackend.Vulkan)
-                backendStr = "vulkan";
+                backendStr = "Vulkan";
             else
                 exitWithError("Unsupported GPU API backend: " ~ backend.to!string);
             
-            device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, application.gpuDebug, toStringz(backendStr));
+            SDL_PropertiesID props = SDL_CreateProperties();
+            SDL_SetStringProperty(props, SDL_PROP_GPU_DEVICE_CREATE_NAME_STRING, toStringz(backendStr));
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_SPIRV_BOOLEAN, true);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, application.gpuDebug);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_PREFERLOWPOWER_BOOLEAN, false);
+            device = SDL_CreateGPUDeviceWithProperties(props);
+            SDL_DestroyProperties(props);
+            
+            //device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, application.gpuDebug, toStringz(backendStr));
+            
             if (device is null)
                 exitWithError("SDL_CreateGPUDevice failed: " ~ to!string(SDL_GetError()));
             
