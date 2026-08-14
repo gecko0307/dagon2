@@ -1,0 +1,17 @@
+{
+    "name": "physfs",
+    "importPaths": [
+        "src"
+    ],
+    "sourcePaths": [
+        "src"
+    ],
+    "dependencies": {
+        "dagon2": "*",
+        "bindbc-physfs": "0.1.0"
+    },
+    
+    "copyFiles": ["license"],
+    "copyFiles-windows-x86_64": ["lib/windows-x64/*"],
+    "copyFiles-linux-x86_64": ["lib/linux-x64/*"]
+}
