@@ -111,6 +111,8 @@ Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux
 "lflags-linux": ["-rpath=$$ORIGIN"]
 ```
 
+On Windows, some dependencies require Visual C++ v14 Redistributable. You can download an official installer [here](https://aka.ms/vc14/vc_redist.x64.exe). It is recommended to bundle vc_redist.x64.exe with your application's installer for end users.
+
 Known Limitations
 -----------------
 - The engine doesn't support macOS yet

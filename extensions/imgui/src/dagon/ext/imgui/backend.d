@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.ext.imgui;
+module dagon.ext.imgui.backend;
 
 import core.stdc.string: memcpy;
 
@@ -42,7 +42,7 @@ import dagon.resource.shader;
 import dagon.render.pass;
 import dagon.render.renderer;
 
-public import bindbc.imgui;
+import bindbc.imgui;
 
 struct ImGuiShaderVertexUniformBuffer
 {
