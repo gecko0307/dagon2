@@ -592,10 +592,17 @@ bool parseProperties(string input, Properties props)
                 propValue.append("1");
                 expect = Expect.Semicolon;
             }
-            else
+            else if (lexeme.isNumeric)
             {
                 propType = DPropType.Number;
                 propValue.append(lexeme);
+                expect = Expect.Semicolon;
+            }
+            else
+            {
+                auto p = props[lexeme];
+                propType = p.type;
+                propValue.append(p.data);
                 expect = Expect.Semicolon;
             }
         }

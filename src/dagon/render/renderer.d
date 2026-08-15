@@ -86,16 +86,21 @@ abstract class Renderer: EventListener, Updateable
     /// Inactive renderer does nothing in runtime.
     bool active = true;
     
-    ///
+    /**
+     * Current swapchain texture. Can be null, because the renderer doesn't wait
+     * for the valid texture to be acquired and just cancels the pipeline in such case.
+     * This pointer is only reliable to use from the `render` methods of the renderer's passes.
+     */
     SDL_GPUTexture* swapchainTexture;
     
-    ///
+    /// Current swapchain texture width, if `swapchainTexture` is not null.
     uint swapchainWidth;
     
-    ///
+    /// Current swapchain texture height, if `swapchainTexture` is not null.
     uint swapchainHeight;
     
    protected:
+    bool minimized = false;
     bool buffersInvalidated = false;
     
    public:
@@ -175,10 +180,8 @@ abstract class Renderer: EventListener, Updateable
     /// Renders the current frame using the pipeline and output buffer.
     void render()
     {
-        if (!active)
+        if (!active || minimized)
             return;
-        
-        state.reset();
         
         commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
         
@@ -194,6 +197,8 @@ abstract class Renderer: EventListener, Updateable
             SDL_CancelGPUCommandBuffer(commandBuffer);
             return;
         }
+        
+        state.reset();
         
         foreach(i, pass; renderPasses)
         {
@@ -239,12 +244,12 @@ abstract class Renderer: EventListener, Updateable
     
     override void onMinimize()
     {
-        active = false;
+        minimized = true;
     }
     
     override void onRestore()
     {
-        active = true;
+        minimized = false;
     }
     
     /**

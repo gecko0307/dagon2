@@ -301,7 +301,6 @@ interface InputDevice
     bool pollEvents();
 }
 
-
 /**
  * Manages event polling, event queue and input state.
  *
