@@ -131,16 +131,19 @@ class Cadencer: Owner
      * Calls the callback if enough time has accumulated for a fixed update,
      * and updates the FPS counter.
      */
-    void update(Time t)
+    bool update(Time t)
     {
         elapsedTime += t.delta;
         fpsTimeCounter += t.delta;
+        
+        bool updated = false;
         
         if (elapsedTime >= timeStep)
         {
             updateable.update(Time(timeStep, t.elapsed));
             elapsedTime -= timeStep;
             fpsCounter++;
+            updated = true;
         }
         
         if (fpsTimeCounter >= 1.0) // 1 sec interval
@@ -149,5 +152,7 @@ class Cadencer: Owner
             fpsCounter = 0;
             fpsTimeCounter = 0;
         }
+        
+        return updated;
     }
 }

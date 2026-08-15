@@ -483,6 +483,12 @@ class Application: EventListener, Updateable
     /// Number of logic updates per second.
     uint updatesPerSecond = 60;
     
+    ///
+    bool enableCPUSleep = true;
+    
+    ///
+    ulong cpuSleepDurationNS = 10000;
+    
     /// Maximum simultaneous timers.
     uint maxTimersCount = 1024;
     
@@ -1543,8 +1549,11 @@ class Application: EventListener, Updateable
         {
             eventManager.updateTimer();
             t.delta = eventManager.deltaTime;
-            cadencer.update(t);
+            bool updated = cadencer.update(t);
             t.elapsed += t.delta;
+            
+            if (!updated && enableCPUSleep)
+                SDL_DelayNS(cpuSleepDurationNS);
         }
     }
     
