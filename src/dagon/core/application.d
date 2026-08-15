@@ -115,7 +115,7 @@ struct DagonVersion
 immutable DagonVersion dagonVersion = DagonVersion(2, 0, 0);
 
 /// Engine version number as a read-only string.
-immutable string dagonVersionString = "2.0.0";
+immutable string dagonVersionString = "2.0.0-alpha";
 
 /// Internally reserved event codes.
 enum DagonEvent
@@ -1200,7 +1200,7 @@ class Application: EventListener, Updateable
         _gpu = gpu;
         
         logInfo("GPU API backend: ", gpu.backend);
-        logInfo("Back buffer format: ", gpu.swapchainTextureFormat);
+        logInfo("Swap chain format: ", gpu.swapchainTextureFormat);
         
         if (gpu.hdrSwapchain)
         {
@@ -1208,6 +1208,8 @@ class Application: EventListener, Updateable
         }
         
         setFullscreen(fullscreen);
+        
+        logInfo("VSync: ", vsync);
         
         // Create event manager
         eventManager = New!EventManager(this);
