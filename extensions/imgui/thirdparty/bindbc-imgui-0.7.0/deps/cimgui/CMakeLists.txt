@@ -5,9 +5,9 @@ project(cimgui)
 set (CMAKE_CXX_STANDARD 11)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_tables.cpp)
-	set(TABLES_SOURCE "imgui/imgui_tables.cpp")
+    set(TABLES_SOURCE "imgui/imgui_tables.cpp")
 else()
-	set(TABLES_SOURCE "")
+    set(TABLES_SOURCE "")
 endif()
 
 
@@ -20,7 +20,7 @@ file(GLOB IMGUI_SOURCES
     imgui/imgui_demo.cpp
     imgui/imgui_internal.h
     imgui/imgui_widgets.cpp
-	${TABLES_SOURCE}
+    ${TABLES_SOURCE}
 )
 
 set(IMGUI_STATIC "no" CACHE STRING "Build as a static library")

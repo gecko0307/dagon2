@@ -12,10 +12,6 @@
         "dagon2": "*"
     },
     
-    "versions": [
-        "USE_SDL2"
-    ],
-    
     "copyFiles": ["license", "data"],
     
     "copyFiles-windows-x86_64": [
