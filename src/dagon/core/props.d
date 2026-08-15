@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
  * handling property data. Properties can be numbers, vectors, or strings,
  * and are used for configuration, serialization, and runtime data storage.
  *
- * Copyright: Timur Gafarov 2016-2025
+ * Copyright: Timur Gafarov 2016-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
  * Authors: Timur Gafarov
  */

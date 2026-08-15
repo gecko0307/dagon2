@@ -47,7 +47,6 @@ Note: Dagon 2 is still in active development. Not all features and extensions of
 - Native file open/save dialogs (for Windows, GTK, and Qt).
 
 New features:
-- Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - The renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
 - Screen-space reflections
@@ -59,7 +58,9 @@ New features:
 - Fog effect is now applied in a separate pass. Ground fog support
 - Radial optical distortion support
 - Shadeless materials in deferred pipeline
-- Window minimize/restore events.
+- Window minimize/restore events
+- Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
+- Referencing support in *.conf files syntax. Any property can be reused like a variable.
 
 Major changes from Dagon 0.x/1.x:
 - Moved to SDL3 and SDL GPU
