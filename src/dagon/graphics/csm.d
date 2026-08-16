@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Provides boilerplate for cascaded shadow mapping (CSM).
+ * Provides a boilerplate for cascaded shadow mapping (CSM).
  *
  * Description:
  * Cascaded shadow mapping is a technique for rendering high-quality shadows

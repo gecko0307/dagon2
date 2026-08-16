@@ -168,9 +168,9 @@ class Texture: Owner
                     if (buffer.format.blockSize > 0)
                     {
                         levelSize =
-                             ((cast(uint)levelWidth + 3) / 4) *
-                             ((cast(uint)levelHeight + 3) / 4) *
-                             buffer.format.blockSize;
+                            ((cast(uint)levelWidth + 3) / 4) *
+                            ((cast(uint)levelHeight + 3) / 4) *
+                            buffer.format.blockSize;
                     }
                     else
                     {
@@ -222,9 +222,9 @@ class Texture: Owner
                 if (buffer.format.blockSize > 0)
                 {
                     levelSize =
-                         ((cast(uint)levelWidth + 3) / 4) *
-                         ((cast(uint)levelHeight + 3) / 4) *
-                         buffer.format.blockSize;
+                        ((cast(uint)levelWidth + 3) / 4) *
+                        ((cast(uint)levelHeight + 3) / 4) *
+                        buffer.format.blockSize;
                 }
                 else
                 {
@@ -276,10 +276,10 @@ class Texture: Owner
                 if (buffer.format.blockSize > 0)
                 {
                     levelSize =
-                         ((cast(uint)levelWidth + 3) / 4) *
-                         ((cast(uint)levelHeight + 3) / 4) *
-                         ((cast(uint)levelDepth + 3) / 4) *
-                         buffer.format.blockSize;
+                        ((cast(uint)levelWidth + 3) / 4) *
+                        ((cast(uint)levelHeight + 3) / 4) *
+                        ((cast(uint)levelDepth + 3) / 4) *
+                        buffer.format.blockSize;
                 }
                 else
                 {

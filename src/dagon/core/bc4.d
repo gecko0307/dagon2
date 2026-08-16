@@ -133,7 +133,7 @@ void bc4Compress(ubyte* output, ubyte* image, uint width, uint height, uint numC
                     uint srcx = bx * 4 + x;
                     uint srcy = by * 4 + y;
                     
-                    if (srcx >= width)  srcx = width  - 1;
+                    if (srcx >= width)  srcx = width - 1;
                     if (srcy >= height) srcy = height - 1;
                     uint srcIndex = (srcy * width + srcx) * numChannels;
                     

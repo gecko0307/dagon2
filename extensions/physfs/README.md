@@ -1,22 +1,22 @@
 # dagon:physfs
 
-PhysFS-based virtual filesystem extension. Allows to use archives as asset sources in `assetManager.fs`.
+PhysFS-based virtual filesystem extension. Allows to use archives in Dagon's VFS.
 
 ## Usage
 
 ```d
 import dagon.ext.physfs;
 
-class TestScene: Scene
+class MyGame: Game
 {
-    this(Game game)
+    this(uint w, uint h, bool fullscreen, string title, string[] args)
     {
-        super(game);
+        super(w, h, fullscreen, title, args);
         
         PhysFS pfs = New!PhysFS();
         pfs.addSearchPath("./data");
         pfs.addSearchPath("data.zip");
-        assetManager.fs.mount(pfs);
+        vfs.mount(pfs);
     }
 }
 ```

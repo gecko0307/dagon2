@@ -123,7 +123,7 @@ class Material: Owner
     
     /**
      * If true, the surface is not affected by any lights.
-     * The resulting look is determied by baseColor/baseColorTexture.
+     * The resulting look is determined by baseColor/baseColorTexture.
      * This is useful for interface objects in the scene (like guidelines or arrows).
      */
     bool shadeless = false;

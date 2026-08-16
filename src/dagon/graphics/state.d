@@ -55,22 +55,55 @@ struct InputBuffer
 
 struct GraphicsState
 {
+    ///
     Time time;
+    
+    ///
     InputBuffer depthBuffer;
+    
+    ///
     InputBuffer colorBuffer;
+    
+    ///
     InputBuffer normalBuffer;
+    
+    ///
     InputBuffer roughnessMetallicBuffer;
+    
+    ///
     InputBuffer emissionBuffer;
+    
+    ///
     InputBuffer velocityBuffer;
+    
+    ///
     InputBuffer occlusionBuffer;
+    
+    ///
     InputBuffer reflectionBuffer;
+    
+    ///
     InputBuffer radianceBuffer;
+    
+    ///
     RenderPass pass;
+    
+    ///
     Scene scene;
+    
+    ///
     Entity entity;
+    
+    ///
     Material material;
+    
+    ///
     Texture brdfLUT;
+    
+    ///
     bool brdfLUTEnabled = false;
+    
+    ///
     bool occlusionEnabled = false;
     
     // TODO: other data

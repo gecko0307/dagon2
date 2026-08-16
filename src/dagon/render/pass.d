@@ -30,9 +30,8 @@ DEALINGS IN THE SOFTWARE.
  *
  * Description:
  * This module provides the base class for rendering passes.
- * Rendering passes encapsulate individual stages of the graphics pipeline,
- * managing GPU resources and providing methods for binding textures, buffers, 
- * and executing draw commands.
+ * A pass encapsulates an individual stage of the rendering process,
+ * managing a pipeline state object and issuing draw calls.
  *
  * Copyright: Timur Gafarov 2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).

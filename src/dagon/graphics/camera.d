@@ -66,7 +66,7 @@ class Camera: Entity
     /// Far clipping plane distance.
     float zFar = 1000.0f;
 
-    //TODO: lens parameters
+    //TODO: lens parameters for DoF
 
     /**
      * Constructs a camera entity.
