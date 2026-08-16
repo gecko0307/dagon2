@@ -40,6 +40,7 @@ module dagon.graphics.material;
 
 import dlib.core.ownership;
 import dlib.math.vector;
+import dlib.math.matrix;
 import dlib.image.color;
 
 import dagon.graphics.texture;
@@ -141,11 +142,25 @@ class Material: Owner
     /// Blend mode of the surface.
     BlendMode blendMode = BlendMode.Opaque;
     
+    /// UV transformation matrix.
+    Matrix4x4f uvTransformation;
+    
     /**
      * Constructor.
      */
     this(Owner owner)
     {
         super(owner);
+        uvTransformation = Matrix4x4f.identity;
+    }
+    
+    /// Assign uvTransformation from 3x3 affine matrix
+    void uvTransformation3x3(Matrix3x3f m) @property
+    {
+        uvTransformation = matrixf(
+            m.a11, m.a12, m.a13, 0.0f,
+            m.a21, m.a22, m.a23, 0.0f,
+            m.a31, m.a32, m.a33, 0.0f,
+            0.0f,  0.0f,  0.0f,  1.0f);
     }
 }

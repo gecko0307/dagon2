@@ -17,6 +17,7 @@ layout(set = 1, binding = 0) uniform UniformBuffer
     mat4 normalMatrix;
     mat4 projectionMatrix;
     mat4 prevModelViewMatrix;
+    mat3 uvTransformation;
 } ubo;
 
 void main()
@@ -24,7 +25,7 @@ void main()
     vec4 modelPosHmg = vec4(va_position, 1.0);
     vec4 eyePosHmg = ubo.modelViewMatrix * modelPosHmg;
     eyePosition = eyePosHmg.xyz;
-    texCoords = va_texcoords;
+    texCoords = (ubo.uvTransformation * vec3(va_texcoords, 1.0)).xy;
     eyeNormal = (ubo.normalMatrix * vec4(va_normal, 0.0)).xyz;
     modelPosition = va_position;
     

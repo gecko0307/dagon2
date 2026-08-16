@@ -51,6 +51,7 @@ struct GeometryShaderVertexUniformBuffer
     Matrix4x4f normalMatrix;
     Matrix4x4f projectionMatrix;
     Matrix4x4f prevModelViewMatrix;
+    Matrix4x4f uvTransformation;
 }
 
 struct GeometryShaderFragmentUniformBuffer
@@ -119,6 +120,7 @@ class GeometryShader: Shader
         vsUBO.normalMatrix = Matrix4x4f.identity;
         vsUBO.projectionMatrix = Matrix4x4f.identity;
         vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
+        vsUBO.uvTransformation = Matrix4x4f.identity;
         
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
@@ -143,6 +145,7 @@ class GeometryShader: Shader
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
+        vsUBO.uvTransformation = material.uvTransformation;
         
         fsUBO.flags[GeometryFlags.Texture] = 0;
         fsUBO.flags[GeometryFlags.Output] = 0;

@@ -39,6 +39,8 @@ import dlib.container.dict;
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.quaternion;
+import dlib.math.transformation;
+import dlib.math.utils;
 import dlib.geometry.triangle;
 import dlib.image.color;
 import dlib.filesystem.filesystem;
@@ -176,7 +178,8 @@ class ModelAsset: Asset, TriangleSet
     
     ///
     ModelConversionOptions conversionOptions =
-        ModelConversionOptions.Triangulate | ModelConversionOptions.FlipUVs;
+        ModelConversionOptions.Triangulate |
+        ModelConversionOptions.FlipUVs;
     
     ///
     this(GPU gpu, Owner owner)
@@ -364,6 +367,18 @@ class ModelAsset: Asset, TriangleSet
         }
         
         // TODO: other textures
+        
+        aiUVTransform uvTransform;
+        if (aiGetMaterialUVTransform(material, _AI_MATKEY_UVTRANSFORM_BASE, aiTextureType.DIFFUSE, 0, &uvTransform) == aiReturn.SUCCESS)
+        {
+            Matrix3x3f m =
+                translationMatrix2D(Vector2f(uvTransform.mTranslation.x, uvTransform.mTranslation.y)) *
+                translationMatrix2D(Vector2f(0.5f, 0.5f)) *
+                rotationMatrix2D(uvTransform.mRotation) *
+                scaleMatrix2D(Vector2f(uvTransform.mScaling.x, uvTransform.mScaling.y)) *
+                translationMatrix2D(Vector2f(-0.5f, -0.5f));
+            mat.uvTransformation3x3 = m;
+        }
         
         materials.insertBack(mat);
         
