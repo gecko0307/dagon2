@@ -64,9 +64,14 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
-    vec4 fparams; // time
+    vec4 fparams; // [0] = time
     uvec4 iparams;
 } ubo;
+
+const float maxDistance = 5.0;
+const int steps = 40;
+const int refineSteps = 4;
+const float thickness = 0.2;
 
 layout(location = 0) in vec2 texCoords;
 
@@ -75,13 +80,9 @@ layout(location = 0) out vec4 outColor;
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
-    const float maxDistance = 5.0;
-    const int steps = 40;
-    const int refineSteps = 4;
     float invSamples = 1.0 / float(steps);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     float jitter = hash(texCoords * 467.759 + ubo.fparams[0]) * 0.9;
-    const float thickness = 0.2;
     float prevT = 0.0;
 
     for (int i = 0; i <= steps; i++)
