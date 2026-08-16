@@ -10,11 +10,8 @@ Feature-rich, performant, easy to use, extensible desktop game development frame
 
 Screenshots
 -----------
-[![Car 1](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)
-[![Car 2](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-color-grading1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-color-grading1.jpg)
-[![Car 3](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-color-grading2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-color-grading2.jpg)
-[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new2.jpg)
-[![Temporal SSLR test](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-sslr-new3.jpg)
+[![Screenshot 1](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/05/dagon2-mclaren.jpg)
+[![Screenshot 2](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-city.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-city.jpg)
 
 Features
 --------
