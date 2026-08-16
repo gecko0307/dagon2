@@ -35,7 +35,7 @@ New features and major changes from Dagon 0.x/1.x:
 - Fog effect is now applied in a separate pass. Ground fog support
 - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
 - HDR (scRGB) output support
-- Mailbox VSync mode support
+- Mailbox VSync mode support. CPU-friendly frame scheduler
 - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
 - Radial optical distortion support
 - Shadeless materials in deferred pipeline

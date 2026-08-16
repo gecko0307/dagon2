@@ -56,10 +56,8 @@ enum GPUBackend
 /**
  * `SDL_GPUDevice` wrapper class.
  *
- * This class provides an abstraction layer for SDL 3.0's GPU device management,
- * including device initialization, buffer creation, and resource management.
- * It handles the lifecycle of GPU resources and provides convenient methods for
- * common GPU operations like buffer uploads and device querying.
+ * This class provides an abstraction layer for SDL 3.0's GPU device management.
+ * It also provides convenient methods for common GPU operations like buffer uploads.
  */
 class GPU: Owner
 {
@@ -81,9 +79,6 @@ class GPU: Owner
     /// Version string of the GPU driver
     string deviceDriverVersion = "";
     
-    /// The texture format used by the swapchain.
-    SDL_GPUTextureFormat swapchainTextureFormat;
-    
     /// Default 2D texture for fallback sampling operations.
     SDL_GPUTexture* defaultTexture;
     
@@ -93,11 +88,20 @@ class GPU: Owner
     /// Default sampler for fallback sampling operations.
     SDL_GPUSampler* defaultSampler;
     
+    /// The texture format used by the swapchain.
+    SDL_GPUTextureFormat swapchainTextureFormat;
+    
     /// Whether the GPU device supports HDR extended linear swapchain composition.
     bool hdrExtendedLinearSwapchainSupported = false;
     
     /// Whether HDR swapchain is currently enabled.
     bool hdrSwapchain = false;
+    
+    /// Colorspace of the swapchain textures.
+    SDL_GPUSwapchainComposition swapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
+    
+    /// Present mode that will be used to present swapchain textures to the OS.
+    SDL_GPUPresentMode swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
     
     /**
      * Constructs a GPU device wrapper for the given application.
@@ -118,6 +122,8 @@ class GPU: Owner
         this.application = application;
         if (application.window)
         {
+            // Initialize GPU device
+            
             string backendStr;
             if (backend == GPUBackend.Vulkan)
                 backendStr = "Vulkan";
@@ -125,14 +131,14 @@ class GPU: Owner
                 exitWithError("Unsupported GPU API backend: " ~ backend.to!string);
             
             SDL_PropertiesID props = SDL_CreateProperties();
-            SDL_SetStringProperty(props, SDL_PROP_GPU_DEVICE_CREATE_NAME_STRING, toStringz(backendStr));
-            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_SPIRV_BOOLEAN, true);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, application.gpuDebug);
-            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_PREFERLOWPOWER_BOOLEAN, false);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_PREFERLOWPOWER_BOOLEAN, application.preferLowPower);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_VERBOSE_BOOLEAN, false);
+            SDL_SetStringProperty(props, SDL_PROP_GPU_DEVICE_CREATE_NAME_STRING, toStringz(backendStr));
+            if (backend == GPUBackend.Vulkan)
+                SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_SPIRV_BOOLEAN, true);
             device = SDL_CreateGPUDeviceWithProperties(props);
             SDL_DestroyProperties(props);
-            
-            //device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, application.gpuDebug, toStringz(backendStr));
             
             if (device is null)
                 exitWithError("SDL_CreateGPUDevice failed: " ~ to!string(SDL_GetError()));
@@ -144,33 +150,39 @@ class GPU: Owner
             deviceDriver = SDL_GetStringProperty(gpuProps, SDL_PROP_GPU_DEVICE_DRIVER_NAME_STRING, "Unknown").to!string;
             deviceDriverVersion = SDL_GetStringProperty(gpuProps, SDL_PROP_GPU_DEVICE_DRIVER_VERSION_STRING, "Unknown").to!string;
             
+            // Initialize swapchain parameters
+            
             if (application.hdrOutputSupport && application.hdrOutput)
             {
                 hdrExtendedLinearSwapchainSupported = SDL_WindowSupportsGPUSwapchainComposition(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR);
                 if (hdrExtendedLinearSwapchainSupported)
                 {
-                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR, SDL_GPU_PRESENTMODE_VSYNC);
-                    hdrSwapchain = application.hdrOutputSupport && application.hdrOutput;
+                    swapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_HDR_EXTENDED_LINEAR;
+                    hdrSwapchain = true;
                 }
             }
             
             if (application.vsync == VSyncMode.Enabled)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_VSYNC))
-                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_VSYNC);
+                    swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
             }
             else if (application.vsync == VSyncMode.Disabled)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_IMMEDIATE))
-                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_IMMEDIATE);
+                    swapchainPresentMode = SDL_GPU_PRESENTMODE_IMMEDIATE;
             }
             else if (application.vsync == VSyncMode.Mailbox)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_MAILBOX))
-                    SDL_SetGPUSwapchainParameters(device, application.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
+                    swapchainPresentMode = SDL_GPU_PRESENTMODE_MAILBOX;
             }
             
+            SDL_SetGPUSwapchainParameters(device, application.window, swapchainComposition, swapchainPresentMode);
+            
             swapchainTextureFormat = SDL_GetGPUSwapchainTextureFormat(device, application.window);
+            
+            // Default/fallback textures
             
             SDL_GPUTextureCreateInfo textureCreateInfo = {
                 type: SDL_GPU_TEXTURETYPE_2D,

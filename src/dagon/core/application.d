@@ -483,11 +483,11 @@ class Application: EventListener, Updateable
     /// Number of logic updates per second.
     uint updatesPerSecond = 60;
     
-    ///
+    /// Sleeping is used for CPU-friendly game loop.
     bool enableCPUSleep = true;
     
-    ///
-    ulong cpuSleepDurationNS = 10000;
+    /// Enable to prefer energy efficiency over maximum GPU performance.
+    bool preferLowPower = false;
     
     /// Maximum simultaneous timers.
     uint maxTimersCount = 1024;
@@ -1244,6 +1244,7 @@ class Application: EventListener, Updateable
         logInfo("Display refresh rate: ", refreshRate, " Hz");
         logInfo("Updates per second: ", updatesPerSecond, " Hz");
         cadencer = New!Cadencer(this, updatesPerSecond, this);
+        cadencer.enableSleep = enableCPUSleep;
         
         if ("maxTimersCount" in config.props)
         {
@@ -1551,9 +1552,6 @@ class Application: EventListener, Updateable
             t.delta = eventManager.deltaTime;
             bool updated = cadencer.update(t);
             t.elapsed += t.delta;
-            
-            if (!updated && enableCPUSleep)
-                SDL_DelayNS(cpuSleepDurationNS);
         }
     }
     

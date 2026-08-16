@@ -40,6 +40,7 @@ module dagon.core.time;
 
 import dlib.core.ownership;
 
+import dagon.core.sdl3;
 import dagon.core.updateable;
 
 /**
@@ -55,7 +56,7 @@ struct Time
 }
 
 /**
- * Schedules fixed-step updates and tracks frames per second (FPS).
+ * Schedules precise fixed-step updates and tracks frames per second (FPS).
  *
  * Description:
  * The `Cadencer` class accumulates time and udates a user-provided
@@ -84,6 +85,9 @@ class Cadencer: Owner
     Updateable updateable;
     
     public:
+    
+    ///
+    bool enableSleep = true;
 
     /// Current frames per second.
     int fps = 0;
@@ -129,7 +133,8 @@ class Cadencer: Owner
      *   t = The current frame's timing information.
      *
      * Calls the callback if enough time has accumulated for a fixed update,
-     * and updates the FPS counter.
+     * otherwise waits to reduce CPU load (if sleeping is enabled).
+     * Updates the FPS counter in 1 second intervals.
      */
     bool update(Time t)
     {
@@ -144,6 +149,15 @@ class Cadencer: Owner
             elapsedTime -= timeStep;
             fpsCounter++;
             updated = true;
+        }
+        else if (enableSleep)
+        {
+            double sleepDuration = timeStep - elapsedTime;
+            if (sleepDuration > 0.0)
+            {
+                ulong sleepDurationNS = cast(ulong)(sleepDuration * 1000000000.0);
+                SDL_DelayPrecise(sleepDurationNS);
+            }
         }
         
         if (fpsTimeCounter >= 1.0) // 1 sec interval
