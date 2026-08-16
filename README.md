@@ -86,8 +86,9 @@ On Windows, some dependencies require Visual C++ v14 Redistributable. You can do
 
 Known Limitations
 -----------------
-- The engine doesn't support macOS yet
+- The engine doesn't support macOS yet.
 - Although SDL GPU is a multi-backend API, Dagon 2 currently targets only Vulkan backend.
+- `dagon:openvr` extension from Dagon 1.x won't be ported because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
 
 Documentation
 -------------

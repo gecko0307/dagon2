@@ -1,0 +1,14 @@
+{
+    "name": "openxr",
+    "importPaths": [
+        "src"
+    ],
+    "sourcePaths": [
+        "src"
+    ],
+    "dependencies": {
+        "dagon2": "*"
+    },
+    
+    "copyFiles-windows-x86_64": ["lib/windows-x64/*"]
+}

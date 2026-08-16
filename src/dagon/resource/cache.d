@@ -69,6 +69,9 @@ class ResourceCacheStorage: Owner
     StdFileSystem fs;
     
     ///
+    bool enableLogging = true;
+    
+    ///
     this(ResourceCache cache, string directory, string extension)
     {
         super(cache);
@@ -115,7 +118,8 @@ class ResourceCacheStorage: Owner
         path ~= name;
         path ~= extension;
         
-        logDebug("[Cache]", " Saving ", path, "...");
+        if (enableLogging)
+            logDebug("[Cache]", " Saving ", path, "...");
         OutputStream strm = fs.openForOutput(path, FileSystem.create);
         strm.writeArray(data);
         Delete(strm);
@@ -135,7 +139,8 @@ class ResourceCacheStorage: Owner
         path ~= name;
         path ~= extension;
         
-        logDebug("[Cache]", " Saving ", path, "...");
+        if (enableLogging)
+            logDebug("[Cache]", " Saving ", path, "...");
         OutputStream strm = fs.openForOutput(path, FileSystem.create);
         saveCallback(path, strm, userData);
         Delete(strm);
@@ -159,7 +164,8 @@ class ResourceCacheStorage: Owner
             size_t size = cast(size_t)s.sizeInBytes;
             if (size > 0)
             {
-                logDebug("[Cache]", " Loading ", path, "...");
+                if (enableLogging)
+                    logDebug("[Cache]", " Loading ", path, "...");
                 auto istrm = fs.openForInput(path);
                 data = New!(ubyte[])(size);
                 istrm.fillArray(data);
@@ -188,7 +194,8 @@ class ResourceCacheStorage: Owner
             size_t size = cast(size_t)s.sizeInBytes;
             if (size > 0)
             {
-                logDebug("[Cache]", " Loading ", path, "...");
+                if (enableLogging)
+                    logDebug("[Cache]", " Loading ", path, "...");
                 auto istrm = fs.openForInput(path);
                 data = New!(ubyte[])(size);
                 istrm.fillArray(data);

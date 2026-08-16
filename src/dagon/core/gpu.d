@@ -43,6 +43,8 @@ import std.string;
 
 import dlib.core.ownership;
 
+import bindbc.openxr.types;
+
 import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.logger;
@@ -103,6 +105,12 @@ class GPU: Owner
     /// Present mode that will be used to present swapchain textures to the OS.
     SDL_GPUPresentMode swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
     
+    ///
+    XrInstance xrInstance = XR_NULL_HANDLE;
+    
+    ///
+    XrSystemId xrSystemId = 0;
+    
     /**
      * Constructs a GPU device wrapper for the given application.
      *
@@ -137,6 +145,19 @@ class GPU: Owner
             SDL_SetStringProperty(props, SDL_PROP_GPU_DEVICE_CREATE_NAME_STRING, toStringz(backendStr));
             if (backend == GPUBackend.Vulkan)
                 SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_SPIRV_BOOLEAN, true);
+            
+            if (application.useOpenXR)
+            {
+                /*
+                // TODO: wait for SDL 3.6.0
+                SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_XR_ENABLE_BOOLEAN, true);
+                SDL_SetPointerProperty(props, SDL_PROP_GPU_DEVICE_CREATE_XR_INSTANCE_POINTER, &xrInstance);
+                SDL_SetPointerProperty(props, SDL_PROP_GPU_DEVICE_CREATE_XR_SYSTEM_ID_POINTER, &xrSystemId);
+                SDL_SetStringProperty(props, SDL_PROP_GPU_DEVICE_CREATE_XR_APPLICATION_NAME_STRING, toStringz(application.name));
+                SDL_SetNumberProperty(props, SDL_PROP_GPU_DEVICE_CREATE_XR_APPLICATION_VERSION_NUMBER, application._version);
+                */
+            }
+            
             device = SDL_CreateGPUDeviceWithProperties(props);
             SDL_DestroyProperties(props);
             

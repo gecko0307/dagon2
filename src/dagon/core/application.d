@@ -282,6 +282,12 @@ class Application: EventListener, Updateable
 {
     protected string configFilename = "settings.conf";
     
+    /// Application name.
+    string name = "Dagon Application";
+    
+    /// Application version.
+    uint _version = 1;
+    
     /// Initial log level.
     LogLevel logLevel = LogLevel.Info;
     
@@ -617,6 +623,9 @@ class Application: EventListener, Updateable
     
     /// GPU object encapsulating SDL GPU device and its settings.
     GPU gpu;
+    
+    ///
+    bool useOpenXR = false;
     
     protected
     {
@@ -1150,6 +1159,7 @@ class Application: EventListener, Updateable
             // TODO: make configurable
             drawableWidth = 1080;
             drawableHeight = 1080;
+            useOpenXR = true;
         }
         else
         {
@@ -1333,6 +1343,12 @@ class Application: EventListener, Updateable
         }
         shaderCacheStorage = resourceCache.addStorage(ResourceType.Shader, ".spv", shaderCachePath);
         textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
+        
+        if ("gpu.shaderCache.enableLogging" in config.props)
+            shaderCacheStorage.enableLogging = cast(bool)(config.props["gpu.shaderCache.enableLogging"].toUInt);
+        
+        if ("gpu.textureCache.enableLogging" in config.props)
+            textureCacheStorage.enableLogging = cast(bool)(config.props["gpu.textureCache.enableLogging"].toUInt);
         
         // Get system cursors
         cursors[SystemCursor.Default] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);

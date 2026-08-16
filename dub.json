@@ -50,6 +50,7 @@
     
     "subPackages": [
         "extensions/imgui",
+        "extensions/openxr",
         "extensions/physfs"
     ],
 
