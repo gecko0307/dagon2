@@ -1,6 +1,6 @@
 Dagon Engine 2
 --------------
-Feature-rich, performant, easy to use, extensible desktop game development framework for [D language](https://dlang.org/), a work-in-progress SDL3/Vulkan port of [Dagon Engine 1.x](https://github.com/gecko0307/dagon). It works on Windows and Linux.
+Feature-rich, performant, easy to use, extensible desktop game development framework for [D language](https://dlang.org/), a work-in-progress [SDL3](https://github.com/libsdl-org/SDL) port of [Dagon Engine 1.x](https://github.com/gecko0307/dagon). It works on Windows and Linux.
 
 > Note: this project is not connected to Dagon engine by Senscape.
 
@@ -22,11 +22,11 @@ New features and major changes from Dagon 0.x/1.x:
 - The renderer now leverages SDL GPU, targeting Vulkan
 - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
 - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
-- Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
-- Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`. KTX support is now a core feature
+- Shader workflow is now based on GLSL 4.60 and includes a built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
+- Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`. KTX support is now a core feature
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - Many new DDS/DXGI formats support
-- Assimp integration is now a core feature
+- [Assimp](https://github.com/assimp/assimp) integration is now a core feature. glTF and other model formats support now rely on Assimp
 - Screen-space reflections
 - Temporal SSAO
 - Fog effect is now applied in a separate pass. Ground fog support
@@ -42,10 +42,11 @@ New features and major changes from Dagon 0.x/1.x:
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
 - The renderer now uses separate irradiance cubemap
 - BRDF LUT is now generated at runtime instead of loading from data/__internal
-- Jolt Physics is now built-in as `dagon.jolt` package
+- [Jolt Physics](https://github.com/jrouwe/joltphysics) is now built-in as `dagon.jolt` package
 - Window minimize/restore events
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
-- Referencing support in *.conf files syntax. Any property can be reused like a variable.
+- Referencing support in *.conf files syntax. Any property can be reused like a variable
+- [ImGui](https://github.com/ocornut/imgui) integration (dagon2:imgui extension) now provides a built-in UI boilerplate class.
 
 System Requirements
 -------------------
