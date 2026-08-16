@@ -233,6 +233,8 @@ class Entity: Owner, Updateable, GsObject
     {
         prevModelMatrix = modelMatrix;
         
+        bool childrenModelMatricesValid = modelMatricesValid;
+        
         if (!modelMatricesValid)
         {
             if (controller)
@@ -255,6 +257,7 @@ class Entity: Owner, Updateable, GsObject
         
         foreach(child; children)
         {
+            child.modelMatricesValid = child.modelMatricesValid && childrenModelMatricesValid;
             child.postUpdate(t);
         }
         
