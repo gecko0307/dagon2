@@ -49,6 +49,7 @@
     "copyFiles-windows-x86_64": ["lib/windows-x64/*"],
     
     "subPackages": [
+        "extensions/audio",
         "extensions/imgui",
         "extensions/openxr",
         "extensions/physfs"

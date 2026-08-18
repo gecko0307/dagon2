@@ -75,6 +75,7 @@ Runtime Dependencies
 - [libtiff](https://libtiff.gitlab.io/libtiff/) for TIFF support (optional)
 - [Dear ImGui](https://github.com/ocornut/imgui) via [cimgui](https://github.com/cimgui/cimgui) wrapper (optional)
 - [PhysFS](https://github.com/icculus/physfs) (optional)
+- [SoLoud](https://github.com/gecko0307/soloud) (optional)
 
 Dependencies are automatically deployed on 64-bit Windows and Linux. Under Linux, if you want to use local libraries in Windows way (from application's working directory rather than from the system), add the following to your `dub.json`:
 

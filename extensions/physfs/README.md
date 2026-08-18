@@ -1,4 +1,4 @@
-# dagon:physfs
+# dagon2:physfs
 
 PhysFS-based virtual filesystem extension. Allows to use archives in Dagon's VFS.
 

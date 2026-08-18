@@ -1,4 +1,4 @@
-# dagon:imgui
+# dagon2:imgui
 
 Immediate mode GUI extension that uses [Dear ImGui](https://github.com/ocornut/imgui) via [cimgui](https://github.com/cimgui/cimgui) wrapper and a custom version of [i2d-imgui](https://github.com/Inochi2D/i2d-imgui) dynamic binding which is in turn a fork of [bindbc-imgui](https://github.com/playmer/bindbc-imgui).
 

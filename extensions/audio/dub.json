@@ -1,0 +1,20 @@
+{
+    "name": "audio",
+    "importPaths": [
+        "src"
+    ],
+    "sourcePaths": [
+        "src"
+    ],
+    "dependencies": {
+        "dagon2": "*"
+    },
+    
+    "buildRequirements":[
+        "allowWarnings"
+    ],
+    
+    "copyFiles": ["license"],
+    "copyFiles-windows-x86_64": ["lib/windows-x64/*"],
+    "copyFiles-linux-x86_64": ["lib/linux-x64/*"]
+}
