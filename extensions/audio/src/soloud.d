@@ -4,7 +4,7 @@ public import bindbc.soloud;
 
 nothrow @nogc:
 
-private struct SoloudObject
+public struct SoloudObject
 {
     public int* objhandle;
 }
@@ -67,6 +67,7 @@ public struct Soloud
         return Soloud_initEx(objhandle, aFlags, aBackend, aSamplerate, aBufferSize, aChannels);
     }
 
+    /*
     public int pause()
     {
         return Soloud_pause(objhandle);
@@ -76,7 +77,8 @@ public struct Soloud
     {
         return Soloud_resume(objhandle);
     }
-
+    */
+    
     public void deinit()
     {
         Soloud_deinit(objhandle);
@@ -2343,12 +2345,12 @@ public struct Wav
         return Wav_loadRawWave8Ex(objhandle, aMem, aLength, aSamplerate, aChannels);
     }
 
-    public int loadRawWave16(short[] aMem, uint aLength, float aSamplerate = 44100.0f, uint aChannels = 1)
+    public int loadRawWave16(short* aMem, uint aLength, float aSamplerate = 44100.0f, uint aChannels = 1)
     {
         return Wav_loadRawWave16Ex(objhandle, aMem, aLength, aSamplerate, aChannels);
     }
 
-    public int loadRawWave(float[] aMem, uint aLength, float aSamplerate = 44100.0f, uint aChannels = 1, int aCopy = false, int aTakeOwnership = true)
+    public int loadRawWave(float* aMem, uint aLength, float aSamplerate = 44100.0f, uint aChannels = 1, int aCopy = false, int aTakeOwnership = true)
     {
         return Wav_loadRawWaveEx(objhandle, aMem, aLength, aSamplerate, aChannels, aCopy, aTakeOwnership);
     }
