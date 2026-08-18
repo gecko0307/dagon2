@@ -71,16 +71,17 @@ class SoundComponent: EntityComponent
             return 0;
         
         Vector3f pos = entity.positionWorld;
-        voice = audioManager.audio.play3d(sound, pos.x, pos.y, pos.z);
+        voice = audioManager.audio.play3d(sound,
+            pos.x, pos.y, pos.z, 0.0f, 0.0f, 0.0f, audioManager.options[soundClass].volume * volume, true);
         audioManager.audio.set3dSourceVelocity(voice, velocity.x, velocity.y, velocity.z);
         audioManager.audio.setLooping(voice, looping);
         this.volume = volume;
         this.targetVolume = volume;
         this.soundClass = soundClass;
-        audioManager.audio.setVolume(voice, audioManager.options[soundClass].volume * volume);
         audioManager.audio.set3dSourceMinMaxDistance(voice, minDistance, maxDistance);
         audioManager.audio.set3dSourceAttenuation(voice, attenuationModel, attenuationRolloffFactor);
         audioManager.audio.set3dSourceDopplerFactor(voice, dopplerFactor);
+        audioManager.audio.setPause(voice, false);
         return voice;
     }
     

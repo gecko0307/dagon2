@@ -118,6 +118,12 @@ class AudioManager: EventListener
     float masterFadeInDuration = 0.25f; // in seconds
     SoundClassOptions[32] options;
     
+    float masterMinDistance = 0.0f;
+    float masterMaxDistance = 100.0f;
+    AttenuationModel masterAttenuationModel = AttenuationModel.LinearDistance;
+    float masterAttenuationRolloffFactor = 1.0f;
+    float masterDopplerFactor = 1.0f;
+    
     Entity listener;
     
     PlaylistPlayer activePlaylistPlayer;
@@ -403,8 +409,7 @@ class AudioManager: EventListener
         if (!enabled)
             return 0;
         
-        int voice = audio.play(sound);
-        audio.setVolume(voice, options[soundClass].volume);
+        int voice = audio.play(sound, options[soundClass].volume);
         audio.setLooping(voice, looping);
         return voice;
     }
@@ -414,10 +419,12 @@ class AudioManager: EventListener
         if (!enabled)
             return 0;
         
-        int voice = audio.play3d(sound, position.x, position.y, position.z);
-        audio.setVolume(voice, options[soundClass].volume);
+        int voice = audio.play3d(sound, position.x, position.y, position.z, 0.0f, 0.0f, 0.0f, options[soundClass].volume, true);
         audio.setLooping(voice, looping);
-        // TODO: use master 3D sound settings
+        audio.set3dSourceMinMaxDistance(voice, masterMinDistance, masterMaxDistance);
+        audio.set3dSourceAttenuation(voice, masterAttenuationModel, masterAttenuationRolloffFactor);
+        audio.set3dSourceDopplerFactor(voice, masterDopplerFactor);
+        audio.setPause(voice, false);
         return voice;
     }
     
