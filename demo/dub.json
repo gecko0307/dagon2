@@ -6,11 +6,14 @@
     "authors": [
         "Timur Gafarov"
     ],
+    
     "dependencies": {
         "dagon2": { "path": ".." }
     },
+    
     "buildRequirements": [
         "allowWarnings"
     ],
+    
     "lflags-linux": ["-rpath=$$ORIGIN"]
 }
