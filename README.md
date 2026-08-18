@@ -46,7 +46,8 @@ New features and major changes from Dagon 0.x/1.x:
 - Window minimize/restore events
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - Referencing support in *.conf files syntax. Any property can be reused like a variable
-- [ImGui](https://github.com/ocornut/imgui) integration (dagon2:imgui extension) now provides a built-in UI boilerplate class.
+- [ImGui](https://github.com/ocornut/imgui) integration (dagon2:imgui extension) now provides a built-in UI boilerplate class
+- Audio extension now uses its own SoLoud fork with SDL3 support.
 
 System Requirements
 -------------------
