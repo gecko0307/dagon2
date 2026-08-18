@@ -386,12 +386,10 @@ class AudioManager: EventListener
         return openmpt;
     }
     
-    /*
     SoundComponent addSoundTo(Entity entity)
     {
         return New!SoundComponent(eventManager, this, entity);
     }
-    */
     
     PlaylistPlayer addPlaylistPlayer()
     {

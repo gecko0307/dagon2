@@ -52,6 +52,7 @@ import dagon.core.time;
 import dagon.core.updateable;
 import dagon.graphics.drawable;
 import dagon.graphics.material;
+import dagon.graphics.state;
 
 import gscript;
 
@@ -88,7 +89,7 @@ enum TransformMode: int
 /**
  * Scene graph node with local and world transformations.
  *
- * Entities can have parent-child relationships and optionally a controller.
+ * Entities can have parent-child relationships and an optional controller.
  * This class tracks world/model matrices for rendering and supports movement,
  * rotation, scaling, and hierarchical transformation updates.
  */
@@ -99,6 +100,9 @@ class Entity: Owner, Updateable, GsObject
     
     /// Array of child entities.
     Array!Entity children;
+    
+    /// The attached components.
+    Array!EntityComponent components;
 
     /// Parent entity (null for root).
     Entity parent;
@@ -186,12 +190,36 @@ class Entity: Owner, Updateable, GsObject
     /// Release child entity array and other resources.
     ~this()
     {
+        if (parent)
+            parent.removeChild(this);
+        
+        for (size_t i = 0; i < children.data.length; i++)
+            children.data[i].parent = null;
+        
         children.free();
+        components.free();
     }
     
     /**
-     * Attach a child entity to this node.
-     * The child inherits dynamic state and will be updated in `postUpdate``.
+     * Sets the parent entity.
+     *
+     * Params:
+     *   parentEntity = The new parent entity.
+     */
+    void setParent(Entity parentEntity)
+    {
+        if (parent)
+            parent.removeChild(this);
+
+        parent = parentEntity;
+        parent.addChild(this);
+    }
+    
+    /**
+     * Attach a child entity.
+     *
+     * Params:
+     *   child = The child entity to add.
      */
     void addChild(Entity child)
     {
@@ -199,6 +227,40 @@ class Entity: Owner, Updateable, GsObject
         child.dynamic = dynamic;
         child.transformationValid = false;
         children.append(child);
+    }
+    
+    /**
+     * Removes a child entity.
+     *
+     * Params:
+     *   childEntity = The child entity to remove.
+     */
+    void removeChild(Entity childEntity)
+    {
+        children.removeFirst(childEntity);
+        childEntity.parent = null;
+    }
+    
+    /**
+     * Adds a component to this entity.
+     *
+     * Params:
+     *   component = The component to add.
+     */
+    void addComponent(EntityComponent component)
+    {
+        components.append(component);
+    }
+
+    /**
+     * Removes a component from this entity.
+     *
+     * Params:
+     *   component = The component to remove.
+     */
+    void removeComponent(EntityComponent component)
+    {
+        components.removeFirst(component);
     }
     
     /// Updates transformation using initial time.
@@ -225,6 +287,11 @@ class Entity: Owner, Updateable, GsObject
                 transformationValid = true;
                 modelMatricesValid = false;
             }
+        }
+        
+        foreach(c; components)
+        {
+            c.update(t);
         }
     }
     
@@ -253,6 +320,11 @@ class Entity: Owner, Updateable, GsObject
             }
             
             modelMatricesValid = true;
+        }
+        
+        foreach(c; components)
+        {
+            c.postUpdate(t);
         }
         
         foreach(child; children)
@@ -457,6 +529,58 @@ class Entity: Owner, Updateable, GsObject
     void setPrototype(GsObject obj)
     {
         // No-op
+    }
+}
+
+/**
+ * Base class for entity components.
+ *
+ * Description:
+ * Components implement custom logic for entities.
+ */
+class EntityComponent: EventListener, Updateable, Drawable
+{
+    /// The entity this component is attached to.
+    Entity entity;
+
+    /// If false, the `render` method should not be called by the renderer.
+    bool visible = true;
+
+    /**
+     * Constructs an entity component and attaches it to the given entity.
+     *
+     * Params:
+     *   eventManager = The event manager.
+     *   hostEntity   = The entity to attach to.
+     */
+    this(EventManager eventManager, Entity hostEntity)
+    {
+        super(eventManager, hostEntity);
+        entity = hostEntity;
+        entity.addComponent(this);
+    }
+
+    /**
+     * Called at the start of each update step, after entity's local transformation is updated.
+     * Override to implement early per-frame update logic.
+     */
+    void update(Time t)
+    {
+        //
+    }
+
+    /**
+     * Called in the end of each update step after entity's model matrix is recalculated.
+     * Override if the component needs entity's world space transformation for the current frame.
+     */
+    void postUpdate(Time t)
+    {
+        //
+    }
+
+    /// Override to implement rendering logic.
+    void render(GraphicsState* state)
+    {
     }
 }
 

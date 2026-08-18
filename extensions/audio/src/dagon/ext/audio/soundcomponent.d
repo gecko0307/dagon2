@@ -42,7 +42,6 @@ import soloud;
 /**
  * A component for playing spatial sounds at Entity's position
  */
-/*
 class SoundComponent: EntityComponent
 {
     AudioManager audioManager;
@@ -71,7 +70,7 @@ class SoundComponent: EntityComponent
         if (!audioManager.enabled)
             return 0;
         
-        Vector3f pos = entity.positionAbsolute;
+        Vector3f pos = entity.positionWorld;
         voice = audioManager.audio.play3d(sound, pos.x, pos.y, pos.z);
         audioManager.audio.set3dSourceVelocity(voice, velocity.x, velocity.y, velocity.z);
         audioManager.audio.setLooping(voice, looping);
@@ -105,7 +104,7 @@ class SoundComponent: EntityComponent
         
         this.soundClass = SoundClass.Music;
         
-        Vector3f pos = entity.positionAbsolute;
+        Vector3f pos = entity.positionWorld;
         playlistPlayer.positional = true;
         playlistPlayer.position = pos;
         PlaylistTrack track = playlistPlayer.play(playlistTrack);
@@ -128,7 +127,7 @@ class SoundComponent: EntityComponent
         this.volumeChangeDuration = duration;
     }
     
-    override void update(Time time)
+    override void postUpdate(Time time)
     {
         if (volume < targetVolume)
         {
@@ -143,9 +142,8 @@ class SoundComponent: EntityComponent
                 volume = targetVolume;
         }
         
-        Vector3f pos = entity.positionAbsolute;
+        Vector3f pos = entity.positionWorld;
         audioManager.audio.setVolume(voice, audioManager.options[soundClass].volume * volume);
         audioManager.audio.set3dSourceParameters(voice, pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
     }
 }
-*/
