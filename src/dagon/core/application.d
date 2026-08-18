@@ -91,6 +91,15 @@ version(Windows)
     //import dagon.core.wintab;
     
     enum CP_UTF8 = 65001;
+    
+    extern(C) __gshared
+    {
+        // Force NVIDIA High Performance Graphics
+        export immutable(DWORD) NvOptimusEnablement = 0x00000001;
+        
+        // Force AMD High Performance Graphics
+        export immutable(int) AmdPowerXpressRequestHighPerformance = 0x00000001;
+    }
 }
 
 static this()
