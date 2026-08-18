@@ -39,10 +39,10 @@ New features and major changes from Dagon 0.x/1.x:
 - `Environment` class is gone, all environment properties are now part of the `Scene` class
 - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh
 - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
-- All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
+- All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
 - The renderer now uses separate irradiance cubemap
-- BRDF LUT is now generated at runtime instead of loading from data/__internal
-- [Jolt Physics](https://github.com/jrouwe/joltphysics) is now built-in as `dagon.jolt` package
+- BRDF LUT is now generated at runtime instead of loading from `data/__internal`
+- Jolt Physics is now built-in as `dagon.jolt` package
 - Window minimize/restore events
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API
 - Referencing support in *.conf files syntax. Any property can be reused like a variable

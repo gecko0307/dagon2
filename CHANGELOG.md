@@ -1,11 +1,12 @@
 Dagon 2.0.0 - TBD
 -----------------
 - **Core**
-  - BC7 texture compressor based on D port of Rich Geldreich's [bc7enc](https://github.com/richgel999/bc7enc_rdo)
-  - BC4 texture compressor (original implementation)
+  - Dagon now uses SDL3
   - Window minimize/restore events
   - Nanosecond-precision timer
+  - CPU-friendly frame scheduler
   - Mailbox Vsync support, significantly reducing input lag
+  - Referencing support in *.conf files syntax. Any property can be reused like a variable
 - **Assets**
   - Assimp integration is now a core feature
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
@@ -15,18 +16,19 @@ Dagon 2.0.0 - TBD
   - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - **Render**
   - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
-  - Renderer now leverages SDL GPU, targeting Vulkan instead of OpenGL
+  - Renderer now leverages SDL GPU, targeting Vulkan
   - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
   - Stochastic screen-space reflections (SSSR) support
   - HDR (scRGB) output support
   - The renderer now uses separate irradiance cubemap
-  - BRDF LUT is now generated at runtime instead of loading from data/__internal
+  - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
   - Temporal SSAO support
   - Fog effect is now applied in a separate pass. Ground fog support
   - Shadeless materials in deferred pipeline
 - **Graphics components**
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
-  - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController` (partly analogous to old `EntityComponent`)
+  - `Environment` class is gone, all environment properties are now part of the `Scene` class
+  - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
 - **Post-processing**
   - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
   - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
@@ -34,6 +36,16 @@ Dagon 2.0.0 - TBD
   - Jolt Physics is now built-in as `dagon.jolt` package
 - **Scripting**
   - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API.
+- **Extensions**
+  - `dagon2:imgui`
+    - ImGui integration now provides a built-in UI boilerplate class
+  - `dagon2:audio`
+    - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
+
+Dagon 1.6.1 - TBD
+-----------------
+- **Extensions**
+  - Fix `AudioManager.loadMusic`.
 
 Dagon 1.6.0 - 10 Aug, 2026
 --------------------------
