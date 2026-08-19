@@ -54,6 +54,7 @@ import dagon.core.logger;
  */
 abstract class Endpoint: EventDispatcher
 {
+   public:
     /// Reference to a message broker
     MessageBroker broker;
     
@@ -80,7 +81,7 @@ abstract class Endpoint: EventDispatcher
         this(address, broker, broker);
     }
     
-    protected:
+   protected:
     
     /// Queues an outgoing event.
     bool queue(Event e)
@@ -111,7 +112,7 @@ abstract class Endpoint: EventDispatcher
         queue(e);
     }
 
-    public:
+   public:
     
     /// Process all events in the inbox.
     void processEvents()
@@ -208,12 +209,12 @@ class Worker: Service
  */
 class MessageBroker: Owner
 {
-    public:
+   public:
     
     /// Activity flag.
     bool enabled = false;
 
-    protected:
+   protected:
     
     /// Associated event manager.
     EventManager eventManager;
@@ -230,7 +231,7 @@ class MessageBroker: Owner
     /// Last worker index for round-robin scheduling
     size_t lastWorkerIndex = 0;
 
-    public:
+   public:
 
     this(EventManager eventManager)
     {

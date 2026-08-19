@@ -30,9 +30,10 @@ DEALINGS IN THE SOFTWARE.
  *
  * Description:
  * The `dagon.core.updateable` module provides the `Updateable` interface,
- * which must be implemented by any object that can be updated per frame.
- * This is typically used for entities, components, and other systems that require
- * time-based updates.
+ * which must be implemented by any object that can be updated over time.
+ * Semantic of `update` is fully user-defined. Typically it is used with
+ * the built-in frame scheduler that calls the update chain for the entire
+ * application in fixed intervals.
  *
  * Copyright: Timur Gafarov 2019-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -43,14 +44,12 @@ module dagon.core.updateable;
 import dagon.core.time;
 
 /**
- * Interface for objects that can be updated each frame.
- * Implement this interface to receive per-frame update calls
- * with timing information.
+ * Interface for objects that can be updated.
  */
 interface Updateable
 {
     /**
-     * Updates the object for the current frame.
+     * Updates the object.
      *
      * Params:
      *   t = The current frame's timing information.

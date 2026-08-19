@@ -59,6 +59,7 @@ import dagon.core.application;
 //import dagon.core.input;
 import dagon.core.logger;
 import dagon.core.messaging;
+import dagon.core.graphicstablet;
 
 /**
  * Maximum number of simultaneous game input devices.
@@ -508,7 +509,7 @@ class EventManager: Owner
     protected Array!InputDevice inputDevices;
     
     /// `PenMotion` events emitter.
-    //GraphicsTablet graphicsTablet;
+    GraphicsTablet graphicsTablet;
     
     /// Event dispatching hook. Provide your delegate to receive SDL events directly.
     void delegate(SDL_Event* event) onProcessEvent;
@@ -547,13 +548,11 @@ class EventManager: Owner
         
         messageBroker = New!MessageBroker(this);
         
-        /*
         graphicsTablet = New!GraphicsTablet(this);
         if (graphicsTablet.initialize(this))
             addInputDevice(graphicsTablet);
         else
             logWarning("Graphics tablet is not available");
-        */
         
         //tmpHeap = New!Arena(4 * 1024, this);
         
@@ -1245,7 +1244,7 @@ class EventManager: Owner
             return SDL_HideCursor();
     }
     
-    ///
+    /// Returns true if the system cursor is visible.
     bool cursorVisible()
     {
         return SDL_CursorVisible();
@@ -1510,10 +1509,10 @@ abstract class EventDispatcher: Owner
     /// Called when the window is resized.
     void onResize(int width, int height) {}
 
-    ///
+    /// Called when the window is minimized.
     void onMinimize() {}
     
-    ///
+    /// Called when the window is restored from minimized state.
     void onRestore() {}
 
     /// Called when the window loses focus.

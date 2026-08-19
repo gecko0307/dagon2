@@ -27,11 +27,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Provides information about hardware and operating system.
+ * Provides information about hardware and the operating system.
  *
  * Description:
  * The `dagon.core.sysinfo` module provides a cross-platform way to query
- * system information, such as CPU architecture, RAM size, and operating system name.
+ * system information, such as CPU architecture, RAM size, and the operating system name.
+ * Supports Windows and most standard Unix variants.
  *
  * Copyright: Timur Gafarov 2022-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -117,10 +118,11 @@ version(Posix)
 }
 
 /**
- * `sysInfo` works on Windows, Unix/sysconf (Linux-like)
- * and Unix/sysctl (BSD-like) systems.
- * Under other systems it returns false, meaning that 
- * it's not possible to retrieve system information.
+ * Retrieves system information to the user-provided `SysInfo` structure.
+ * `sysInfo` works on Windows, Unix/sysconf (Linux-like) and Unix/sysctl
+ * (BSD-like) systems. Returns true on success.
+ * Under unsupported systems it returns false and writes
+ * nothing, meaning that it's not possible to get system information.
  */
 bool sysInfo(SysInfo* info) nothrow @nogc
 {

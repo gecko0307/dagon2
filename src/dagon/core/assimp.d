@@ -26,7 +26,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Helper module that publicly imports Assimp binding.
+ * Helper module that publicly imports Assimp binding
+ * and provides vector type conversion functions.
  *
  * Copyright: Timur Gafarov 2026.
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -76,25 +77,25 @@ AssimpSupport loadAssimp(string path = "")
     return assimpSupport;
 }
 
-///
+/// Converts Assimp vector to dlib vector.
 Vector3f fromAssimpVector(aiVector3D v)
 {
     return Vector3f(v.x, v.y, v.z);
 }
 
-///
+/// Converts Assimp quaternion to dlib quaternion.
 Quaternionf fromAssimpQuaternion(aiQuaternion q)
 {
     return Quaternionf(q.x, q.y, q.z, q.w);
 }
 
-///
+/// Converts Assimp color to dlib color.
 Color4f fromAssimpColor(aiColor4D col)
 {
     return Color4f(col.r, col.g, col.b, col.a);
 }
 
-///
+/// Converts Assimp matrix to dlib matrix.
 Matrix4x4f fromAssimpMatrix(aiMatrix4x4 m)
 {
     return matrixf(

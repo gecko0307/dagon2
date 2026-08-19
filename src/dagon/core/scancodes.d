@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Defines codes for keyboard, mouse and gamepads.
+ * Defines codes for keyboard keys, mouse buttons and gamepad buttons/axes.
  *
  * The `dagon.core.keycodes` module provides symbolic constants for all supported
  * keyboard keys (based on SDL scancodes), mouse buttons and gamepad buttons and axes.

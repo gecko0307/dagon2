@@ -88,17 +88,21 @@ version(Windows)
     pragma(lib, "user32");
     
     import core.sys.windows.windows;
-    //import dagon.core.wintab;
+    import dagon.core.wintab;
     
     enum CP_UTF8 = 65001;
     
-    extern(C) __gshared
+    version(DAGON_NO_HIGH_PERF_DRIVER_HINT) {}
+    else
     {
-        // Force NVIDIA High Performance Graphics
-        export immutable(DWORD) NvOptimusEnablement = 0x00000001;
-        
-        // Force AMD High Performance Graphics
-        export immutable(int) AmdPowerXpressRequestHighPerformance = 0x00000001;
+        extern(C) __gshared
+        {
+            // Force NVIDIA High Performance Graphics
+            export immutable(DWORD) NvOptimusEnablement = 0x00000001;
+            
+            // Force AMD High Performance Graphics
+            export immutable(int) AmdPowerXpressRequestHighPerformance = 0x00000001;
+        }
     }
 }
 
@@ -380,6 +384,11 @@ class Application: EventListener, Updateable
      * To check actually loaded library version, use `assimpVersion`.
      */
     AssimpSupport loadedAssimpSupport;
+
+    /**
+     * Loaded Wintab API support version.
+     */
+    WintabSupport loadedWintabSupport;
     
     /// SDL_Image available or not.
     bool sdlImagePresent = false;
@@ -389,6 +398,9 @@ class Application: EventListener, Updateable
     
     /// Assimp available or not.
     bool assimpPresent = false;
+
+    /// Wintab available or not.
+    bool wintabPresent = false;
     
     /// Actually used SDL library version.
     LibraryVersion sdlVersion;
@@ -633,7 +645,7 @@ class Application: EventListener, Updateable
     /// GPU object encapsulating SDL GPU device and its settings.
     GPU gpu;
     
-    ///
+    /// Indicates that SDL GPU should initialize OpenXR instance (preserved for future, currently not supported).
     bool useOpenXR = false;
     
     protected
@@ -962,6 +974,27 @@ class Application: EventListener, Updateable
             assimpVersion.minor = aiGetVersionMinor();
             assimpVersion.patch = aiGetVersionRevision();
             logInfo("Assimp version: ", assimpVersion.major, ".", assimpVersion.minor, ".", assimpVersion.patch);
+        }
+
+        // Init Wintab
+        version(Windows)
+        {
+            // TODO: wintabLibraryPath
+            loadedWintabSupport = loadWintab();
+            if (loadedWintabSupport != WintabSupport.v140)
+            {
+                if (loadedWintabSupport == WintabSupport.badLibrary)
+                {
+                    logWarning("Failed to load some Wintab functions");
+                    wintabPresent = true;
+                }
+                else
+                    logWarning("Wintab library is not found");
+            }
+            else
+                wintabPresent = true;
+
+            logInfo("Wintab API present: ", wintabPresent);
         }
         
         // Init SDL
@@ -1554,15 +1587,12 @@ class Application: EventListener, Updateable
             SDL_SetWindowFullscreen(window, 0);
     }
     
-    ///
-    /*
-    // TODO
+    /// Returns true if the window has input focus.
     bool isWindowFocused()
     {
-        uint flags = SDL_GetWindowFlags(window);
+        SDL_WindowFlags flags = SDL_GetWindowFlags(window);
         return (flags & SDL_WINDOW_INPUT_FOCUS) != 0;
     }
-    */
     
     /**
      * Runs the main loop.

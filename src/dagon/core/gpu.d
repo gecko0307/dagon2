@@ -105,10 +105,10 @@ class GPU: Owner
     /// Present mode that will be used to present swapchain textures to the OS.
     SDL_GPUPresentMode swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
     
-    ///
+    /// OpenXR instance.
     XrInstance xrInstance = XR_NULL_HANDLE;
     
-    ///
+    /// OpenXR System ID. Used internally to identify a VR system.
     XrSystemId xrSystemId = 0;
     
     /**

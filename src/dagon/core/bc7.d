@@ -53,7 +53,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 module dagon.core.bc7;
 
-// Richard Geldreich, Jr. 3/31/2020 - MIT license or public domain (see end of file)
+// Richard Geldreich, Jr. 3/31/2020 - MIT license or public domain.
 // Currently supports modes 1, 6 for RGB blocks, and modes 5, 6, 7 for RGBA blocks.
 
 import core.stdc.stdlib;

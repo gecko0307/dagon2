@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Provides a dynamic type system for object properties.
+ * Provides a dynamic type system and key-value property sets.
  *
  * Description:
  * The `dagon.core.props` module defines the `DProperty` struct for storing

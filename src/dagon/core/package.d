@@ -41,31 +41,90 @@ module dagon.core;
 
 public
 {
+    /// Application base class and core utilities.
     import dagon.core.application;
+
+    /// Assimp binding.
     import dagon.core.assimp;
+
+    /// BC4 encoder.
     import dagon.core.bc4;
+
+    /// BC7 encoder.
     import dagon.core.bc7;
+
+    /// Configuration management and property loading.
     import dagon.core.config;
-    import dagon.core.crashhandler;
+
+    /// Cursor-related functionality.
+    import dagon.core.cursor;
+
+    /// Cross-platform native dialogs.
     import dagon.core.dialogs;
+
+    /// DirectX image format enumerations.
     import dagon.core.dxgiformat;
+
+    /// DXT1/DXT5 compressor.
     import dagon.core.dxt;
+
+    /// Event types, event manager, and event listener base class.
     import dagon.core.event;
+
+    /// Freetype binding.
     import dagon.core.freetype;
+
+    // GLSLang binding.
     import dagon.core.glslang;
+
+    /// GPU device management.
     import dagon.core.gpu;
+
+    /// Graphics tablet API.
+    import dagon.core.graphicstablet;
+
+    /// Internationalization functionalty.
     import dagon.core.i18n;
+
+    /// libktx binding.
     import dagon.core.ktx;
+
+    /// Symbolic key codes for keyboard, mouse, and gamepad.
     import dagon.core.scancodes;
+
+    /// System locale detection and query utilities.
     import dagon.core.locale;
+
+    /// Logging facilities.
     import dagon.core.logger;
+
+    /// Lock-free, wait-free inter-thread communication.
     import dagon.core.messaging;
+
+    /// Persistent storage for application data.
     import dagon.core.persistent;
+
+    /// Flexible property system for configuration data.
     import dagon.core.props;
+
+    /// SDL3 binding.
     import dagon.core.sdl3;
+
+    /// SPIRV-Cross binding.
     import dagon.core.spvc;
+
+    /// Time management, frame timing, and fixed-step scheduling.
     import dagon.core.time;
+
+    /// Updateable object interface.
     import dagon.core.updateable;
+
+    /// Virtual file system abstraction.
     import dagon.core.vfs;
+    
+    /// Vulkan image format enumerations.
     import dagon.core.vkformat;
+
+    /// Vulkan image format enumerations.
+    import dagon.core.wintab;
 }
