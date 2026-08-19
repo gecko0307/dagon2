@@ -291,12 +291,12 @@ class TonemappingPass: RenderPass
         
         beginPass();
         
-        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
-        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
-        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
-        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
-        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
-        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        //state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
+        //state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
+        //state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
+        //state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
+        //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
         state.entity = null;
         tonemappingShader.bindParameters(state);
