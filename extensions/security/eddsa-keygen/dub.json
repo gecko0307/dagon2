@@ -1,0 +1,13 @@
+{
+    "name": "eddsa-keygen",
+    "description": "EdDSA key pair generator",
+    "license": "BSL-1.0",
+    "authors": [
+        "Timur Gafarov"
+    ],
+    "copyright": "Copyright © 2026, Timur Gafarov",
+    
+    "dependencies": {
+        "security": { "path": ".." }
+    }
+}

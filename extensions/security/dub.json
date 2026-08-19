@@ -1,0 +1,15 @@
+{
+    "name": "security",
+    
+    "dependencies": {
+        "dlib": "~>1.6.0",
+        "minicrypto": "~>0.4.0"
+    },
+
+    "sourcePaths": [
+        "src"
+    ],
+    "importPaths": [
+        "src"
+    ]
+}

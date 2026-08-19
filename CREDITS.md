@@ -1,7 +1,7 @@
 # Credits
 
 ## Authors
-* Core engine, GScript3 runtime, Jolt Physics binding, ImGui extension, PhysFS extension, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
+* Core engine, GScript3 runtime, Jolt Physics binding, ImGui extension, PhysFS extension, security extension, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
 
 ## Contributors
 * OBJ group parser - [Vlad Davydov aka Tynuk](https://github.com/Tynukua)
