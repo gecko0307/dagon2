@@ -78,11 +78,6 @@ class TestWorld: World
         game.renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy;
     }
     
-    override void onPenMotion(float x, float y, float pressure)
-    {
-        logInfo(x, " ", y, " ", pressure);
-    }
-    
     override void onUpdate(Time t) { }
     override void onPostUpdate(Time t) { }
     override void onKeyDown(int key) { }
@@ -94,6 +89,7 @@ class TestWorld: World
     override void onGamepadButtonDown(uint deviceIndex, int btn) { }
     override void onGamepadButtonUp(uint deviceIndex, int btn) { }
     override void onGamepadAxisMotion(uint deviceIndex, int axis, float value) { }
+    override void onPenMotion(float x, float y, float pressure) {}
     override void onResize(int width, int height) { }
     override void onFocusLoss() { }
     override void onFocusGain() { }
