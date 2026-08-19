@@ -102,6 +102,8 @@ void main()
     float motionBlurMask = ubo.alphaOptions.z;
     float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
     
+    // TODO: fog
+    
     outColor = vec4(outputColor, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);
     

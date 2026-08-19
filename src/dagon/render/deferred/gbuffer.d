@@ -82,6 +82,8 @@ class GBuffer: Owner
     
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
+    SDL_GPUSampler* depthSamplerNearest;
+    SDL_GPUSampler* colorSamplerNearest;
     
     this(GPU gpu, GBufferConfig* config, Owner owner)
     {
@@ -189,6 +191,13 @@ class GBuffer: Owner
         
         depthSampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
         colorSampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
+        
+        samplerCreateInfo.min_filter = SDL_GPU_FILTER_NEAREST;
+        samplerCreateInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
+        samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+        
+        depthSamplerNearest = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
+        colorSamplerNearest = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
     }
     
     ~this()
@@ -197,8 +206,12 @@ class GBuffer: Owner
         
         if (depthSampler)
             SDL_ReleaseGPUSampler(gpu.device, depthSampler);
+        if (depthSamplerNearest)
+            SDL_ReleaseGPUSampler(gpu.device, depthSamplerNearest);
         if (colorSampler)
             SDL_ReleaseGPUSampler(gpu.device, colorSampler);
+        if (colorSamplerNearest)
+            SDL_ReleaseGPUSampler(gpu.device, colorSamplerNearest);
     }
     
     void releaseBuffers()

@@ -311,11 +311,11 @@ class TransparentPass: RenderPass
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "TRANSPARENT");
         beginPass();
         
-        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
-        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
-        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
-        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
-        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        //state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
+        //state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
+        //state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
+        //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         
         foreach(entity; state.scene.entities)

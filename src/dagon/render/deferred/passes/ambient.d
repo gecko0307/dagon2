@@ -157,7 +157,7 @@ class AmbientShader: Shader
             pass.bindDefaultTexture(PipelineStage.Fragment, 7);
         }
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 8, &state.velocityBuffer);
+        //pass.bindInputBuffer(PipelineStage.Fragment, 8, &state.velocityBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -278,14 +278,14 @@ class AmbientPass: RenderPass
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "AMBIENT");
         beginPass();
         
-        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
-        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
-        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
+        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSamplerNearest);
+        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSamplerNearest);
+        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSamplerNearest);
         state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
-        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
-        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
+        //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.occlusionBuffer = InputBuffer(gbuffer.currentOcclusionBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(null, null);
+        //state.radianceBuffer = InputBuffer(null, null);
         state.entity = null;
         ambientShader.bindParameters(state);
         

@@ -16,9 +16,35 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
+/*
 float hash(vec2 p)
 {
     return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
+}
+*/
+
+// Permuted congruential generator
+uint pcg(uint x)
+{
+    uint state = x * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+float hash2(uvec2 v)
+{
+    return pcg(v.x ^ (v.y * 1103515245u));
+}
+
+float hash3(uvec3 v)
+{
+    return pcg(v.x ^ (v.y * 1103515245u) ^ (v.z * 134775813u));
+}
+
+float hash(vec2 uv)
+{
+    uvec2 ip = uvec2(floatBitsToUint(uv.x), floatBitsToUint(uv.y));
+    return float(hash2(ip)) / float(0xFFFFFFFFu);
 }
 
 // Brian Karis, "Real Shading in Unreal Engine 4"

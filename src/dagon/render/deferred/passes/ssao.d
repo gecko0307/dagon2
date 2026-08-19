@@ -134,7 +134,7 @@ class SSAOShader: Shader
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.resolution.x = view.width / 2;
         fsUBO.resolution.x = view.height / 2;
-        fsUBO.fparams[0] = time;
+        fsUBO.fparams[0] = temporalAccumulation? time : 0.0f;
         fsUBO.fparams[1] = radius;
         fsUBO.fparams[2] = power;
         fsUBO.iparams[0] = numSamples;
@@ -274,13 +274,13 @@ class SSAOPass: RenderPass
         beginPass();
         
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
-        state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
-        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
-        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
-        state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
-        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        //state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
+        state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSamplerNearest);
+        //state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
+        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSamplerNearest);
         state.occlusionBuffer = InputBuffer(gbuffer.previousOcclusionBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
+        //state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         state.entity = null;
         ssaoShader.bindParameters(state);
         

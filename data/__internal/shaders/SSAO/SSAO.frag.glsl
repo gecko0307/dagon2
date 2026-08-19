@@ -12,11 +12,37 @@ vec3 unproject(mat4 invProjMatrix, vec3 ndc)
     return res.xyz / res.w;
 }
 
+/*
 float hash(vec2 p)
 {
     vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.11369, 0.13787));
     p3 += dot(p3, p3.yzx + 19.19);
     return fract((p3.x + p3.y) * p3.z);
+}
+*/
+
+// Permuted congruential generator
+uint pcg(uint x)
+{
+    uint state = x * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+float hash2(uvec2 v)
+{
+    return pcg(v.x ^ (v.y * 1103515245u));
+}
+
+float hash3(uvec3 v)
+{
+    return pcg(v.x ^ (v.y * 1103515245u) ^ (v.z * 134775813u));
+}
+
+float hash(vec2 uv)
+{
+    uvec2 ip = uvec2(floatBitsToUint(uv.x), floatBitsToUint(uv.y));
+    return float(hash2(ip)) / float(0xFFFFFFFFu);
 }
 
 layout(set = 2, binding = 0) uniform sampler2D depthBuffer;
@@ -121,7 +147,7 @@ void main()
         vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
         float prevOcclusion = texture(prevOcclusionBuffer, texCoords - uvVelocity).x;
         float velocityLength = length(uvVelocity);
-        float alpha = mix(0.05, 1.0, clamp(velocityLength * 100.0, 0.0, 1.0));
+        float alpha = mix(0.05, 1.0, clamp(velocityLength * 200.0, 0.0, 1.0));
         occlusion = mix(prevOcclusion, occlusion, alpha);
     }
     

@@ -356,8 +356,8 @@ class DecalPass: RenderPass
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "DECAL");
         beginPass();
         
-        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSampler);
-        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
+        state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSamplerNearest);
+        state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSamplerNearest);
         
         foreach(entity; state.scene.entities)
         {

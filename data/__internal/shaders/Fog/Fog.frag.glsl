@@ -18,8 +18,7 @@ vec3 toLinear(vec3 v)
 }
 
 layout(set = 2, binding = 0) uniform sampler2D depthBuffer;
-layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
-layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
+layout(set = 2, binding = 1) uniform sampler2D roughnessMetallicBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {

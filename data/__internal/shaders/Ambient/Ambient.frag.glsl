@@ -40,7 +40,7 @@ layout(set = 2, binding = 4) uniform samplerCube specularTexture;
 layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
 layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
 layout(set = 2, binding = 7) uniform sampler2D occlusionBuffer;
-layout(set = 2, binding = 8) uniform sampler2D velocityBuffer;
+//layout(set = 2, binding = 8) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
