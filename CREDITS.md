@@ -7,6 +7,7 @@
 * OBJ group parser - [Vlad Davydov aka Tynuk](https://github.com/Tynukua)
 
 ## Adapted third-party code
+* Wintab binding - [Vadim Lopatin aka buggins](https://github.com/buggins)
 * DXT1/DXT5 compressor - [Fabian Giesen](https://github.com/rygorous), [Yann Collet](https://github.com/Cyan4973)
 * BC7 compressor - [Rich Geldreich](https://github.com/richgel999)
 * SSAO implementation is based on the code by [Reinder Nijhoff](https://www.shadertoy.com/view/Ms33WB)
