@@ -24,7 +24,7 @@ float hash(vec2 p)
 // Brian Karis, "Real Shading in Unreal Engine 4"
 vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 {
-    float a = roughness; // * roughness;
+    float a = roughness;
     
     // Sample in spherical coordinates
     float phi = PI2 * Xi.x;
@@ -68,6 +68,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     uvec4 iparams;
 } ubo;
 
+// TODO: make uniforms
 const float maxDistance = 5.0;
 const int steps = 40;
 const int refineSteps = 4;
@@ -82,7 +83,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
     float invSamples = 1.0 / float(steps);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float jitter = hash(texCoords * 467.759 + ubo.fparams[0]) * 0.9;
+    float jitter = hash(texCoords * 467.759 + ubo.fparams[FPARAM_TIME]) * 0.9;
     float prevT = 0.0;
 
     for (int i = 0; i <= steps; i++)
@@ -175,7 +176,10 @@ void main()
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
-    vec2 xi = vec2(hash(texCoords + ubo.fparams[0]), hash(texCoords * 1.1 + ubo.fparams[0]));
+    vec2 xi = vec2(
+        hash(texCoords + ubo.fparams[FPARAM_TIME]),
+        hash(texCoords * 1.1 + ubo.fparams[FPARAM_TIME])
+    );
     vec3 H = importanceSampleGGX(xi, roughness, N);
     vec3 R = normalize(reflect(E, mix(N, H, roughness)));
     

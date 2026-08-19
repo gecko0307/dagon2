@@ -29,5 +29,7 @@ void main()
         baseColor *= texture(baseColorTexture, texCoords);
     }
     
+    // TODO: support fog
+    
     outColor = baseColor;
 }

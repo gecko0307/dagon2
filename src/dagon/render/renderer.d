@@ -183,6 +183,13 @@ abstract class Renderer: EventListener, Updateable
         if (!active || minimized)
             return;
         
+        if (buffersInvalidated)
+        {
+            buffersInvalidated = false;
+            SDL_WaitForGPUIdle(gpu.device);
+            resize();
+        }
+        
         commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
         
         SDL_AcquireGPUSwapchainTexture(
@@ -210,13 +217,6 @@ abstract class Renderer: EventListener, Updateable
         }
         
         SDL_SubmitGPUCommandBuffer(commandBuffer);
-        
-        if (buffersInvalidated)
-        {
-            buffersInvalidated = false;
-            SDL_WaitForGPUIdle(gpu.device);
-            resize();
-        }
     }
     
     /// Override for custom post-update logic.
