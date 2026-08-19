@@ -17,7 +17,7 @@ Dagon 2.0.0 - TBD
 - **Render**
   - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
   - Renderer now leverages SDL GPU, targeting Vulkan
-  - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0
+  - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. All stochastic techniques now use permuted congruential generator as a hash function
   - Stochastic screen-space reflections (SSSR) support
   - HDR (scRGB) output support
   - The renderer now uses separate irradiance cubemap
