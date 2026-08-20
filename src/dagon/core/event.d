@@ -927,10 +927,20 @@ class EventManager: Owner
                     break;
                 
                 case SDL_EVENT_MOUSE_MOTION:
-                    mouseX = event.motion.x;
-                    mouseY = event.motion.y;
-                    mouseRelX = event.motion.xrel;
-                    mouseRelY = event.motion.yrel;
+                    if (application.systemUnits == SystemUnits.PhysicalPixels)
+                    {
+                        mouseX = event.motion.x / application.displayContentScale;
+                        mouseY = event.motion.y / application.displayContentScale;
+                        mouseRelX = event.motion.xrel / application.displayContentScale;
+                        mouseRelY = event.motion.yrel / application.displayContentScale;
+                    }
+                    else
+                    {
+                        mouseX = event.motion.x;
+                        mouseY = event.motion.y;
+                        mouseRelX = event.motion.xrel;
+                        mouseRelY = event.motion.yrel;
+                    }
                     break;
                 
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -1242,7 +1252,17 @@ class EventManager: Owner
      */
     void setMouse(float x, float y)
     {
-        SDL_WarpMouseInWindow(window, x, y);
+        float sdlX = x;
+        float sdlY = y;
+
+        if (application.systemUnits == SystemUnits.PhysicalPixels)
+        {
+            sdlX *= application.displayContentScale;
+            sdlY *= application.displayContentScale;
+        }
+        
+        SDL_WarpMouseInWindow(window, sdlX, sdlY);
+        
         mouseX = x;
         mouseY = y;
     }
