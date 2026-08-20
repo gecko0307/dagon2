@@ -97,11 +97,12 @@ class ImGui: EventListener
         io = igGetIO();
         io.BackendPlatformName = "imgui_impl_dagon_sdl3";
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags.NoMouseCursorChange;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0f / application.pixelRatio;
 
         if (fontPath.length)
         {
+            io.FontGlobalScale = 1.0f / application.pixelRatio;
             String path = fontPath;
             font = ImFontAtlas_AddFontFromFileTTF(io.Fonts, path.ptr, cast(uint)(fontSize * application.pixelRatio), null, fontRanges.ptr);
             path.free();
