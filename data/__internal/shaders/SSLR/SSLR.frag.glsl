@@ -93,10 +93,11 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 } ubo;
 
 // TODO: make uniforms
-const float maxDistance = 5.0;
-const int steps = 40;
-const int refineSteps = 4;
-const float thickness = 0.2;
+const float maxDistance = 10.0; //5.0
+const int samples = 40;
+const float invSamples = 1.0 / float(samples);
+const int refineSamples = 4;
+const float thickness = 0.3; //0.2
 
 layout(location = 0) in vec2 texCoords;
 
@@ -105,40 +106,82 @@ layout(location = 0) out vec4 outColor;
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
-    float invSamples = 1.0 / float(steps);
+    if (roughnessFactor <= 0.0)
+        return vec4(0.0);
+
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     float jitter = hash(texCoords * 467.759 + ubo.fparams[FPARAM_TIME]) * 0.9;
     float prevT = 0.0;
 
-    for (int i = 0; i <= steps; i++)
+    float P00 = ubo.projectionMatrix[0][0];
+    float P11 = ubo.projectionMatrix[1][1];
+    float P20 = ubo.projectionMatrix[2][0];
+    float P21 = ubo.projectionMatrix[2][1];
+    float P22 = ubo.projectionMatrix[2][2];
+    float P23 = ubo.projectionMatrix[3][2];
+    float P32 = ubo.projectionMatrix[2][3];
+    
+    float I02 = ubo.invProjectionMatrix[0][2];
+    float I12 = ubo.invProjectionMatrix[1][2];
+    float I22 = ubo.invProjectionMatrix[2][2];
+    float I32 = ubo.invProjectionMatrix[3][2];
+    float I03 = ubo.invProjectionMatrix[0][3];
+    float I13 = ubo.invProjectionMatrix[1][3];
+    float I23 = ubo.invProjectionMatrix[2][3];
+    float I33 = ubo.invProjectionMatrix[3][3];
+
+    for (int i = 0; i <= samples; i++)
     {
         float t = (float(i) + jitter) * invSamples * maxDistance;
-
         vec3 samplePos = P + R * t;
-        vec4 clip = ubo.projectionMatrix * vec4(samplePos, 1.0);
-        clip /= clip.w;
-        vec2 uv = clip.xy * 0.5 + 0.5;
+
+        // Fast projection, instead of multiplying ubo.projectionMatrix * vec4(samplePos, 1.0)
+        float clipW = samplePos.z * P32; 
+        float invW = 1.0 / clipW;
+
+        vec2 uv;
+        uv.x = (samplePos.x * P00 + samplePos.z * P20) * invW;
+        uv.y = (samplePos.y * P11 + samplePos.z * P21) * invW;
+        
+        // Convert to UV space (reverse Y for Vulkan)
+        uv = uv * 0.5 + 0.5;
         uv.y = 1.0 - uv.y;
 
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-            return vec4(0.0);
+            break;
 
         float depth = texture(depthBuffer, uv).x;
         vec3 ndc = vec3(uv, depth);
-        vec3 hitPos = unproject(ubo.invProjectionMatrix, ndc);
+        
+        //vec3 hitPos = unproject(ubo.invProjectionMatrix, ndc);
+        
+        // Optimized unproject
+        vec2 ndcXY = uv * 2.0 - 1.0;
+        float ndcZ = depth * 2.0 - 1.0;
+        float resZ = I02 * ndcXY.x + I12 * ndcXY.y + I22 * ndcZ + I32;
+        float resW = I03 * ndcXY.x + I13 * ndcXY.y + I23 * ndcZ + I33;
+        float sceneZ = resZ / resW;
 
-        if (samplePos.z < hitPos.z && samplePos.z > hitPos.z - thickness)
+        // Hit test
+        if (samplePos.z < sceneZ && samplePos.z > sceneZ - thickness)
         {
             float tLo = prevT;
             float tHi = t;
 
-            for (int j = 0; j < refineSteps; j++)
+            // Binary search refinement
+            for (int j = 0; j < refineSamples; j++)
             {
                 float tMid = 0.5 * (tLo + tHi);
                 vec3 midPos = P + R * tMid;
-                vec4 midClip = ubo.projectionMatrix * vec4(midPos, 1.0);
-                midClip /= midClip.w;
-                vec2 midUV = midClip.xy * 0.5 + 0.5;
+
+                // Fast projection again
+                float midClipW = midPos.z * P32;
+                float midInvW = 1.0 / midClipW;
+                
+                vec2 midUV;
+                midUV.x = (midPos.x * P00 + midPos.z * P20) * midInvW;
+                midUV.y = (midPos.y * P11 + midPos.z * P21) * midInvW;
+                midUV.xy = midUV.xy * 0.5 + 0.5;
                 midUV.y = 1.0 - midUV.y;
 
                 if (midUV.x < 0.0 || midUV.x > 1.0 || midUV.y < 0.0 || midUV.y > 1.0)
@@ -148,30 +191,41 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
                 }
 
                 float midDepth = texture(depthBuffer, midUV).x;
-                vec3 midHitPos = unproject(ubo.invProjectionMatrix, vec3(midUV, midDepth));
+                
+                //vec3 midHitPos = unproject(ubo.invProjectionMatrix, vec3(midUV, midDepth));
+                
+                // Optimized unproject
+                vec2 midNdcXY = midUV * 2.0 - 1.0;
+                float midNdcZ = midDepth * 2.0 - 1.0;
+                float midResZ = I02 * midNdcXY.x + I12 * midNdcXY.y + I22 * midNdcZ + I32;
+                float midResW = I03 * midNdcXY.x + I13 * midNdcXY.y + I23 * midNdcZ + I33;
+                float midHitZ = midResZ / midResW;
 
-                if (midPos.z < midHitPos.z)
-                    tHi = tMid;
-                else
-                    tLo = tMid;
+                if (midPos.z < midHitZ) tHi = tMid; else tLo = tMid;
             }
 
+            // Final hit position
             float tFinal = tHi;
             vec3 finalPos = P + R * tFinal;
-            vec4 finalClip = ubo.projectionMatrix * vec4(finalPos, 1.0);
-            finalClip /= finalClip.w;
-            vec2 finalUV = finalClip.xy * 0.5 + 0.5;
+            
+            float finalClipW = finalPos.z * P32;
+            float finalInvW = 1.0 / finalClipW;
+            
+            vec2 finalUV;
+            finalUV.x = (finalPos.x * P00 + finalPos.z * P20) * finalInvW;
+            finalUV.y = (finalPos.y * P11 + finalPos.z * P21) * finalInvW;
+            finalUV.xy = finalUV.xy * 0.5 + 0.5;
             finalUV.y = 1.0 - finalUV.y;
 
-            vec2 edgeFactor =
-                smoothstep(vec2(0.0), vec2(0.2), finalUV) *
-                (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
+            // Fade out reflectionat edges
+            vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
             float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
             float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
+
             return vec4(texture(radianceBuffer, finalUV).rgb, alpha);
         }
-
+        
         prevT = t;
     }
 
