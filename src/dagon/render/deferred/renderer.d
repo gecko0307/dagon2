@@ -103,6 +103,8 @@ class DeferredRenderer: Renderer
         gbuffer = New!GBuffer(gpu, &gbufferConfig, this);
         ppContext = New!PostProcessingContext(gpu, gbuffer, this);
         
+        logInfo("Initializing DeferredRenderer...");
+        
         csmPass = New!CSMPass(this, gbuffer);
         geometryPass = New!GeometryPass(this, gbuffer);
         decalPass = New!DecalPass(this, gbuffer);
@@ -125,6 +127,8 @@ class DeferredRenderer: Renderer
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
+        
+        logInfo("Done");
     }
     
     void clearColor(Color4f color) @property
