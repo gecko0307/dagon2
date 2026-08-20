@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * Core game logic for Dagon-based games.
+ * Core game class that uses Dagon's built-in renderer.
  *
  * Description:
  * The `dagon.game.game` module defines the `Game` class, which serves
