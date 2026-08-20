@@ -95,27 +95,31 @@ float ssao(in vec2 tcoord, in vec2 uv, in vec3 p, in vec3 cnorm)
     return ao;
 }
 
+#define GOLDEN_ANGLE 2.4
+const float cosGA = cos(GOLDEN_ANGLE); // 0.73739
+const float sinGA = sin(GOLDEN_ANGLE); // 0.67546
+
 float spiralSSAO(vec2 uv, vec3 p, vec3 n, float rad)
 {
-    const float goldenAngle = 2.4;
     float ao = 0.0;
     float invSamples = 1.0 / float(ssaoSamples);
     float radius = 0.0;
+    float rStep = invSamples * rad;
 
     float rotatePhase = hash(uv * 467.759) * 6.28 + ubo.fparams[FPARAM_TIME];
-    float rStep = invSamples * rad;
-    vec2 spiralUV;
+    
+    vec2 dir = vec2(sin(rotatePhase), cos(rotatePhase));
 
     for (int i = 0; i < ssaoSamples; i++)
     {
-        spiralUV.x = sin(rotatePhase);
-        spiralUV.y = cos(rotatePhase);
         radius += rStep;
-        
-        ao += ssao(uv, spiralUV * radius, p, n);
-        rotatePhase += goldenAngle;
+        ao += ssao(uv, dir * radius, p, n);
+        dir = vec2(
+            dir.x * cosGA - dir.y * sinGA,
+            dir.x * sinGA + dir.y * cosGA
+        );
     }
-    
+
     ao *= invSamples;
     return (1.0 - ao);
 }
