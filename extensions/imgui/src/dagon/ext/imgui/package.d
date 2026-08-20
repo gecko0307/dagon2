@@ -227,7 +227,9 @@ class ImGui: EventListener
         
         processEvents();
         
-        io.DisplaySize = ImVec2(cast(float)application.windowWidth, cast(float)application.windowHeight);
+        io.DisplaySize = ImVec2(cast(float)application.drawableWidth, cast(float)application.drawableHeight);
+        //io.DisplayFramebufferScale = ImVec2(application.pixelRatio, application.pixelRatio);
+        //io.FontGlobalScale = application.pixelRatio;
         io.DeltaTime = cast(float)t.delta;
         
         if (io.WantTextInput)
