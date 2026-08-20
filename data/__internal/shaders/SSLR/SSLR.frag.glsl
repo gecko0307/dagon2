@@ -80,6 +80,7 @@ layout(set = 2, binding = 7) uniform sampler2D brdfLUT;
 #define FLAGS_MAX_LOD_LEVEL 1
 
 #define FPARAM_TIME 0
+#define FPARAM_TIME_DELTA 1
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -88,7 +89,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
-    vec4 fparams; // [0] = time
+    vec4 fparams; // [0] = time, [1] = delta
     uvec4 iparams;
 } ubo;
 
@@ -269,11 +270,21 @@ void main()
     vec4 reflection = sslr(eyePos, R, roughness);
     reflection = vec4(reflection.rgb * F, reflection.a);
     
+    // Temporal accumulation
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
-    vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
+    vec2 prevTexCoords = texCoords - uvVelocity;
+    vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
+    float currentFrameTime = ubo.fparams[FPARAM_TIME_DELTA]; 
+    float baseAlpha = 1.0 - exp(-currentFrameTime * 1.2);
+    baseAlpha = clamp(baseAlpha, 0.02, 0.15); 
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.02, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
-    vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
+    float motionFactor = clamp((velocityLength / max(currentFrameTime, 0.001)) * 1.5, 0.0, 1.0);
+    float alpha = mix(baseAlpha, 1.0, motionFactor);
+    
+    if (prevTexCoords.x < 0.0 || prevTexCoords.x > 1.0 || prevTexCoords.y < 0.0 || prevTexCoords.y > 1.0)
+        alpha = 1.0;
 
+    vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
+    
     outColor = accumulatedReflection;
 }

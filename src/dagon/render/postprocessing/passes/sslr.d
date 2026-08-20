@@ -71,6 +71,7 @@ class SSLRShader: Shader
     SSLRShaderVertexUniformBuffer vsUBO;
     SSLRShaderFragmentUniformBuffer fsUBO;
     float time = 0.0f;
+    float delta = 0.0f;
     
    public:
     this(GPU gpu, Owner owner)
@@ -95,8 +96,8 @@ class SSLRShader: Shader
         fsUBO.projectionMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.fparams[0] = 0.0f;
-        fsUBO.fparams[1] = 0.0f;
+        fsUBO.fparams[0] = time;
+        fsUBO.fparams[1] = delta;
         fsUBO.fparams[2] = 0.0f;
         fsUBO.fparams[3] = 0.0f;
     }
@@ -106,6 +107,7 @@ class SSLRShader: Shader
         time += 4.0f * t.delta;
         if (time > PI * 2.0f)
             time = 0.0f;
+        delta = t.delta;
     }
     
     override void bindParameters(GraphicsState* state)
@@ -122,6 +124,7 @@ class SSLRShader: Shader
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         fsUBO.fparams[0] = time;
+        fsUBO.fparams[1] = delta;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
