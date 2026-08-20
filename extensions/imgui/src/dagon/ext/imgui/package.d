@@ -87,7 +87,7 @@ class ImGui: EventListener
     
     ImGuiPass imGuiPass;
     
-    this(Application application, Renderer renderer, string fontPath = "")
+    this(Application application, Renderer renderer, string fontPath = "", uint fontSize = 16)
     {
         super(application.eventManager, application);
         this.application = application;
@@ -98,11 +98,12 @@ class ImGui: EventListener
         io.BackendPlatformName = "imgui_impl_dagon_sdl3";
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
+        io.FontGlobalScale = 1.0f / application.pixelRatio;
 
         if (fontPath.length)
         {
             String path = fontPath;
-            font = ImFontAtlas_AddFontFromFileTTF(io.Fonts, path.ptr, 16, null, fontRanges.ptr);
+            font = ImFontAtlas_AddFontFromFileTTF(io.Fonts, path.ptr, cast(uint)(fontSize * application.pixelRatio), null, fontRanges.ptr);
             path.free();
         }
         
@@ -229,7 +230,6 @@ class ImGui: EventListener
         
         io.DisplaySize = ImVec2(cast(float)application.drawableWidth, cast(float)application.drawableHeight);
         //io.DisplayFramebufferScale = ImVec2(application.pixelRatio, application.pixelRatio);
-        //io.FontGlobalScale = application.pixelRatio;
         io.DeltaTime = cast(float)t.delta;
         
         if (io.WantTextInput)
