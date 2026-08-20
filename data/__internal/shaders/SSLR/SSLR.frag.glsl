@@ -21,13 +21,6 @@ vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
     return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-/*
-float hash(vec2 p)
-{
-    return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
-}
-*/
-
 // Permuted congruential generator
 uint pcg(uint x)
 {
