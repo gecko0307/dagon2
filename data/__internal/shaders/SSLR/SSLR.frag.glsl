@@ -16,6 +16,11 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
+vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
+{
+    return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
 /*
 float hash(vec2 p)
 {
@@ -201,6 +206,8 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
+    vec4 color = texture(colorBuffer, texCoords);
+    vec3 baseColor = toLinear(color.rgb);
     
     vec2 xi = vec2(
         hash(texCoords + ubo.fparams[FPARAM_TIME]),
@@ -209,10 +216,11 @@ void main()
     vec3 H = importanceSampleGGX(xi, roughness, N);
     vec3 R = normalize(reflect(E, mix(N, H, roughness)));
     
-    float NE = 1.0 - clamp(dot(N, -E), 0.0, 1.0);
+    vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
+    vec3 F = fresnelRoughness(max(dot(H, E), 0.0), f0, roughness);
     
     vec4 reflection = sslr(eyePos, R, roughness);
-    reflection = vec4(reflection.rgb * NE, reflection.a);
+    reflection = vec4(reflection.rgb * F, reflection.a);
     
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec4 prevReflection = texture(prevReflectionBuffer, texCoords - uvVelocity);
