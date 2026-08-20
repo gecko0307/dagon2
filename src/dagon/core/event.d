@@ -1163,6 +1163,31 @@ class EventManager: Owner
                     addEvent(e);
                     break;
                 
+                case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                    // TODO
+                    /*
+                    application.drawableWidth = event.window.data1;
+                    application.drawableHeight = event.window.data2;
+                    
+                    float currentScale = SDL_GetWindowDisplayScale(window);
+                    
+                    if (application.windowHiDPI && application.systemUnits == SystemUnits.PhysicalPixels)
+                    {
+                        application.windowWidth = cast(uint)round(application.drawableWidth / currentScale);
+                        application.windowHeight = cast(uint)round(application.drawableHeight / currentScale);
+                    }
+                    else
+                    {
+                        int w, h;
+                        SDL_GetWindowSize(window, &w, &h);
+                        application.windowWidth = w;
+                        application.windowHeight = h;
+                    }
+                    
+                    application.pixelRatio = cast(float)application.drawableHeight / cast(float)application.windowHeight;
+                    */
+                    break;
+                
                 case SDL_EVENT_DROP_FILE:
                     e = Event(EventType.DropFile);
                     e.filename = to!string(event.drop.data);

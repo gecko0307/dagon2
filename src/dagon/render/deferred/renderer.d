@@ -91,6 +91,8 @@ class DeferredRenderer: Renderer
     {
         super(gpu, eventManager);
         
+        logInfo("Initializing DeferredRenderer...");
+        
         GBufferConfig gbufferConfig = {
             colorTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
             normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM, //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT
@@ -102,8 +104,6 @@ class DeferredRenderer: Renderer
         
         gbuffer = New!GBuffer(gpu, &gbufferConfig, this);
         ppContext = New!PostProcessingContext(gpu, gbuffer, this);
-        
-        logInfo("Initializing DeferredRenderer...");
         
         csmPass = New!CSMPass(this, gbuffer);
         geometryPass = New!GeometryPass(this, gbuffer);
@@ -127,8 +127,6 @@ class DeferredRenderer: Renderer
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
-        
-        logInfo("Done");
     }
     
     void clearColor(Color4f color) @property

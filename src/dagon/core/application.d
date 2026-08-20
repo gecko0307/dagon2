@@ -151,6 +151,13 @@ enum ColorProfile: uint
     Linear = 1
 }
 
+/// Window system units.
+enum SystemUnits: uint
+{
+    PhysicalPixels = 0,
+    LogicalPixels = 1
+}
+
 /// Supported image formats.
 enum ImageFileFormat
 {
@@ -429,6 +436,12 @@ class Application: EventListener, Updateable
     /// System information.
     SysInfo systemInfo;
     
+    /// Video driver name.
+    string videoDriver = "undefined";
+    
+    /// Desktop units native to the window system.
+    SystemUnits systemUnits = SystemUnits.PhysicalPixels;
+    
     /// Number of video displays in the system.
     uint displayCount;
     
@@ -446,6 +459,9 @@ class Application: EventListener, Updateable
     
     /// Selected video display height.
     uint displayHeight;
+    
+    /// Selected video display content scale.
+    float displayContentScale = 1.0f;
     
     /// Width of the desktop area represented by the selected display.
     uint desktopWidth;
@@ -1004,6 +1020,13 @@ class Application: EventListener, Updateable
         if (SDL_Init(sdlSubsystems) < 0)
             exitWithError("Failed to init SDL: " ~ to!string(SDL_GetError()));
         
+        SDL_SetAppMetadata("Dagon", dagonVersionString.ptr, "com.pixelperfect.dagon");
+        
+        auto vd = SDL_GetCurrentVideoDriver();
+        if (vd !is null)
+            videoDriver = to!string(vd);
+        logInfo("Video driver: ", videoDriver);
+        
         // Init display
         int numDisplays = 0;
         SDL_DisplayID* displayIDs = SDL_GetDisplays(&numDisplays);
@@ -1052,6 +1075,25 @@ class Application: EventListener, Updateable
         else
             display = primaryDisplay;
         logInfo("Selected display: ", display);
+        
+        displayContentScale = SDL_GetDisplayContentScale(display);
+        
+        version(Windows)
+        {
+            systemUnits = SystemUnits.PhysicalPixels;
+        }
+        else version(linux)
+        {
+            if (videoDriver == "wayland")
+                systemUnits = SystemUnits.LogicalPixels;
+            else
+                systemUnits = SystemUnits.PhysicalPixels;
+        }
+        else version(OSX)
+        {
+            systemUnits = SystemUnits.LogicalPixels;
+        }
+        logInfo("System units: ", systemUnits);
         
         if ("window.width" in config.props)
             windowWidth = config.props["window.width"].toUInt;
@@ -1116,6 +1158,7 @@ class Application: EventListener, Updateable
         desktopHeight = desktopBounds.h;
         
         logInfo("Display resolution: ", displayWidth, "x", displayHeight);
+        logInfo("Content scale: ", displayContentScale);
         
         // Create SDL window
         if (fullscreen)
@@ -1138,13 +1181,21 @@ class Application: EventListener, Updateable
         if ("window.hiDPI" in config.props)
             windowHiDPI = cast(bool)config.props["window.hiDPI"].toUInt;
         
+        uint windowPhysicalWidth = windowWidth;
+        uint windowPhysicalHeight = windowHeight;
+        if (windowHiDPI && systemUnits == SystemUnits.PhysicalPixels)
+        {
+            windowPhysicalWidth = cast(uint)(windowWidth * displayContentScale);
+            windowPhysicalHeight = cast(uint)(windowHeight * displayContentScale);
+        }
+        
         SDL_PropertiesID winProps = SDL_CreateProperties();
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
         SDL_SetStringProperty(winProps, SDL_PROP_WINDOW_CREATE_TITLE_STRING, toStringz(windowTitle));
         SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_X_NUMBER, windowX);
         SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_Y_NUMBER, windowY);
-        SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, windowWidth);
-        SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, windowHeight);
+        SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, windowPhysicalWidth);
+        SDL_SetNumberProperty(winProps, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, windowPhysicalHeight);
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, windowResizable);
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_MAXIMIZED_BOOLEAN, windowMaximized);
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_MINIMIZED_BOOLEAN, windowMinimized);
@@ -1157,9 +1208,18 @@ class Application: EventListener, Updateable
         
         int createdWindowWidth, createdWindowHeight;
         SDL_GetWindowSize(window, &createdWindowWidth, &createdWindowHeight);
-        windowWidth = createdWindowWidth;
-        windowHeight = createdWindowHeight;
-        logInfo("Window size: ", windowWidth, "x", windowHeight);
+        if (windowHiDPI && systemUnits == SystemUnits.PhysicalPixels)
+        {
+            // Scale down to get logical window size
+            windowWidth = cast(uint)(createdWindowWidth / displayContentScale);
+            windowHeight = cast(uint)(createdWindowHeight / displayContentScale);
+        }
+        else
+        {
+            windowWidth = createdWindowWidth;
+            windowHeight = createdWindowHeight;
+        }
+        logInfo("Window size (logical): ", windowWidth, "x", windowHeight);
         
         windowProperties = SDL_GetWindowProperties(window);
         version(Windows)
@@ -1215,8 +1275,11 @@ class Application: EventListener, Updateable
         drawableHeight = cast(uint)floor(drawableHeight * supersampling);
         logInfo("Window drawable size: ", drawableWidth, "x", drawableHeight);
         
-        pixelRatio = cast(float)drawableHeight / cast(float)windowHeight;
-        logInfo("Pixel ratio: ", pixelRatio);
+        if (windowHiDPI)
+            pixelRatio = cast(float)drawableHeight / cast(float)windowHeight;
+        else
+            pixelRatio = 1.0f;
+        logInfo("Window pixel ratio: ", pixelRatio);
         
         if ("vsync" in config.props)
             vsync = cast(VSyncMode)config.props["vsync"].toInt;
@@ -1294,7 +1357,7 @@ class Application: EventListener, Updateable
         if (updatesPerSecond == 0)
             updatesPerSecond = refreshRate;
         logInfo("Display refresh rate: ", refreshRate, " Hz");
-        logInfo("Updates per second: ", updatesPerSecond, " Hz");
+        logInfo("Updates per second: ", updatesPerSecond);
         cadencer = New!Cadencer(this, updatesPerSecond, this);
         cadencer.enableSleep = enableCPUSleep;
         
