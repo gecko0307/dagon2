@@ -1259,6 +1259,8 @@ class Application: EventListener, Updateable
         
         logInfo("GPU API backend: ", gpu.backend);
         logInfo("Swap chain format: ", gpu.swapchainTextureFormat);
+        logInfo("Swap chain composition: ", gpu.swapchainComposition);
+        logInfo("Swap chain present mode: ", gpu.presentMode);
         
         if (gpu.hdrSwapchain)
         {
@@ -1267,8 +1269,6 @@ class Application: EventListener, Updateable
         
         setFullscreen(fullscreen);
         
-        logInfo("VSync: ", vsync);
-        
         // Create event manager
         eventManager = New!EventManager(this);
         super(eventManager, owner);
@@ -1276,8 +1276,8 @@ class Application: EventListener, Updateable
             eventManager.enableKeyRepeat = cast(bool)config.props["events.keyRepeat"].toUInt;
         if ("events.gamepadAxisThreshold" in config.props)
             eventManager.gamepadAxisThreshold = config.props["events.gamepadAxisThreshold"].toUInt;
-        //if ("events.graphicsTablet.enabled" in config.props)
-        //    eventManager.graphicsTablet.enabled = cast(bool)config.props["events.graphicsTablet.enabled"].toUInt;
+        if ("events.graphicsTablet.enabled" in config.props)
+            eventManager.graphicsTablet.enabled = cast(bool)config.props["events.graphicsTablet.enabled"].toUInt;
         
         // Create cadencer and timers pool
         if ("updatesPerSecond" in config.props)

@@ -103,7 +103,7 @@ class GPU: Owner
     SDL_GPUSwapchainComposition swapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
     
     /// Present mode that will be used to present swapchain textures to the OS.
-    SDL_GPUPresentMode swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
+    SDL_GPUPresentMode presentMode = SDL_GPU_PRESENTMODE_VSYNC;
     
     /// OpenXR instance.
     XrInstance xrInstance = XR_NULL_HANDLE;
@@ -186,20 +186,20 @@ class GPU: Owner
             if (application.vsync == VSyncMode.Enabled)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_VSYNC))
-                    swapchainPresentMode = SDL_GPU_PRESENTMODE_VSYNC;
+                    presentMode = SDL_GPU_PRESENTMODE_VSYNC;
             }
             else if (application.vsync == VSyncMode.Disabled)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_IMMEDIATE))
-                    swapchainPresentMode = SDL_GPU_PRESENTMODE_IMMEDIATE;
+                    presentMode = SDL_GPU_PRESENTMODE_IMMEDIATE;
             }
             else if (application.vsync == VSyncMode.Mailbox)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_MAILBOX))
-                    swapchainPresentMode = SDL_GPU_PRESENTMODE_MAILBOX;
+                    presentMode = SDL_GPU_PRESENTMODE_MAILBOX;
             }
             
-            SDL_SetGPUSwapchainParameters(device, application.window, swapchainComposition, swapchainPresentMode);
+            SDL_SetGPUSwapchainParameters(device, application.window, swapchainComposition, presentMode);
             
             swapchainTextureFormat = SDL_GetGPUSwapchainTextureFormat(device, application.window);
             
