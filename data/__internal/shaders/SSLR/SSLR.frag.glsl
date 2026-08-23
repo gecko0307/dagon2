@@ -271,6 +271,7 @@ void main()
     reflection = vec4(reflection.rgb * F, reflection.a);
     
     // Temporal accumulation
+    /*
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec2 prevTexCoords = texCoords - uvVelocity;
     vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
@@ -280,13 +281,13 @@ void main()
     float velocityLength = length(uvVelocity);
     float motionFactor = clamp((velocityLength / max(currentFrameTime, 0.001)) * 1.5, 0.0, 1.0);
     float alpha = mix(baseAlpha, 1.0, motionFactor);
-    /*
+    */
+    
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec2 prevTexCoords = texCoords - uvVelocity;
     vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.01, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
-    */
+    float alpha = mix(0.02, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
 
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
     
