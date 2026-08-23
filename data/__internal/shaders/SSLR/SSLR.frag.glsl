@@ -94,11 +94,11 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 } ubo;
 
 // TODO: make uniforms
-const float maxDistance = 10.0; //5.0
+const float maxDistance = 10.0;
 const int samples = 40;
 const float invSamples = 1.0 / float(samples);
 const int refineSamples = 4;
-const float thickness = 0.3; //0.2
+const float thickness = 0.3;
 
 layout(location = 0) in vec2 texCoords;
 
@@ -276,13 +276,17 @@ void main()
     vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
     float currentFrameTime = ubo.fparams[FPARAM_TIME_DELTA]; 
     float baseAlpha = 1.0 - exp(-currentFrameTime * 1.2);
-    baseAlpha = clamp(baseAlpha, 0.02, 0.15); 
+    baseAlpha = clamp(baseAlpha, 0.005, 0.01); 
     float velocityLength = length(uvVelocity);
     float motionFactor = clamp((velocityLength / max(currentFrameTime, 0.001)) * 1.5, 0.0, 1.0);
     float alpha = mix(baseAlpha, 1.0, motionFactor);
-    
-    if (prevTexCoords.x < 0.0 || prevTexCoords.x > 1.0 || prevTexCoords.y < 0.0 || prevTexCoords.y > 1.0)
-        alpha = 1.0;
+    /*
+    vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
+    vec2 prevTexCoords = texCoords - uvVelocity;
+    vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
+    float velocityLength = length(uvVelocity);
+    float alpha = mix(0.01, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
+    */
 
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
     

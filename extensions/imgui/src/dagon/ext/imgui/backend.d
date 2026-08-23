@@ -319,6 +319,7 @@ class ImGuiPass: RenderPass
         TextureCreationOptions options;
         options.generateMipmaps = false;
         options.repeatUV = false;
+        options.bilinearFiltering = true;
         options.anisotropicFiltering = false;
 
         fontTexture = New!Texture(gpu, this);
@@ -476,10 +477,10 @@ class ImGuiPass: RenderPass
                 if (pcmd.UserCallback is null)
                 {
                     SDL_Rect clipRect;
-                    clipRect.x = cast(int)(pcmd.ClipRect.x - clipOff.x);
-                    clipRect.y = cast(int)(pcmd.ClipRect.y - clipOff.y);
-                    clipRect.w = cast(int)(pcmd.ClipRect.z - pcmd.ClipRect.x);
-                    clipRect.h = cast(int)(pcmd.ClipRect.w - pcmd.ClipRect.y);
+                    clipRect.x = cast(int)((pcmd.ClipRect.x - clipOff.x) * renderer.eventManager.application.pixelRatio);
+                    clipRect.y = cast(int)((pcmd.ClipRect.y - clipOff.y) * renderer.eventManager.application.pixelRatio);
+                    clipRect.w = cast(int)((pcmd.ClipRect.z - pcmd.ClipRect.x) * renderer.eventManager.application.pixelRatio);
+                    clipRect.h = cast(int)((pcmd.ClipRect.w - pcmd.ClipRect.y) * renderer.eventManager.application.pixelRatio);
                     SDL_SetGPUScissor(renderPass, &clipRect);
                     
                     Texture tex = fontTexture;

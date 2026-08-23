@@ -55,9 +55,10 @@ public import dagon.graphics.texturebuffer;
 ///
 struct TextureCreationOptions
 {
-    bool generateMipmaps;
-    bool repeatUV;
-    bool anisotropicFiltering;
+    bool generateMipmaps = false;
+    bool repeatUV = false;
+    bool bilinearFiltering = true;
+    bool anisotropicFiltering = false;
 }
 
 class Texture: Owner
@@ -94,9 +95,18 @@ class Texture: Owner
         
         // TODO: customization via TextureCreationOptions
         SDL_GPUSamplerCreateInfo samplerCreateInfo;
-        samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
-        samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
-        samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+        if (options.bilinearFiltering)
+        {
+            samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
+            samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
+            samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+        }
+        else
+        {
+            samplerCreateInfo.min_filter = SDL_GPU_FILTER_NEAREST;
+            samplerCreateInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
+            samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+        }
         if (options.repeatUV)
         {
             samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;

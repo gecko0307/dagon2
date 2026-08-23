@@ -26,11 +26,15 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.ext.imgui;
 
+import core.stdc.string;
+import std.math;
+
 public import bindbc.imgui;
 
 import dlib.core.memory;
 import dlib.text.str;
 
+import dagon.core.logger;
 import dagon.core.sdl3;
 import dagon.core.event;
 import dagon.core.time;
@@ -103,8 +107,31 @@ class ImGui: EventListener
         if (fontPath.length)
         {
             io.FontGlobalScale = 1.0f / application.pixelRatio;
+            
             String path = fontPath;
-            font = ImFontAtlas_AddFontFromFileTTF(io.Fonts, path.ptr, cast(uint)(fontSize * application.pixelRatio), null, fontRanges.ptr);
+            ImFontConfig fontConfig;
+            fontConfig.FontData = null; // TODO: use font manager
+            fontConfig.FontDataSize = 0;
+            fontConfig.FontDataOwnedByAtlas = true;
+            fontConfig.FontNo = 0; // Index of font within a collection file (e.g. .ttc pack)
+            fontConfig.SizePixels = fontSize * application.pixelRatio;
+            fontConfig.OversampleH = 1; // Horizontal oversampling factor (Higher values improve small text readability)
+            fontConfig.OversampleV = 1;  // Vertical oversampling factor
+            fontConfig.PixelSnapH = true; // Align every glyph horizontally to pixel boundaries
+            fontConfig.GlyphExtraSpacing = ImVec2(0.0f, 0.0f); // Extra spacing between characters (X) and lines (Y)
+            fontConfig.GlyphOffset = ImVec2(0.0f, 0.0f); // Offset all glyphs on X/Y axes (Useful for aligning merged icon fonts)
+            fontConfig.GlyphRanges = fontRanges.ptr;
+            fontConfig.GlyphMinAdvanceX = 0.0f; // Force minimum width per glyph (Useful to turn icon fonts into monospaced fonts)
+            fontConfig.GlyphMaxAdvanceX = float.max; // Force maximum width per glyph
+            fontConfig.MergeMode = false;
+            fontConfig.FontBuilderFlags = 0;
+            fontConfig.RasterizerMultiply = 1.0f;
+            fontConfig.EllipsisChar = cast(ImWchar)0x2026;
+            strncpy(fontConfig.Name.ptr, "Font", fontConfig.Name.length - 1);
+            fontConfig.DstFont = font;
+            
+            font = ImFontAtlas_AddFontFromFileTTF(
+                io.Fonts, path.ptr, fontSize * application.pixelRatio, &fontConfig, fontRanges.ptr);
             path.free();
         }
         
@@ -164,7 +191,9 @@ class ImGui: EventListener
         switch(event.type)
         {
             case SDL_EVENT_MOUSE_MOTION:
-                ImGuiIO_AddMousePosEvent(io, event.motion.x, event.motion.y);
+                ImGuiIO_AddMousePosEvent(io,
+                    event.motion.x / application.pixelRatio,
+                    event.motion.y / application.pixelRatio);
                 break;
                 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -229,8 +258,8 @@ class ImGui: EventListener
         
         processEvents();
         
-        io.DisplaySize = ImVec2(cast(float)application.drawableWidth, cast(float)application.drawableHeight);
-        //io.DisplayFramebufferScale = ImVec2(application.pixelRatio, application.pixelRatio);
+        io.DisplaySize = ImVec2(cast(float)application.windowWidth, cast(float)application.windowHeight);
+        io.DisplayFramebufferScale = ImVec2(application.pixelRatio, application.pixelRatio);
         io.DeltaTime = cast(float)t.delta;
         
         if (io.WantTextInput)
