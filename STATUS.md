@@ -36,12 +36,9 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 
 [#2](https://github.com/gecko0307/dagon2/issues/2)
 
-- [x] dagon2:assimp (now core functionality)
 - [x] dagon2:audio
 - [x] dagon2:exformats
 - [x] dagon2:imgui
-- [x] dagon2:jolt (now core functionality)
-- [x] dagon2:ktx (now core functionality)
 - [ ] dagon2:network
 - [ ] dagon2:newton
 - [x] dagon2:physfs
