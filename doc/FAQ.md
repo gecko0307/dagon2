@@ -1,10 +1,10 @@
 # Frequently Asked Questions
 
 ## 1. Is this a full-fledged game production suite like Unity/UE/Godot?
-No, not at all. Dagon only provides a framework for building real-time applications. It abstracts a lot of complex tasks such as managing a window and handling user input, loading models and textures, doing transformations, rendering, animation, sound and physics, but it doesn't include any content creation tools such as a scene editor.
+No, not at all. Dagon only provides a framework for building real-time applications. It abstracts a lot of complex tasks such as managing a window and handling user input, loading models and textures, doing transformations, rendering, animation, sound and physics, but currently it doesn't include any content creation tools such as a scene editor.
 
 ## 2. Why Dagon doesn't support multiple graphics APIs?
-Historically, Dagon was based on OpenGL because it was the most convenient way to use the same codebase across all major desktop platforms. After moving to SDL GPU multi-backend functionality is now possible and is a long-term planned feature. However, it will require significant efforts to manage properly.
+Historically, Dagon was based on OpenGL because it was the most convenient way to use the same codebase across all major desktop platforms (except macOS) without writing a complex intermediate layer that unifies different graphics APIs. After moving to SDL GPU, multi-backend architecture is now theoretically possible and is a long-term planned feature. However, it will require significant efforts to manage properly.
 
 ## 3. Why Dagon doesn't support macOS?
 See Question 2.
@@ -26,9 +26,9 @@ On Windows, VSync may cause stuttering in windowed mode due to the issues in the
 As a general rule, VSync should only be enabled if you are experiencing screen tearing, and it usually only makes sense in exclusive fullscreen mode.
 
 ## 8. How to fix input lag?
-Input lag is the perceptible delay between pressing a button or moving a mouse and seeing that action happen on your screen. It can be caused by various reasons, VSync being a major one. A good trade-off between tearing and input lag is to use Mailbox mode (`vsync: 2` in settings.conf). In Dagon 2 it is on by default.
+Input lag is a perceptible delay between pressing a button or moving a mouse and seeing that action happen on your screen. It can be caused by various reasons, VSync being a major one. A good trade-off between tearing and input lag is to use Mailbox mode (`vsync: 2` in settings.conf). In Dagon 2 it is on by default.
 
-Also input lag is sometimes caused by electromagnetic interference during signal transmission from wireless peripherals. If a wireless mouse is lagging, try to move other devices away from your desktop and the mouse receiver.
+Also input lag is sometimes caused by electromagnetic interference during signal transmission from wireless peripherals. If a wireless mouse is lagging in the game, try to move other devices such as a mobile phone away from your desktop and the mouse receiver.
 
 ## 9. Why matrix-vector multiplication is inverted?
 The reason behind this is an optimization under common associativity rules. Generally speaking, there is actually only multiplication of two matrices, and matrix-vector multiplication is its special case. This operation is ambiguous, since you can see the vector as Nx1 matrix (column vector) or 1xN matrix (row vector). The order of operands (and hense results) will be different in each case.
