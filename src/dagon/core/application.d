@@ -1189,6 +1189,8 @@ class Application: EventListener, Updateable
             windowPhysicalHeight = cast(uint)(windowHeight * displayContentScale);
         }
         
+        //SDL_SetHint(SDL_HINT_VULKAN_LIBRARY, ""); // TODO
+        
         SDL_PropertiesID winProps = SDL_CreateProperties();
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
         SDL_SetStringProperty(winProps, SDL_PROP_WINDOW_CREATE_TITLE_STRING, toStringz(windowTitle));
