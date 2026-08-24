@@ -119,6 +119,14 @@ class Game: BaseGame
         renderer.state.brdfLUTEnabled = true;
         
         // Renderer configuration
+        if ("profile" in rendererConfig.props)
+        {
+            uint profile = rendererConfig.props["profile"].toUInt;
+            if (profile > DeferredRendererProfile.UltraQuality)
+                profile = DeferredRendererProfile.UltraQuality;
+            renderer.applyProfile(cast(DeferredRendererProfile)profile);
+        }
+        
         if ("ssao.enabled" in rendererConfig.props)
             renderer.ssaoPass.active = cast(bool)(rendererConfig.props["ssao.enabled"].toUInt);
         if ("ssao.samplesMin" in rendererConfig.props)

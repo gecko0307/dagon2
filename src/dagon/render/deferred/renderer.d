@@ -61,6 +61,13 @@ import dagon.render.postprocessing.passes.fxaa;
 import dagon.render.postprocessing.passes.sharpening;
 import dagon.render.postprocessing.passes.present;
 
+enum DeferredRendererProfile
+{
+    LowQuality = 0,
+    HighQuality = 1,
+    UltraQuality = 2
+}
+
 class DeferredRenderer: Renderer
 {
     GBuffer gbuffer;
@@ -86,6 +93,8 @@ class DeferredRenderer: Renderer
     FXAAPass fxaaPass;
     SharpeningPass sharpeningPass;
     PresentPass presentPass;
+    
+    DeferredRendererProfile profile;
     
     this(GPU gpu, EventManager eventManager)
     {
@@ -127,6 +136,91 @@ class DeferredRenderer: Renderer
         fxaaPass = New!FXAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
+        
+        applyProfile(DeferredRendererProfile.HighQuality);
+    }
+    
+    void applyProfile(DeferredRendererProfile profile)
+    {
+        this.profile = profile;
+        
+        if (profile == DeferredRendererProfile.HighQuality ||
+            profile == DeferredRendererProfile.UltraQuality)
+        {
+            ssaoPass.active = true;
+            decalPass.active = true;
+            selfIlluminationPass.active = true;
+            sunLightPass.active = true;
+            lightVolumePass.active = true;
+            fogPass.active = true;
+            sslrPass.active = true;
+            reflectionPass.active = true;
+            motionBlurPass.active = true;
+            tonemappingPass.active = true;
+            lensDistortionPass.active = true;
+            fxaaPass.active = true;
+            sharpeningPass.active = true;
+            
+            motionBlurPass.motionBlurShader.samples = 16;
+            motionBlurPass.motionBlurShader.shutterFramerate = 30;
+            motionBlurPass.motionBlurShader.minDistance = 0.01f;
+            motionBlurPass.motionBlurShader.maxDistance = 2.0f;
+            motionBlurPass.motionBlurShader.offsetRandomCoefficient = 0.15f;
+            
+            ssaoPass.ssaoShader.numSamplesMin = 20;
+            ssaoPass.ssaoShader.numSamplesMax = 40;
+            if (profile == DeferredRendererProfile.UltraQuality)
+            {
+                ssaoPass.ssaoShader.temporalAccumulation = false;
+                ssaoDenoisePass.active = true;
+                gbuffer.halfResolutionOcclusion = false;
+                gbuffer.halfResolutionReflection = false;
+            }
+            else
+            {
+                ssaoPass.ssaoShader.temporalAccumulation = true;
+                ssaoDenoisePass.active = false;
+                gbuffer.halfResolutionOcclusion = true;
+                gbuffer.halfResolutionReflection = true;
+            }
+            // TODO: other SSLR options
+            
+            sharpeningPass.sharpeningShader.strength = 0.5f;
+        }
+        else if (profile == DeferredRendererProfile.LowQuality)
+        {
+            ssaoPass.active = false;
+            decalPass.active = true;
+            selfIlluminationPass.active = true;
+            sunLightPass.active = true;
+            lightVolumePass.active = true;
+            fogPass.active = true;
+            sslrPass.active = false;
+            reflectionPass.active = false;
+            motionBlurPass.active = false;
+            tonemappingPass.active = true;
+            lensDistortionPass.active = false;
+            fxaaPass.active = true;
+            sharpeningPass.active = false;
+            
+            ssaoPass.ssaoShader.temporalAccumulation = true;
+            ssaoDenoisePass.active = false;
+            
+            motionBlurPass.motionBlurShader.samples = 16;
+            motionBlurPass.motionBlurShader.shutterFramerate = 30;
+            motionBlurPass.motionBlurShader.minDistance = 0.01f;
+            motionBlurPass.motionBlurShader.maxDistance = 2.0f;
+            motionBlurPass.motionBlurShader.offsetRandomCoefficient = 0.15f;
+            
+            ssaoPass.ssaoShader.numSamplesMin = 10;
+            ssaoPass.ssaoShader.numSamplesMax = 10;
+            gbuffer.halfResolutionOcclusion = true;
+            gbuffer.halfResolutionReflection = true;
+            
+            // TODO: other SSLR options
+        }
+        
+        invalidateBuffers();
     }
     
     void clearColor(Color4f color) @property
