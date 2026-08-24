@@ -29,6 +29,7 @@ module dagon.resource.shader.shadermodule;
 import std.stdio;
 import std.file;
 import std.conv;
+import std.algorithm.searching: count;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -43,7 +44,8 @@ import dagon.resource.shader.glsl;
 enum PipelineStage
 {
     Vertex = 0,
-    Fragment = 1
+    Fragment = 1,
+    Compute = 2
 }
 
 enum ShaderSourceType
@@ -62,6 +64,7 @@ class ShaderUniform: Owner
     string name;
     uint set;
     uint binding;
+    bool readonly = true;
     
     this(string name, uint set, uint binding, Owner owner)
     {
@@ -147,10 +150,24 @@ class ShaderModule: Owner
     PipelineStage pipelineStage;
     bool valid = false;
     
+    uint localSizeX = 1;
+    uint localSizeY = 1;
+    uint localSizeZ = 1;
+    
     ShaderSampler[] samplers;
     ShaderStorageBuffer[] storageBuffers;
     ShaderStorageTexture[] storageTextures;
     ShaderUniformBuffer[] uniformBuffers;
+    
+    final uint countStorageBuffers(bool readonly) const
+    {
+        return cast(uint)storageBuffers.count!(b => b.readonly == readonly);
+    }
+
+    final uint countStorageTextures(bool readonly) const
+    {
+        return cast(uint)storageTextures.count!(b => b.readonly == readonly);
+    }
     
     this(GPU gpu, Owner owner)
     {
@@ -161,20 +178,12 @@ class ShaderModule: Owner
     
     ~this()
     {
-        if (samplers.length)
-            Delete(samplers);
+        if (samplers.length) Delete(samplers);
+        if (storageBuffers.length) Delete(storageBuffers);
+        if (storageTextures.length) Delete(storageTextures);
+        if (uniformBuffers.length) Delete(uniformBuffers);
         
-        if (storageBuffers.length)
-            Delete(storageBuffers);
-        
-        if (storageTextures.length)
-            Delete(storageTextures);
-        
-        if (uniformBuffers.length)
-            Delete(uniformBuffers);
-        
-        if (spirvInternal.length)
-            Delete(spirvInternal);
+        if (spirvInternal.length) Delete(spirvInternal);
     }
     
     bool create(string name, string source, ShaderSourceType sourceType, ShaderLanguage sourceLanguage, PipelineStage pipelineStage)
@@ -216,9 +225,14 @@ class ShaderModule: Owner
                 ShaderCompilationResult res = compileGLSLtoSPIRV(sourceString, pipelineStage);
                 if (res.success)
                 {
-                    spirv = res.spirv;
+                    // Copy SPIR-V and delete the compilation context
+                    spirvInternal = New!(ubyte[])(res.spirv.length * 4);
+                    spirvInternal[] = cast(ubyte[])res.spirv[];
+                    uint* ubytePtr = cast(uint*)spirvInternal.ptr;
+                    spirv = ubytePtr[0..spirvInternal.length / 4];
                     valid = true;
-                    globalResourceCache.save(ResourceType.Shader, name, spirvAsBytes);
+                    globalResourceCache.save(ResourceType.Shader, name, spirvInternal);
+                    res.free();
                 }
                 else
                 {
@@ -237,7 +251,8 @@ class ShaderModule: Owner
             // TODO: SPIR-V introspection cache
             valid = analyze();
             
-            valid = createSDLShader();
+            if (pipelineStage != PipelineStage.Compute)
+                valid = createSDLShader();
         }
         
         return valid;
@@ -253,7 +268,8 @@ class ShaderModule: Owner
         if (valid)
         {
             valid = analyze();
-            valid = createSDLShader();
+            if (pipelineStage != PipelineStage.Compute)
+                valid = createSDLShader();
         }
         
         return valid;
@@ -296,15 +312,20 @@ class ShaderModule: Owner
             return false;
         }
         
-        /*
-        spvc_compiler_options_set_uint(spvcCompilerOptions, SPVC_COMPILER_OPTION_GLSL_VERSION, 400);
-        spvc_compiler_options_set_bool(spvcCompilerOptions, SPVC_COMPILER_OPTION_GLSL_EMIT_UNIFORM_BUFFER_AS_PLAIN_UNIFORMS, true);
-        spvc_compiler_options_set_bool(spvcCompilerOptions, SPVC_COMPILER_OPTION_GLSL_VULKAN_SEMANTICS, false);
-        */
         spvc_compiler_install_compiler_options(spvcCompiler, spvcCompilerOptions);
         
         spvc_resources resources;
         spvc_compiler_create_shader_resources(spvcCompiler, &resources);
+        
+        if (pipelineStage == PipelineStage.Compute)
+        {
+            localSizeX = spvc_compiler_get_execution_mode_argument_by_index(spvcCompiler, SpvExecutionMode.LocalSize, 0);
+            localSizeY = spvc_compiler_get_execution_mode_argument_by_index(spvcCompiler, SpvExecutionMode.LocalSize, 1);
+            localSizeZ = spvc_compiler_get_execution_mode_argument_by_index(spvcCompiler, SpvExecutionMode.LocalSize, 2);
+            if (localSizeX == 0) localSizeX = 1;
+            if (localSizeY == 0) localSizeY = 1;
+            if (localSizeZ == 0) localSizeZ = 1;
+        }
         
         // Enumerate sampled images
         {
@@ -319,6 +340,7 @@ class ShaderModule: Owner
                 uint set = spvc_compiler_get_decoration(spvcCompiler, rSamplers[i].id, SpvDecoration.DescriptorSet);
                 uint binding = spvc_compiler_get_decoration(spvcCompiler, rSamplers[i].id, SpvDecoration.Binding);
                 samplers[i] = New!ShaderSampler(name, set, binding, this);
+                samplers[i].readonly = true; // samplers are always read-only
             }
         }
         
@@ -335,7 +357,11 @@ class ShaderModule: Owner
                 string name = rStorageBuffers[i].name.to!string;
                 uint set = spvc_compiler_get_decoration(spvcCompiler, rStorageBuffers[i].id, SpvDecoration.DescriptorSet);
                 uint binding = spvc_compiler_get_decoration(spvcCompiler, rStorageBuffers[i].id, SpvDecoration.Binding);
-                storageBuffers[i] = New!ShaderStorageBuffer(name, set, binding, this);
+                auto buf = New!ShaderStorageBuffer(name, set, binding, this);
+                
+                buf.readonly = cast(bool)spvc_compiler_has_decoration(spvcCompiler, rStorageBuffers[i].id, SpvDecoration.NonWritable);
+                
+                storageBuffers[i] = buf;
             }
         }
         
@@ -352,7 +378,11 @@ class ShaderModule: Owner
                 string name = rStorageTextures[i].name.to!string;
                 uint set = spvc_compiler_get_decoration(spvcCompiler, rStorageTextures[i].id, SpvDecoration.DescriptorSet);
                 uint binding = spvc_compiler_get_decoration(spvcCompiler, rStorageTextures[i].id, SpvDecoration.Binding);
-                storageTextures[i] = New!ShaderStorageTexture(name, set, binding, this);
+                auto tex = New!ShaderStorageTexture(name, set, binding, this);
+                
+                tex.readonly = cast(bool)spvc_compiler_has_decoration(spvcCompiler, rStorageTextures[i].id, SpvDecoration.NonWritable);
+                
+                storageTextures[i] = tex;
             }
         }
         
@@ -370,6 +400,7 @@ class ShaderModule: Owner
                 uint set = spvc_compiler_get_decoration(spvcCompiler, rUniformBuffers[i].id, SpvDecoration.DescriptorSet);
                 uint binding = spvc_compiler_get_decoration(spvcCompiler, rUniformBuffers[i].id, SpvDecoration.Binding);
                 uniformBuffers[i] = New!ShaderUniformBuffer(name, set, binding, this);
+                uniformBuffers[i].readonly = true; // UBOs are always read-only
             }
         }
         
@@ -390,12 +421,14 @@ class ShaderModule: Owner
         info.code_size = vsSPIRVBytes.length;
         info.entrypoint = "main"; // TODO: get from shader?
         info.format = SDL_GPU_SHADERFORMAT_SPIRV;
+        
         if (pipelineStage == PipelineStage.Vertex)
             info.stage = SDL_GPU_SHADERSTAGE_VERTEX;
         else if (pipelineStage == PipelineStage.Fragment)
             info.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
         else
             return false;
+        
         info.num_samplers = cast(uint)samplers.length;
         info.num_storage_buffers = cast(uint)storageBuffers.length;
         info.num_storage_textures = cast(uint)storageTextures.length;
@@ -412,26 +445,9 @@ class ShaderModule: Owner
     protected void releaseSDLShader()
     {
         if (shader)
+        {
             SDL_ReleaseGPUShader(gpu.device, shader);
-    }
-    
-    /*
-    void printUniforms()
-    {
-        foreach(s; samplers)
-        {
-            writefln("%s shader sampler \"%s\": set %s, binding %s", pipelineStage, s.name, s.set, s.binding);
-        }
-        
-        foreach(ssbo; storageBuffers)
-        {
-            writefln("%s shader storage buffer \"%s\": set %s, binding %s", pipelineStage, ssbo.name, ssbo.set, ssbo.binding);
-        }
-        
-        foreach(ubo; uniformBuffers)
-        {
-            writefln("%s shader uniform buffer \"%s\": set %s, binding %s", pipelineStage, ubo.name, ubo.set, ubo.binding);
+            shader = null;
         }
     }
-    */
 }

@@ -28,6 +28,7 @@ module dagon.resource.shader.glsl;
 
 import std.stdio;
 import std.conv;
+import dagon.core.logger;
 import dagon.core.glslang;
 import dagon.resource.shader.shadermodule;
 
@@ -35,6 +36,17 @@ struct ShaderCompilationResult
 {
     uint[] spirv;
     bool success;
+    
+    glslang_shader_t* shader;
+    glslang_program_t* program;
+    
+    void free()
+    {
+        if (shader)
+            glslang_shader_delete(shader);
+        if (program)
+            glslang_program_delete(program);
+    }
 }
 
 ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineStage)
@@ -47,6 +59,8 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
         stage = GLSLANG_STAGE_VERTEX;
     else if (pipelineStage == PipelineStage.Fragment)
         stage = GLSLANG_STAGE_FRAGMENT;
+    else if (pipelineStage == PipelineStage.Compute)
+        stage = GLSLANG_STAGE_COMPUTE;
     
     glslang_input_t input = {
         language: GLSLANG_SOURCE_GLSL,
@@ -83,7 +97,8 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     if (failed)
     {
         const infoLog = glslang_shader_get_info_log(shader);
-        writeln(infoLog.to!string);
+        logError(infoLog.to!string);
+        glslang_shader_delete(shader);
         return res;
     }
     
@@ -99,8 +114,10 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     
     if (failed)
     {
-        const infoLog = glslang_shader_get_info_log(shader);
-        writeln(infoLog.to!string);
+        const infoLog = glslang_program_get_info_log(program);
+        logError(infoLog.to!string);
+        glslang_shader_delete(shader);
+        glslang_program_delete(program);
         return res;
     }
     
@@ -111,7 +128,9 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     auto spirvMessages = glslang_program_SPIRV_get_messages(program);
     if (spirvMessages !is null)
     {
-        writeln(spirvMessages.to!string);
+        logError(spirvMessages.to!string);
+        glslang_shader_delete(shader);
+        glslang_program_delete(program);
         return res;
     }
     
@@ -120,8 +139,8 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     res.spirv = spirPtr[0..spirSize];
     res.success = true;
     
-    //glslang_shader_delete(shader);
-    //glslang_program_delete(program);
+    res.shader = shader;
+    res.program = program;
     
     return res;
 }

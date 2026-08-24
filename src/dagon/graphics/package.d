@@ -53,6 +53,7 @@ public
     import dagon.graphics.material;
     import dagon.graphics.mesh;
     import dagon.graphics.lightmap;
+    import dagon.graphics.resampler;
     import dagon.graphics.scene;
     import dagon.graphics.shadowmap;
     import dagon.graphics.shapes;

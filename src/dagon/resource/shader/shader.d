@@ -32,11 +32,9 @@ import dagon.core.gpu;
 import dagon.graphics.state;
 import dagon.resource.shader.shadermodule;
 
-abstract class Shader: Owner
+abstract class BaseShader: Owner
 {
     GPU gpu;
-    ShaderModule vertexModule;
-    ShaderModule fragmentModule;
     
     this(GPU gpu, Owner owner)
     {
@@ -47,5 +45,28 @@ abstract class Shader: Owner
     void bindParameters(GraphicsState* state)
     {
         //
+    }
+}
+
+abstract class GraphicsShader: BaseShader
+{
+    ShaderModule vertexModule;
+    ShaderModule fragmentModule;
+    
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+    }
+}
+
+alias Shader = GraphicsShader;
+
+abstract class ComputeShader: BaseShader
+{
+    ShaderModule computeModule;
+
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
     }
 }

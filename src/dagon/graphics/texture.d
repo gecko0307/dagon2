@@ -59,12 +59,14 @@ struct TextureCreationOptions
     bool repeatUV = false;
     bool bilinearFiltering = true;
     bool anisotropicFiltering = false;
+    bool writeable = false;
 }
 
 class Texture: Owner
 {
     GPU gpu;
     TextureBuffer buffer;
+    TextureCreationOptions options;
     SDL_GPUTexture* texture;
     SDL_GPUSampler* sampler;
     uint mipLevels;
@@ -84,9 +86,21 @@ class Texture: Owner
             SDL_ReleaseGPUSampler(gpu.device, sampler);
     }
     
+    Texture createSameFormat(uint width, uint height, uint depth, Owner copyOwner)
+    {
+        Texture outputTexture = New!Texture(gpu, copyOwner);
+        TextureBuffer newBuffer = buffer;
+        newBuffer.size.width = width;
+        newBuffer.size.height = height;
+        newBuffer.size.depth = depth;
+        outputTexture.create(&newBuffer, &options);
+        return outputTexture;
+    }
+    
     bool create(TextureBuffer* buffer, TextureCreationOptions* options)
     {
         this.buffer = *buffer;
+        this.options = *options;
         
         if (options.generateMipmaps)
             mipLevels = 1 + cast(uint)floor(log2(cast(double)max(buffer.size.width, buffer.size.height)));
@@ -134,6 +148,8 @@ class Texture: Owner
         texCreateInfo.type = buffer.format.type;
         texCreateInfo.format = buffer.format.format;
         texCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
+        if (options.writeable)
+            texCreateInfo.usage |= SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE;
         texCreateInfo.width = buffer.size.width;
         texCreateInfo.height = buffer.size.height;
         if (buffer.format.isCubemap)

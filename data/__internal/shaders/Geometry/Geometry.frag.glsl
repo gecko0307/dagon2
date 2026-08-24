@@ -1,39 +1,5 @@
 #version 460
 
-/*
-mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
-{
-    vec3 pos_dx = dFdx(p);
-    vec3 pos_dy = dFdy(p);
-    vec2 st1 = dFdx(uv);
-    vec2 st2 = dFdy(uv);
-    st2.y = -st2.y;
-    vec3 T = (st2.y * pos_dx - st1.y * pos_dy) / (st1.x * st2.y - st2.x * st1.y);
-    T = normalize(T - N * dot(N, T));
-    vec3 B = normalize(cross(N, T));
-    return mat3(T, B, N);
-}
-*/
-
-/*
-mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
-{
-    vec3 dp1 = dFdx(p);
-    vec3 dp2 = dFdy(p);
-    vec2 duv1 = dFdx(uv);
-    vec2 duv2 = dFdy(uv);
-    
-    vec3 dp2perp = cross(dp2, N);
-    vec3 dp1perp = cross(N, dp1);
-    
-    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-    vec3 B = dp2perp * duv1.y + dp1perp * -duv2.y;
-    
-    float invmax = inversesqrt(max(dot(T, T), dot(B, B)));
-    return mat3(T * invmax, B * invmax, N);
-}
-*/
-
 mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
 {
     vec3 dp1 = dFdx(p);
@@ -158,9 +124,11 @@ void main()
     vec3 emission = ubo.emission.rgb;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
         emission *= textureLod(skyboxTexture, -normalize(modelPosition), ubo.fparams[FPARAM_SKYBOX_MIP_LEVEL]).rgb;
-    else if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
+    else
     {
-        emission *= toLinear(texture(emissionTexture, uv).rgb);
+        if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
+            emission *= toLinear(texture(emissionTexture, uv).rgb);
+        
         emission += toLinear(baseColor.rgb) * (1.0 - shadedMask);
     }
     
