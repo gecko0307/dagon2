@@ -1309,6 +1309,34 @@ class Application: EventListener, Updateable
         else
             _imageFileFormatSupported[ImageFileFormat.KTX] = false;
         
+        // Init resource cache
+        resourceCache = New!ResourceCache(this);
+        _resourceCache = resourceCache;
+        
+        // Init shader cache
+        if ("gpu.shaderCache.enabled" in config.props)
+            enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
+        if ("gpu.shaderCache.path" in config.props)
+            shaderCachePath = config.props["gpu.shaderCache.path"].toString;
+        version(Windows)
+        {
+            if ("gpu.shaderCache.path.windows" in config.props)
+                shaderCachePath = config.props["gpu.shaderCache.path.windows"].toString;
+        }
+        else version(linux)
+        {
+            if ("gpu.shaderCache.path.linux" in config.props)
+                shaderCachePath = config.props["gpu.shaderCache.path.linux"].toString;
+        }
+        shaderCacheStorage = resourceCache.addStorage(ResourceType.Shader, ".spv", shaderCachePath);
+        textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
+        
+        if ("gpu.shaderCache.enableLogging" in config.props)
+            shaderCacheStorage.enableLogging = cast(bool)(config.props["gpu.shaderCache.enableLogging"].toUInt);
+        
+        if ("gpu.textureCache.enableLogging" in config.props)
+            textureCacheStorage.enableLogging = cast(bool)(config.props["gpu.textureCache.enableLogging"].toUInt);
+        
         // Init GPU
         gpu = New!GPU(this);
         if (gpu.device)
@@ -1426,34 +1454,6 @@ class Application: EventListener, Updateable
             defaultFontSize = config.props["font.size"].toUInt;
         fontManager = New!FontManager(this);
         */
-        
-        // Init resource cache
-        resourceCache = New!ResourceCache(this);
-        _resourceCache = resourceCache;
-        
-        // Init shader cache
-        if ("gpu.shaderCache.enabled" in config.props)
-            enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
-        if ("gpu.shaderCache.path" in config.props)
-            shaderCachePath = config.props["gpu.shaderCache.path"].toString;
-        version(Windows)
-        {
-            if ("gpu.shaderCache.path.windows" in config.props)
-                shaderCachePath = config.props["gpu.shaderCache.path.windows"].toString;
-        }
-        else version(linux)
-        {
-            if ("gpu.shaderCache.path.linux" in config.props)
-                shaderCachePath = config.props["gpu.shaderCache.path.linux"].toString;
-        }
-        shaderCacheStorage = resourceCache.addStorage(ResourceType.Shader, ".spv", shaderCachePath);
-        textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
-        
-        if ("gpu.shaderCache.enableLogging" in config.props)
-            shaderCacheStorage.enableLogging = cast(bool)(config.props["gpu.shaderCache.enableLogging"].toUInt);
-        
-        if ("gpu.textureCache.enableLogging" in config.props)
-            textureCacheStorage.enableLogging = cast(bool)(config.props["gpu.textureCache.enableLogging"].toUInt);
         
         // Get system cursors
         cursors[SystemCursor.Default] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);

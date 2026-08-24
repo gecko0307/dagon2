@@ -41,6 +41,7 @@ module dagon.core.gpu;
 import std.conv;
 import std.string;
 
+import dlib.core.memory;
 import dlib.core.ownership;
 
 import bindbc.openxr.types;
@@ -48,6 +49,8 @@ import bindbc.openxr.types;
 import dagon.core.application;
 import dagon.core.sdl3;
 import dagon.core.logger;
+import dagon.graphics.texture;
+import dagon.graphics.resampler;
 
 /// Supported GPU API backends. Only Vulkan is supported at the moment.
 enum GPUBackend
@@ -110,6 +113,9 @@ class GPU: Owner
     
     /// OpenXR System ID. Used internally to identify a VR system.
     XrSystemId xrSystemId = 0;
+    
+    /// Utility object that resizes textures on the GPU.
+    Resampler resampler;
     
     /**
      * Constructs a GPU device wrapper for the given application.
@@ -245,6 +251,9 @@ class GPU: Owner
                 compare_op: SDL_GPU_COMPAREOP_ALWAYS
             };
             defaultSampler = SDL_CreateGPUSampler(device, &samplerCreateInfo);
+            
+            //
+            resampler = New!Resampler(this, null);
         }
     }
     
@@ -253,6 +262,8 @@ class GPU: Owner
      */
     ~this()
     {
+        Delete(resampler);
+        
         if (defaultTexture)
             SDL_ReleaseGPUTexture(device, defaultTexture);
         
@@ -347,5 +358,45 @@ class GPU: Owner
             return;
         
         SDL_ReleaseGPUBuffer(device, target);
+    }
+    
+    ///
+    void resampleTexture(Texture inputTexture, Texture outputTexture)
+    {
+        resampler.inputTexture = inputTexture;
+        resampler.outputTexture = outputTexture;
+        resampler.submit();
+    }
+    
+    ///
+    Texture resampleTexture(Texture inputTexture, uint newWidth, uint newHeight, bool generateMipmaps, Owner outputTextureOwner)
+    {
+        Texture outputTexture = New!Texture(this, outputTextureOwner);
+        
+        TextureBuffer textureBuffer = {
+            inputTexture.buffer.format,
+            TextureSize(newWidth, newHeight, 1),
+            mipLevels: 1
+        };
+        
+        TextureCreationOptions textureOptions = inputTexture.options;
+        textureOptions.generateMipmaps = false; // set to false now, mipmaps are generated in the resampler
+        textureOptions.writeable = true;
+        
+        if (!outputTexture.create(&textureBuffer, &textureOptions))
+        {
+            logError("Failed to create an output texture");
+            if (outputTextureOwner)
+                outputTextureOwner.deleteOwnedObject(outputTextureOwner);
+            else
+                Delete(outputTexture);
+            return null;
+        }
+        
+        outputTexture.options.generateMipmaps = generateMipmaps;
+        
+        resampleTexture(inputTexture, outputTexture);
+        
+        return outputTexture;
     }
 }

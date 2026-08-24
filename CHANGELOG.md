@@ -29,6 +29,7 @@ Dagon 2.0.0 - TBD
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
   - `Environment` class is gone, all environment properties are now part of the `Scene` class
   - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
+  - GPU texture resampling now uses separable Lanczos filter
 - **Post-processing**
   - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
   - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT

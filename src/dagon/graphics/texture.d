@@ -593,4 +593,10 @@ class Texture: Owner
         
         return false;
     }
+    
+    /// Makes a resized copy of the texture.
+    Texture resize(uint newWidth, uint newHeight, bool generateMipmaps, Owner resizedTextureOwner)
+    {
+        return gpu.resampleTexture(this, newWidth, newHeight, generateMipmaps, resizedTextureOwner);
+    }
 }

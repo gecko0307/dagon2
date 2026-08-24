@@ -43,6 +43,7 @@ New features and major changes from Dagon 0.x/1.x:
 - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
 - The renderer now uses separate irradiance cubemap
 - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
+- GPU texture resampling now uses separable Lanczos filter
 - Jolt Physics is now built-in as `dagon.jolt` package
 - Window minimize/restore events
 - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API

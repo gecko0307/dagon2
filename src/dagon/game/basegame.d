@@ -48,8 +48,6 @@ import dlib.filesystem.filesystem;
 import dagon.core.application;
 import dagon.core.time;
 import dagon.core.logger;
-import dagon.graphics.texture;
-import dagon.graphics.resampler;
 import dagon.game.world;
 import gscript;
 
@@ -62,9 +60,6 @@ import gscript;
  */
 class BaseGame: Application, GsObject
 {
-    /// Utility object that resizes textures on the GPU.
-    Resampler resampler;
-    
     /// Array of worlds of the game.
     Array!World worlds;
     
@@ -105,9 +100,6 @@ class BaseGame: Application, GsObject
     this(uint winWidth, uint winHeight, bool fullscreen, string windowTitle, string[] args)
     {
         super(winWidth, winHeight, fullscreen, windowTitle, args);
-        
-        //
-        resampler = New!Resampler(gpu, this);
         
         // Initialize VM
         vm = New!GsVirtualMachine(this);
@@ -181,46 +173,6 @@ class BaseGame: Application, GsObject
         Delete(gsProperties);
         if (gsArgs.length)
             Delete(gsArgs);
-    }
-    
-    ///
-    void resampleTexture(Texture inputTexture, Texture outputTexture)
-    {
-        resampler.inputTexture = inputTexture;
-        resampler.outputTexture = outputTexture;
-        resampler.submit();
-    }
-    
-    ///
-    Texture resampleTexture(Texture inputTexture, uint newWidth, uint newHeight, bool generateMipmaps, Owner outputTextureOwner)
-    {
-        Texture outputTexture = New!Texture(gpu, outputTextureOwner);
-        
-        TextureBuffer textureBuffer = {
-            inputTexture.buffer.format,
-            TextureSize(newWidth, newHeight, 1),
-            mipLevels: 1
-        };
-        
-        TextureCreationOptions textureOptions = inputTexture.options;
-        textureOptions.generateMipmaps = false; // set to false now, mipmaps are generated in the resampler
-        textureOptions.writeable = true;
-        
-        if (!outputTexture.create(&textureBuffer, &textureOptions))
-        {
-            logError("Failed to create an output texture");
-            if (outputTextureOwner)
-                outputTextureOwner.deleteOwnedObject(outputTextureOwner);
-            else
-                Delete(outputTexture);
-            return null;
-        }
-        
-        outputTexture.options.generateMipmaps = generateMipmaps;
-        
-        resampleTexture(inputTexture, outputTexture);
-        
-        return outputTexture;
     }
     
     /// Adds a world object to the worlds array.
