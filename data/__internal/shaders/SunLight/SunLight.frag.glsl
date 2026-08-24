@@ -60,13 +60,6 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
-/*
-float hash(vec2 p)
-{
-    return fract(sin(dot(p, vec2(12.7, 4.8))) * 43758.5);
-}
-*/
-
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
