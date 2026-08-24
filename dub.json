@@ -50,6 +50,7 @@
     
     "subPackages": [
         "extensions/audio",
+        "extensions/exformats",
         "extensions/imgui",
         "extensions/openxr",
         "extensions/physfs",

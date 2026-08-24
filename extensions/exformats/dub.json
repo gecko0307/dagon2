@@ -1,0 +1,16 @@
+{
+    "name": "exformats",
+    "importPaths": [
+        "src"
+    ],
+    "sourcePaths": [
+        "src"
+    ],
+    "dependencies": {
+        "dagon2": "*"
+    },
+    
+    "copyFiles": ["license"],
+    
+    "copyFiles-windows-x86_64": ["lib/windows-x64/*"]
+}
