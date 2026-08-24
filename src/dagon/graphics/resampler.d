@@ -26,6 +26,9 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.graphics.resampler;
 
+import std.math;
+import std.algorithm;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 
@@ -50,7 +53,7 @@ enum LanczosPass: uint
     Vertical = 1
 }
 
-class ResampleShader: ComputeShader
+class LanczosResampleShader: ComputeShader
 {
     ResampleShaderUniformBuffer ubo;
     Texture inputTexture;
@@ -63,7 +66,7 @@ class ResampleShader: ComputeShader
         super(gpu, owner);
         
         computeModule = New!ShaderModule(gpu, this);
-        computeModule.create("Resample.comp.glsl", "data/__internal/shaders/Compute/Resample.comp.glsl",
+        computeModule.create("Resample.comp.glsl", "data/__internal/shaders/Compute/ResampleLanczos.comp.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Compute);
         
         if (!computeModule.valid)
@@ -108,7 +111,7 @@ class Resampler: Owner
 {
     GPU gpu;
     SDL_GPUComputePipeline* computePipeline;
-    ResampleShader resampleShader;
+    LanczosResampleShader resampleShader;
     Texture inputTexture;
     Texture outputTexture;
     
@@ -118,7 +121,7 @@ class Resampler: Owner
         
         this.gpu = gpu;
         
-        resampleShader = New!ResampleShader(gpu, this);
+        resampleShader = New!LanczosResampleShader(gpu, this);
         ShaderModule shaderModule = resampleShader.computeModule;
         
         ubyte[] spirvBytes = shaderModule.spirvAsBytes;
@@ -227,6 +230,12 @@ class Resampler: Owner
             SDL_DispatchGPUCompute(pass, workGroupsX, workGroupsY, 1);
             
             SDL_EndGPUComputePass(pass);
+        }
+        
+        if (outputTexture.options.generateMipmaps)
+        {
+            outputTexture.mipLevels = 1 + cast(uint)floor(log2(cast(double)max(outputTexture.buffer.size.width, outputTexture.buffer.size.height)));
+            SDL_GenerateMipmapsForGPUTexture(commandBuffer, outputTexture.texture);
         }
         
         SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(commandBuffer);

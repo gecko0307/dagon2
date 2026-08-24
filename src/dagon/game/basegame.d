@@ -192,7 +192,7 @@ class BaseGame: Application, GsObject
     }
     
     ///
-    Texture resampleTexture(Texture inputTexture, uint newWidth, uint newHeight, Owner outputTextureOwner)
+    Texture resampleTexture(Texture inputTexture, uint newWidth, uint newHeight, bool generateMipmaps, Owner outputTextureOwner)
     {
         Texture outputTexture = New!Texture(gpu, outputTextureOwner);
         
@@ -202,13 +202,9 @@ class BaseGame: Application, GsObject
             mipLevels: 1
         };
         
-        TextureCreationOptions textureOptions = {
-            generateMipmaps: false,
-            repeatUV: false,
-            bilinearFiltering: true,
-            anisotropicFiltering: false,
-            writeable: true
-        };
+        TextureCreationOptions textureOptions = inputTexture.options;
+        textureOptions.generateMipmaps = false; // set to false now, mipmaps are generated in the resampler
+        textureOptions.writeable = true;
         
         if (!outputTexture.create(&textureBuffer, &textureOptions))
         {
@@ -219,6 +215,8 @@ class BaseGame: Application, GsObject
                 Delete(outputTexture);
             return null;
         }
+        
+        outputTexture.options.generateMipmaps = generateMipmaps;
         
         resampleTexture(inputTexture, outputTexture);
         
