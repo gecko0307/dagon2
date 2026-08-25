@@ -24,11 +24,49 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource.shader;
+module dagon.graphics.shader.shader;
 
-public
+import dlib.core.ownership;
+
+import dagon.core.gpu;
+import dagon.graphics.state;
+import dagon.graphics.shader.shadermodule;
+
+abstract class BaseShader: Owner
 {
-    import dagon.resource.shader.glsl;
-    import dagon.resource.shader.shader;
-    import dagon.resource.shader.shadermodule;
+    GPU gpu;
+    
+    this(GPU gpu, Owner owner)
+    {
+        super(owner);
+        this.gpu = gpu;
+    }
+    
+    void bindParameters(GraphicsState* state)
+    {
+        //
+    }
+}
+
+abstract class GraphicsShader: BaseShader
+{
+    ShaderModule vertexModule;
+    ShaderModule fragmentModule;
+    
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+    }
+}
+
+alias Shader = GraphicsShader;
+
+abstract class ComputeShader: BaseShader
+{
+    ShaderModule computeModule;
+
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+    }
 }

@@ -55,6 +55,7 @@ public
     import dagon.graphics.lightmap;
     import dagon.graphics.resampler;
     import dagon.graphics.scene;
+    import dagon.graphics.shader;
     import dagon.graphics.shadowmap;
     import dagon.graphics.shapes;
     import dagon.graphics.state;

@@ -42,7 +42,7 @@ import dagon.graphics.material;
 import dagon.graphics.mesh;
 import dagon.graphics.shapes;
 import dagon.graphics.light;
-import dagon.resource.shader;
+import dagon.graphics.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;

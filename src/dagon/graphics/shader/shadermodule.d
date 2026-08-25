@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource.shader.shadermodule;
+module dagon.graphics.shader.shadermodule;
 
 import std.stdio;
 import std.file;
@@ -39,7 +39,7 @@ import dagon.core.logger;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.spvc;
-import dagon.resource.shader.glsl;
+import dagon.graphics.shader.glsl;
 
 enum PipelineStage
 {

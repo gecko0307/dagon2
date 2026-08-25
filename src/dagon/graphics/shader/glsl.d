@@ -24,13 +24,13 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource.shader.glsl;
+module dagon.graphics.shader.glsl;
 
 import std.stdio;
 import std.conv;
 import dagon.core.logger;
 import dagon.core.glslang;
-import dagon.resource.shader.shadermodule;
+import dagon.graphics.shader.shadermodule;
 
 struct ShaderCompilationResult
 {

@@ -47,8 +47,7 @@ import dagon.graphics.state;
 import dagon.graphics.entity;
 import dagon.graphics.material;
 import dagon.graphics.texture;
-import dagon.resource.shader.shader;
-import dagon.resource.shader.shadermodule;
+import dagon.graphics.shader;
 import dagon.render.renderer;
 import dagon.render.view;
 

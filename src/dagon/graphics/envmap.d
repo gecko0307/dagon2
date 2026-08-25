@@ -44,7 +44,7 @@ import dagon.core.event;
 import dagon.graphics.mesh;
 import dagon.graphics.texture;
 import dagon.graphics.state;
-import dagon.resource.shader;
+import dagon.graphics.shader;
 import dagon.render.renderer;
 import dagon.render.pass;
 

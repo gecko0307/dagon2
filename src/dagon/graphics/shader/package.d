@@ -24,17 +24,11 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.resource;
+module dagon.graphics.shader;
 
 public
 {
-    import dagon.resource.assetmanager;
-    import dagon.resource.asset;
-    import dagon.resource.cache;
-    import dagon.resource.daf;
-    import dagon.resource.dds;
-    import dagon.resource.image;
-    import dagon.resource.model;
-    import dagon.resource.obj;
-    import dagon.resource.texture;
+    import dagon.graphics.shader.glsl;
+    import dagon.graphics.shader.shader;
+    import dagon.graphics.shader.shadermodule;
 }

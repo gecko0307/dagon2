@@ -38,7 +38,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.graphics.state;
 import dagon.graphics.texture;
-import dagon.resource.shader;
+import dagon.graphics.shader;
 
 struct ResampleShaderUniformBuffer
 {

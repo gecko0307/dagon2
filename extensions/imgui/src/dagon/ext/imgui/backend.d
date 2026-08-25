@@ -38,7 +38,7 @@ import dagon.core.gpu;
 import dagon.core.logger;
 import dagon.graphics.texture;
 import dagon.graphics.state;
-import dagon.resource.shader;
+import dagon.graphics.shader;
 import dagon.render.pass;
 import dagon.render.renderer;
 
