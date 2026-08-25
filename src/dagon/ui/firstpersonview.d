@@ -78,7 +78,7 @@ class FirstPersonViewController: EntityController
     float axisSensitivity = 2.0f;
     
     /// Lower threshold of controller axis value.
-    float axisDeadzone = 0.0f;
+    float axisDeadzone = 0.12f;
     
     /// Maximum pitch angle (degrees).
     float pitchLimitMax = 60.0f;
@@ -204,13 +204,12 @@ class FirstPersonViewController: EntityController
             
             isMoving = true;
             
-            // TODO:
-            //float hAxis = inputManager.getAxis("horizontal");
-            //float vAxis = inputManager.getAxis("vertical");
-            //if (abs(hAxis) < axisDeadzone) hAxis = 0.0f;
-            //if (abs(vAxis) < axisDeadzone) vAxis = 0.0f;
-            pitch -= mouseRelV; // + vAxis * axisSensitivity;
-            turn -= mouseRelH; // + hAxis * axisSensitivity;
+            float hAxis = inputManager.getAxis("horizontal");
+            float vAxis = inputManager.getAxis("vertical");
+            if (abs(hAxis) < axisDeadzone) hAxis = 0.0f;
+            if (abs(vAxis) < axisDeadzone) vAxis = 0.0f;
+            pitch -= mouseRelV + vAxis * axisSensitivity;
+            turn -= mouseRelH + hAxis * axisSensitivity;
             
             if (pitch > pitchLimitMax)
             {
