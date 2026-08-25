@@ -61,7 +61,7 @@ enum GPUBackend
 /**
  * `SDL_GPUDevice` wrapper class.
  *
- * This class provides an abstraction layer for SDL 3.0's GPU device management.
+ * This class provides an abstraction layer for SDL's GPU device management.
  * It also provides convenient methods for common GPU operations like buffer uploads.
  */
 class GPU: Owner
