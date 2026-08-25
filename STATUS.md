@@ -49,7 +49,7 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 ## Milestone 3: Core Logic
 
 - [ ] Asset manager
-- [ ] Input manager
+- [x] Input manager
 - [ ] Tweening
 - [ ] Skeletal animation support
 - [ ] Collision detection
