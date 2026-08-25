@@ -789,8 +789,7 @@ class EventManager: Owner
             SDL_PropertiesID gamepadProps = SDL_GetGamepadProperties(device.gamepad);
             device.hasRumble = SDL_GetBooleanProperty(gamepadProps, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false);
             
-            // TODO:
-            //device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
+            device.haptic = SDL_OpenHapticFromJoystick(device.joystick);
         }
         else
         {
@@ -810,14 +809,11 @@ class EventManager: Owner
             device.mappingPresent = false;
             device.hasRumble = false;
             
-            /*
-            // TODO:
-            device.haptic = SDL_HapticOpenFromJoystick(device.joystick);
+            device.haptic = SDL_OpenHapticFromJoystick(device.joystick);
             if (device.haptic)
-                device.hasRumble = (SDL_HapticRumbleInit(device.haptic) != 0);
+                device.hasRumble = SDL_InitHapticRumble(device.haptic);
             else
                 device.hasRumble = false;
-            */
         }
         
         return device;
@@ -883,14 +879,11 @@ class EventManager: Owner
         device.hasRumble = false;
         device.axisValues[] = 0;
         
-        /*
         if (device.haptic)
         {
-            SDL_HapticClose(device.haptic);
+            SDL_CloseHaptic(device.haptic);
             device.haptic = null;
-            device.hasRumble = false;
         }
-        */
         
         getJoysticks();
         getGamepads();
