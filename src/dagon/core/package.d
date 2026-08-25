@@ -86,6 +86,9 @@ public
     /// Internationalization functionalty.
     import dagon.core.i18n;
 
+    /// Input manager.
+    import dagon.core.input;
+
     /// libktx binding.
     import dagon.core.ktx;
 

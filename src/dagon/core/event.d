@@ -56,7 +56,7 @@ import dlib.memory.arena;
 
 import dagon.core.sdl3;
 import dagon.core.application;
-//import dagon.core.input;
+import dagon.core.input;
 import dagon.core.logger;
 import dagon.core.messaging;
 import dagon.core.graphicstablet;
@@ -64,7 +64,7 @@ import dagon.core.graphicstablet;
 /**
  * Maximum number of simultaneous game input devices.
  */
-enum MAX_GAME_INPUT_DEVICES = 4;
+enum uint MAX_GAME_INPUT_DEVICES = 4;
 
 /// Enumeration of supported game input device types.
 enum GameInputDeviceType
@@ -89,7 +89,7 @@ struct GameInputDevice
     /// Opened joystick, if any.
     SDL_Joystick* joystick = null;
     
-    /// Opened haptic (force feedback) device, if any.
+    /// Opened haptic device, if any.
     SDL_Haptic* haptic = null;
     
     /// Is input mapping present in gamecontrollerdb.txt
@@ -444,11 +444,75 @@ class EventManager: Owner
     /// Application's main window focus state.
     bool windowFocused = true;
     
-    /// Opened gamepads/joysticks.
+    /// Gamepads/joysticks with extra data.
     GameInputDevice[MAX_GAME_INPUT_DEVICES] gameInputDevices;
     
+    ///
+    protected SDL_JoystickID[MAX_GAME_INPUT_DEVICES] _joysticks;
+    
+    ///
+    uint numJoysticks = 0;
+    
     /// Number of recognized gamepads/joysticks.
-    //uint numGameInputDevices = 0;
+    alias numGameInputDevices = numJoysticks;
+    
+    /// IDs of all connected joysticks.
+    SDL_JoystickID[] joysticks()
+    {
+        return _joysticks[0..numJoysticks];
+    }
+    
+    ///
+    protected SDL_JoystickID[MAX_GAME_INPUT_DEVICES] _gamepads;
+    
+    ///
+    uint numGamepads = 0;
+    
+    /// IDs of all connected gamepads.
+    SDL_JoystickID[] gamepads()
+    {
+        return _gamepads[0..numGamepads];
+    }
+    
+    /// Queries IDs of all connected joysticks.
+    protected SDL_JoystickID[] getJoysticks()
+    {
+        int n = 0;
+        SDL_JoystickID* jp = SDL_GetJoysticks(&n);
+        numJoysticks = min2(cast(uint)n, MAX_GAME_INPUT_DEVICES);
+        
+        if (numJoysticks == 0 || jp is null)
+            return [];
+        
+        for (size_t i = 0; i < numJoysticks; i++)
+        {
+            _joysticks[i] = jp[i];
+        }
+        
+        SDL_free(jp);
+        
+        return _joysticks[0..numJoysticks];
+    }
+    
+    /// Queries IDs of all connected gamepads.
+    protected SDL_JoystickID[] getGamepads()
+    {
+        int n = 0;
+        SDL_JoystickID* gp = SDL_GetGamepads(&n);
+        numGamepads = min2(cast(uint)n, MAX_GAME_INPUT_DEVICES);
+        
+        if (numGamepads == 0 || gp is null)
+            return [];
+        
+        for (size_t i = 0; i < numGamepads; i++)
+        {
+            _gamepads[i] = gp[i];
+        }
+        
+        SDL_free(gp);
+        
+        return _gamepads[0..numGamepads];
+    }
     
     /// Get currently opened SDL gamepad by device index.
     SDL_Gamepad* gamepad(uint deviceIndex)
@@ -493,7 +557,7 @@ class EventManager: Owner
     alias joystickName = gamepadName;
     
     /// Configurable input manager.
-    //InputManager inputManager;
+    InputManager inputManager;
     
     /// Message broker for distributing messages and scheduling tasks.
     MessageBroker messageBroker;
@@ -544,7 +608,10 @@ class EventManager: Owner
         if (exists("gamecontrollerdb.txt"))
             SDL_AddGamepadMappingsFromFile("gamecontrollerdb.txt");
         
-        //inputManager = New!InputManager(this);
+        getJoysticks();
+        getGamepads();
+        
+        inputManager = New!InputManager(this);
         
         messageBroker = New!MessageBroker(this);
         
@@ -564,7 +631,7 @@ class EventManager: Owner
     /// Destructor. Cleans up resources.
     ~this()
     {
-        //Delete(inputManager);
+        Delete(inputManager);
         inputDevices.free();
     }
     
@@ -1122,6 +1189,8 @@ class EventManager: Owner
                         e.deviceType = device.type;
                     }
                     addEvent(e);
+                    getJoysticks();
+                    getGamepads();
                     break;
                 
                 case SDL_EVENT_GAMEPAD_REMOVED:
@@ -1132,6 +1201,8 @@ class EventManager: Owner
                         gameInputDeviceClose(e.deviceIndex);
                     }
                     addEvent(e);
+                    getJoysticks();
+                    getGamepads();
                     break;
                 
                 case SDL_EVENT_WINDOW_RESIZED:
@@ -1606,7 +1677,7 @@ abstract class EventListener: EventDispatcher
     EventManager eventManager;
     
     /// The input manager for input state queries.
-    //InputManager inputManager;
+    InputManager inputManager;
     
     /// If false, disables event processing.
     bool enabled = true;
@@ -1623,8 +1694,8 @@ abstract class EventListener: EventDispatcher
         super(owner);
         domain = MessageDomain.MainThread;
         this.eventManager = eventManager;
-        //if (eventManager !is null)
-        //    inputManager = eventManager.inputManager;
+        if (eventManager !is null)
+            inputManager = eventManager.inputManager;
     }
 
     /**
