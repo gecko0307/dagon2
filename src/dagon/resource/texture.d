@@ -84,6 +84,7 @@ class TextureAsset: Asset
         super(gpu, owner);
         conversionOptions.width = 0;
         conversionOptions.height = 0;
+        conversionOptions.depth = 1;
         conversionOptions.lutFormat = LUTFormat.Undefined;
         conversionOptions.hint = 0;
     }
@@ -127,6 +128,7 @@ class TextureAsset: Asset
             
             string extension = filename.extension.toLower;
             
+            // TODO: custom loader functions that override default ones
             if (extension == ".dds")
                 loaded = loadDDS(istrm, &buffer);
             else if (extension == ".ktx" && isImageFileFormatSupported(ImageFileFormat.KTX))
@@ -137,7 +139,6 @@ class TextureAsset: Asset
                 loaded = loadHDR(istrm, &buffer);
             else if (isSupportedImageFormat(extension))
                 loaded = loadImage(istrm, extension, &buffer, &conversionOptions);
-            // TODO: custom loaders
             else
                 logError("Unsupported image file format");
             
@@ -167,23 +168,32 @@ class TextureAsset: Asset
                         " is not supported");
                 }
             }
-            
-            /*
-            if (lutFormat == LUTFormat.Hald && buffer.format.target != GL_TEXTURE_3D)
-                texture.createFromBuffer3D(buffer, resolution3D);
-            else if (lutFormat == LUTFormat.GPUImage && buffer.format.target != GL_TEXTURE_3D)
-                convertGPUImageLUTto3DTexture(buffer, texture);
-            else
-                texture.createFromBuffer(buffer, genMipmaps);
-            */
-            
-            if (conversionOptions.lutFormat == LUTFormat.Hald)
+            else if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D)
             {
-                // TODO
-            }
-            else if (conversionOptions.lutFormat == LUTFormat.GPUImage)
-            {
-                convertGPUImageLUTto3DTexture(&buffer);
+                if (conversionOptions.lutFormat == LUTFormat.Hald)
+                {
+                    if (conversionOptions.width * conversionOptions.height * conversionOptions.depth == 
+                        buffer.size.width * buffer.size.height)
+                    {
+                        // Interpret 2D texture as 3D texture
+                        buffer.size.width = conversionOptions.width;
+                        buffer.size.height = conversionOptions.height;
+                        buffer.size.depth = conversionOptions.depth;
+                        buffer.format.type = SDL_GPU_TEXTURETYPE_3D;
+                    }
+                    else
+                    {
+                        logError("Invalid target size for converting Hald CLUT to 3D texture");
+                    }
+                }
+                else if (conversionOptions.lutFormat == LUTFormat.GPUImage)
+                {
+                    convertGPUImageLUTto3DTexture(&buffer);
+                }
+                else
+                    logWarning(
+                        filename, ": ",
+                        "unsupported LUT format ", conversionOptions.lutFormat);
             }
             
             if (cache)

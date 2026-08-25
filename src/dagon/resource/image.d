@@ -97,6 +97,9 @@ struct ImageConversionOptions
     /// Target height (optional).
     uint height;
     
+    /// Target depth (optional).
+    uint depth;
+    
     /// Target compression format (optional, uncompressed by default).
     TextureCompressionFormat compressionFormat;
     
