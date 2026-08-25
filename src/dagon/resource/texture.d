@@ -381,7 +381,7 @@ bool textureLoadCallback(string path, InputStream inputStream, void* data)
     return loadDDS(inputStream, cast(TextureBuffer*)data);
 }
 
-///
+/// Downsamples an image by 2.
 void downsampleBox2x2(ubyte[] src, uint srcW, uint srcH, uint channels, ubyte[] dst)
 {
     uint dstW = srcW > 1 ? srcW / 2 : 1;
