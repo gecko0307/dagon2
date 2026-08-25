@@ -286,7 +286,5 @@ class NPRPass: RenderPass
         }
         
         endPass();
-        
-        //ppContext.swapTargets();
     }
 }

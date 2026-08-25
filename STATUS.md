@@ -27,8 +27,8 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 - [ ] Glow pass
 - [ ] Luminance pass
 - [x] Tonemapping pass
+- [x] Color grading pass (combined with tonemapping)
 - [x] FXAA pass
-- [x] Color grading pass
 - [x] Sharpening pass
 - [ ] Film grain pass
 

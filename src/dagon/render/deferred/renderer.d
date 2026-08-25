@@ -230,7 +230,10 @@ class DeferredRenderer: Renderer
     
     override void onUpdate(Time t)
     {
+        // The pipeline works primarily in linear, except FXAA which works in gamma space.
+        // To optimize the shader, we do the conversion in the tonemapping pass.
         tonemappingPass.tonemappingShader.linearOutput = !fxaaPass.active;
+        
         state.occlusionEnabled = ssaoPass.active;
     }
     

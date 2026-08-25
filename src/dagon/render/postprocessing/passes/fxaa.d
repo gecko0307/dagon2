@@ -54,6 +54,7 @@ struct FXAAShaderVertexUniformBuffer
 struct FXAAShaderFragmentUniformBuffer
 {
     Vector4f viewSize;
+    uint[4] iparams;
 }
 
 class FXAAShader: Shader

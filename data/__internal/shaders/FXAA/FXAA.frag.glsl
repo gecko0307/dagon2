@@ -226,6 +226,7 @@ layout(set = 2, binding = 1) uniform sampler2D depthBuffer;
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 viewSize;
+    uvec4 iparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -237,7 +238,6 @@ void main()
     vec2 viewSize = ubo.viewSize.xy;
     vec3 outputColor = fxaa_311(colorBuffer, texCoords, 1.0 / viewSize);
     
-    // Temporary! Conversion to linear (for CAS) should be done in color grading pass
     outputColor = pow(outputColor, vec3(2.2));
     
     outColor = vec4(outputColor, 1.0);

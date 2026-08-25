@@ -142,7 +142,7 @@ void main()
     else if (ubo.flags[0] == TONEMAPPER_AGX_CUSTOM)
         outputColor = tonemapAgX(inputColor.rgb, AGX_LOOK_CUSTOM);
     
-    // 2.2 gamma transfer function (LUT color grading works in gamma space)
+    // 2.2 gamma transfer function (LUT color grading currently works only in gamma space)
     outputColor = pow(outputColor, vec3(1.0 / 2.2));
     
     // Color grading
