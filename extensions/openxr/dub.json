@@ -10,5 +10,6 @@
         "dagon2": "*"
     },
     
+    "copyFiles": ["license"],
     "copyFiles-windows-x86_64": ["lib/windows-x64/*"]
 }
