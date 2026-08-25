@@ -47,12 +47,14 @@ struct ResampleShaderUniformBuffer
     uint[4] config;
 }
 
+///
 enum LanczosPass: uint
 {
     Horizontal = 0,
     Vertical = 1
 }
 
+///
 class LanczosResampleShader: ComputeShader
 {
     ResampleShaderUniformBuffer ubo;
@@ -61,6 +63,7 @@ class LanczosResampleShader: ComputeShader
     LanczosPass lanczosPass = LanczosPass.Horizontal;
     uint lanczosRadius = 3;
     
+    ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -88,6 +91,7 @@ class LanczosResampleShader: ComputeShader
         ubo.config[1] = lanczosRadius;
     }
     
+    ///
     override void bindParameters(GraphicsState* state)
     {
         if (inputTexture)
@@ -107,6 +111,7 @@ class LanczosResampleShader: ComputeShader
     }
 }
 
+///
 class Resampler: Owner
 {
     GPU gpu;
@@ -115,6 +120,7 @@ class Resampler: Owner
     Texture inputTexture;
     Texture outputTexture;
     
+    ///
     this(GPU gpu, Owner owner)
     {
         super(owner);
@@ -146,6 +152,7 @@ class Resampler: Owner
         computePipeline = SDL_CreateGPUComputePipeline(gpu.device, &computePipelineCreateInfo);
     }
     
+    ///
     ~this()
     {
         if (computePipeline)
@@ -155,6 +162,7 @@ class Resampler: Owner
         }
     }
     
+    ///
     void submit()
     {
         if (outputTexture is null || inputTexture is null)
