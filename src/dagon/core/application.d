@@ -268,17 +268,16 @@ private
     {
         Application application;
         size_t index;
-        int id;
+        SDL_TimerID id;
         int userEventCode;
         bool periodic;
         bool active;
     }
 
-    extern(C) uint sdlTimerCallback(uint interval, void* param) nothrow
+    extern(C) uint sdlTimerCallback(void* userdata, SDL_TimerID timerID, uint interval) nothrow
     {
-        TimerData* td = cast(TimerData*)param;
-        // TODO:
-        //td.application.completeTimer(td.index);
+        TimerData* td = cast(TimerData*)userdata;
+        td.application.completeTimer(td.index);
         if (td.periodic)
             return interval;
         else
@@ -325,6 +324,9 @@ class Application: EventListener, Updateable
     
     /// Additional VFS mount paths defined in settings.conf.
     string customMountPaths;
+    
+    /// Path to the Vulkan library.
+    string vulkanLibraryPath = "auto";
     
     /// Path to the SDL3 library.
     string sdlLibraryPath = "auto";
@@ -1189,7 +1191,8 @@ class Application: EventListener, Updateable
             windowPhysicalHeight = cast(uint)(windowHeight * displayContentScale);
         }
         
-        //SDL_SetHint(SDL_HINT_VULKAN_LIBRARY, ""); // TODO
+        if (vulkanLibraryPath.length && vulkanLibraryPath != "auto")
+            SDL_SetHint(SDL_HINT_VULKAN_LIBRARY, toStringz(vulkanLibraryPath));
         
         SDL_PropertiesID winProps = SDL_CreateProperties();
         SDL_SetBooleanProperty(winProps, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
@@ -1820,7 +1823,7 @@ class Application: EventListener, Updateable
      * Under other OSes does nothing.
      *
      * Params:
-     *   mode = show or hide the console window.
+     *   mode = Show or hide the console window.
      */
     void showConsoleWindow(bool mode)
     {
@@ -1833,11 +1836,15 @@ class Application: EventListener, Updateable
         }
     }
     
-    /*
-    // TODO
-    
-    /// Creates a new timer and returns it's ID.
-    int setTimer(double duration, int userCode, bool periodic = false)
+    /**
+     * Creates a new timer and returns it's ID.
+     *
+     * Params:
+     *   duration = Timer duration in seconds.
+     *   userCode = Arbitrary value passed to the timer event.
+     *   periodic = if set to true, timer will repeat.
+     */
+    SDL_TimerID setTimer(double duration, int userCode, bool periodic = false)
     {
         if (_numTimers == timers.length)
         {
@@ -1845,6 +1852,7 @@ class Application: EventListener, Updateable
             return 0;
         }
         
+        // Find first inactive timer
         size_t index = timers.length;
         for (size_t i = 0; i < timers.length; i++)
         {
@@ -1901,5 +1909,4 @@ class Application: EventListener, Updateable
             _numTimers--;
         }
     }
-    */
 }

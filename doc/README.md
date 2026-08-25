@@ -13,22 +13,21 @@ Welcome to Dagon 2! This guide will help you get started with building games and
 ## Core Requirements
 - [D compiler](https://dlang.org/download.html) (DMD or LDC)
 - [DUB](https://github.com/dlang/dub/) (usually comes with the compiler)
-- Vulkan 1.0 compatible graphics card with the latest driver
-- SDL 3.4 (provided with the engine)
+- Vulkan 1.0 compatible graphics card.
 
 ## Module Structure
-Dagon is organized around several key packages:
+Dagon is organized around several packages:
 
-| Package | Purpose |
-|---------|---------|
-| `dagon.core` | Core application functionality, event handling |
-| `dagon.game` | Game framework, world management, game logic |
+|      Package     |                      Purpose                      |
+|------------------|---------------------------------------------------|
+| `dagon.core`     | Core application functionality, event handling    |
+| `dagon.game`     | Game framework, world management, game logic      |
 | `dagon.graphics` | Graphical primitives, textures, materials, meshes |
-| `dagon.render` | Rendering |
-| `dagon.resource` | Asset loaders, resource caching |
-| `dagon.ui` | User interface components |
-| `dagon.jolt` | Physics engine integration |
-| `gscript` | GScript3 virtual machine |
+| `dagon.render`   | Rendering                                         |
+| `dagon.resource` | Asset loaders, resource caching                   |
+| `dagon.ui`       | User interface components                         |
+| `dagon.jolt`     | Physics engine integration                        |
+| `gscript`        | GScript3 virtual machine                          |
 
 ## Quick Links
 - [Getting Started](getting-started.md) - Installation and your first project
@@ -42,8 +41,3 @@ Dagon is organized around several key packages:
 
 ## Tutorials
 TODO
-
----
-
-**Last Updated:** 2026-04-30  
-**Dagon Version:** 2.0 (in development)
