@@ -44,6 +44,7 @@ import std.math;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.container.array;
+import dlib.math.quaternion;
 import dlib.math.utils;
 
 import dagon.core.application;
@@ -91,11 +92,11 @@ class Game: BaseGame
      * Constructs a new game instance.
      *
      * Params:
-     *   winWidth = Default window width (if `window.width` is not defined in `setting.conf`)
-     *   winHeight = Default window height (if `window.height` is not defined in `setting.conf`)
-     *   fullscreen = Default fullscreen mode (if `fullscreen` is not defined in `setting.conf`)
-     *   title = Default window title (if `window.title` not defined in `setting.conf`)
-     *   args = Optional command line arguments
+     *   winWidth = Default window width (if `window.width` is not defined in `setting.conf`).
+     *   winHeight = Default window height (if `window.height` is not defined in `setting.conf`).
+     *   fullscreen = Default fullscreen mode (if `fullscreen` is not defined in `setting.conf`).
+     *   title = Default window title (if `window.title` not defined in `setting.conf`).
+     *   args = Optional command line arguments.
      */
     this(uint winWidth, uint winHeight, bool fullscreen, string title, string[] args)
     {
@@ -234,15 +235,16 @@ class Game: BaseGame
      * A shorthand for cubemapRenderer.generateCubemaps.
      *
      * Params:
-     *   inputEnvmap = Input environment texture
-     *   specularResolution = Resolution for specular cubemap
-     *   cubemapsOwner = Owner for the generated textures
+     *   inputEnvmap = Input environment texture.
+     *   rotation = Quaternion to rotate the environment texture.
+     *   specularResolution = Resolution for specular cubemap.
+     *   cubemapsOwner = Owner for the generated textures.
      *
      * Returns: `IBLData` struct with generated textures
      */
-    IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
+    IBLData generateCubemaps(Texture inputEnvmap, Quaternionf rotation, uint specularResolution, Owner cubemapsOwner)
     {
-        IBLData ibl = cubemapRenderer.generateCubemaps(inputEnvmap, specularResolution, cubemapsOwner);
+        IBLData ibl = cubemapRenderer.generateCubemaps(inputEnvmap, rotation, specularResolution, cubemapsOwner);
         ibl.brdfLUT = brdfLUT;
         return ibl;
     }
@@ -252,10 +254,10 @@ class Game: BaseGame
      * A shorthand for brdflutRenderer.generateTexture.
      *
      * Params:
-     *   resolution = Texture resolution
-     *   textureOwner = Owner for the texture
+     *   resolution = Texture resolution.
+     *   textureOwner = Owner for the texture.
      *
-     * Returns: Generated BRDF LUT texture
+     * Returns: Generated BRDF LUT texture.
      */
     Texture generateBRDFLUT(uint resolution, Owner textureOwner)
     {

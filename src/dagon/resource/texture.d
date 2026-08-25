@@ -190,10 +190,12 @@ class TextureAsset: Asset
                 {
                     convertGPUImageLUTto3DTexture(&buffer);
                 }
-                else
+                else if (conversionOptions.lutFormat != LUTFormat.Undefined)
+                {
                     logWarning(
                         filename, ": ",
                         "unsupported LUT format ", conversionOptions.lutFormat);
+                }
             }
             
             if (cache)

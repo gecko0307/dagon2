@@ -33,6 +33,7 @@ import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.math.transformation;
 import dlib.math.utils;
 
@@ -113,6 +114,7 @@ class CubemapGeneratorShader: Shader
    public:
     Texture envmap;
     CubeFace cubeFace;
+    Matrix4x4f rotationMatrix;
     
     /**
      * Constructs a cube map generation shader.
@@ -137,7 +139,8 @@ class CubemapGeneratorShader: Shader
             exitWithError("Failed to create CubemapGeneratorShader");
         }
         
-        fsUBO.pixelToWorldMatrix = Matrix4x4f.identity;
+        rotationMatrix = Matrix4x4f.identity;
+        fsUBO.pixelToWorldMatrix = cubeFaceMatrix(cubeFace);
     }
     
     /**
@@ -152,7 +155,7 @@ class CubemapGeneratorShader: Shader
         
         pass.bindTexture(PipelineStage.Fragment, 0, envmap);
         
-        fsUBO.pixelToWorldMatrix = cubeFaceMatrix(cubeFace);
+        fsUBO.pixelToWorldMatrix = rotationMatrix * cubeFaceMatrix(cubeFace);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -670,8 +673,9 @@ class CubemapRenderer: Renderer
      * Params:
      *   inputEnvmap   = Input texture.
      *   outputCubemap = Output cube map to write the result to.
+     *   rotation = Quaternion to rotate the cubemap.
      */
-    void generateCubemap(Texture inputEnvmap, Texture outputCubemap)
+    void generateCubemap(Texture inputEnvmap, Texture outputCubemap, Quaternionf rotation)
     {
         view.resize(outputCubemap.buffer.size.width, outputCubemap.buffer.size.height);
         
@@ -682,6 +686,9 @@ class CubemapRenderer: Renderer
         state.pass = cubemapGeneratorPass;
         cubemapGeneratorPass.inputEnvmap = inputEnvmap;
         cubemapGeneratorPass.outputCubemap = outputCubemap;
+        
+        cubemapGeneratorPass.cubemapGeneratorShader.rotationMatrix = rotation.toMatrix4x4;
+        
         foreach(faceIndex, face; EnumMembers!CubeFace)
         {
             cubemapGeneratorPass.outputCubemapFace = face;
@@ -756,7 +763,7 @@ class CubemapRenderer: Renderer
         SDL_SubmitGPUCommandBuffer(commandBuffer);
     }
     
-    IBLData generateCubemaps(Texture inputEnvmap, uint specularResolution, Owner cubemapsOwner)
+    IBLData generateCubemaps(Texture inputEnvmap, Quaternionf rotation, uint specularResolution, Owner cubemapsOwner)
     {
         TextureBuffer buffer = {
             format: {
@@ -784,7 +791,7 @@ class CubemapRenderer: Renderer
         
         Texture inputCubemap = New!Texture(gpu, null);
         inputCubemap.create(&buffer, &options);
-        generateCubemap(inputEnvmap, inputCubemap);
+        generateCubemap(inputEnvmap, inputCubemap, rotation);
         
         options.generateMipmaps = false;
         

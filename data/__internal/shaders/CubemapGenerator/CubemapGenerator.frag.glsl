@@ -23,8 +23,9 @@ layout(location = 0) out vec4 fragColor;
 void main()
 {
     vec2 ndc = vec2(texCoords.x, 1.0 - texCoords.y) * 2.0 - 1.0;
-    vec3 ray = normalize(vec3(ndc, 1.0f));
+    vec3 ray = vec3(ndc, 1.0f);
     vec3 rayWorld = (ubo.pixelToWorldMatrix * vec4(ray, 0.0f)).xyz;
+    rayWorld = normalize(rayWorld);
     vec2 sampleTexCoord = envMapEquirect(rayWorld);
     fragColor = texture(envmap, sampleTexCoord);
 }
