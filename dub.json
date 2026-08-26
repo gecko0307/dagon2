@@ -55,6 +55,7 @@
         "extensions/openxr",
         "extensions/physfs",
         "extensions/security",
+        "extensions/server",
         "extensions/video"
     ],
 
