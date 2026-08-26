@@ -54,7 +54,8 @@
         "extensions/imgui",
         "extensions/openxr",
         "extensions/physfs",
-        "extensions/security"
+        "extensions/security",
+        "extensions/video"
     ],
 
     "-ddoxTool": "scod"

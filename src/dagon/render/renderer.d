@@ -55,6 +55,7 @@ import dagon.graphics.material;
 import dagon.graphics.scene;
 import dagon.render.view;
 import dagon.render.pass;
+import dagon.render.frametask;
 
 /**
  * High-level renderer abstraction.
@@ -85,6 +86,9 @@ abstract class Renderer: EventListener, Updateable
     
     /// Inactive renderer does nothing in runtime.
     bool active = true;
+    
+    ///
+    Array!FrameTask frameTasks;
     
     /**
      * Current swapchain texture. Can be null, because the renderer doesn't wait
@@ -128,6 +132,7 @@ abstract class Renderer: EventListener, Updateable
     ~this()
     {
         renderPasses.free();
+        frameTasks.free();
     }
     
     ///
@@ -148,6 +153,12 @@ abstract class Renderer: EventListener, Updateable
     {
         renderPasses.append(renderPass);
         renderPass.view = view;
+    }
+    
+    ///
+    void addFrameTask(FrameTask task)
+    {
+        frameTasks.append(task);
     }
     
     /**
@@ -205,6 +216,14 @@ abstract class Renderer: EventListener, Updateable
             return;
         }
         
+        foreach(i, task; frameTasks)
+        {
+            if (task.active)
+            {
+                task.submit(this);
+            }
+        }
+        
         state.reset();
         
         foreach(i, pass; renderPasses)
@@ -222,7 +241,13 @@ abstract class Renderer: EventListener, Updateable
     /// Override for custom post-update logic.
     void onUpdate(Time t)
     {
-        //
+        foreach(i, task; frameTasks)
+        {
+            if (task.active)
+            {
+                task.update(t);
+            }
+        }
     }
     
     void resize()

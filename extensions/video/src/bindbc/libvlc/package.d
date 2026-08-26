@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2026 Timur Gafarov
+Copyright (c) 2025-2026 Timur Gafarov
 
 Boost Software License - Version 1.0 - August 17th, 2003
 Permission is hereby granted, free of charge, to any person or organization
@@ -24,25 +24,12 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-
-/**
- * The main entry point for Dagon's rendering system.
- *
- * Description:
- * The `dagon.render` module publicly imports all core rendering modules.
- *
- * Copyright: Timur Gafarov 2019-2026
- * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
- * Authors: Timur Gafarov
- */
-module dagon.render;
+module bindbc.libvlc;
 
 public
 {
-    import dagon.render.deferred;
-    import dagon.render.pass;
-    import dagon.render.postprocessing;
-    import dagon.render.renderer;
-    import dagon.render.view;
-    import dagon.render.frametask;
+    import bindbc.libvlc.types;
+    import bindbc.libvlc.funcs;
+    import bindbc.libvlc.nativefuncs;
+    import bindbc.libvlc.loader;
 }
