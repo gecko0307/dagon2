@@ -12,6 +12,7 @@ Screenshots
 -----------
 [![Screenshot 1](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon-sponza-new.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon-sponza-new.jpg)
 [![Screenshot 2](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-cyberpunk-noodles1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-cyberpunk-noodles1.jpg)
+[![Screenshot 3](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test3.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/04/dagon2-pbr-test3.jpg)
 
 Features
 --------
