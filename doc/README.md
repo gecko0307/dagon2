@@ -30,10 +30,9 @@ Dagon is organized around several packages:
 | `gscript`        | GScript3 virtual machine                          |
 
 ## Quick Links
-- [Getting Started](getting-started.md) - Installation and your first project
-- [Core Concepts](core-concepts.md) - Understand the engine architecture
+- [Basics](basics.md) - Understand the engine architecture
 - [Resources](resources.md) - Loading and managing game assets
-- [Shaders](shaders.md)
+- [Shaders](shaders.md) - GPU programming
 - [Rendering](rendering.md) - Rendering pipeline and visual features
 - [Configuration](configuration.md) - Engine settings and configuration
 - [Physics Engine](physics.md) - Jolt physics integration
