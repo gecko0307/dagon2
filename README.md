@@ -11,7 +11,7 @@ Feature-rich, performant, easy to use, extensible desktop game development frame
 Screenshots
 -----------
 [![Screenshot 1](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-sponza.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-sponza.jpg)
-[![Screenshot 2](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-city.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-city.jpg)
+[![Screenshot 2](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-cyberpunk-noodles1.jpg)](https://blog.pixperfect.online/wp-content/uploads/2026/08/dagon2-cyberpunk-noodles1.jpg)
 
 Features
 --------
