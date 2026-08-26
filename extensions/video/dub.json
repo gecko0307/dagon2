@@ -10,7 +10,7 @@
         "dagon2": "*"
     },
     
-    "copyfiles": ["license"],
+    "copyFiles": ["license"],
     "copyFiles-windows-x86_64": ["lib/windows-x64/*", "plugins"],
     "copyFiles-linux-x86_64": ["lib/linux-x64/*", "plugins_linux"]
 }

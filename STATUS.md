@@ -44,7 +44,7 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 - [x] dagon2:physfs
 - [x] dagon2:security
 - [ ] dagon2:server
-- [ ] dagon2:video
+- [x] dagon2:video
 
 ## Milestone 3: Core Logic
 

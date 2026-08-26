@@ -32,6 +32,7 @@ Dagon 2 uses the following libraries:
 * [Open Asset Import Library (Assimp)](https://github.com/assimp/assimp)
 * [PhysFS](https://github.com/icculus/physfs)
 * [SoLoud](https://github.com/gecko0307/soloud)
+* [libVLC](https://images.videolan.org/vlc/libvlc.html)
 * [Dear ImGui](https://github.com/ocornut/imgui)
 * [cimgui](https://github.com/cimgui/cimgui)
 * [i2d-imgui](https://github.com/Inochi2D/i2d-imgui)
