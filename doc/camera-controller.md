@@ -1,6 +1,6 @@
 # Camera Controller and Drivers
 
-Dagon 2 provides a new flexible camera control system based on camera states, camera drivers, and a camera controller. The system separates the logic responsible for calculating a camera's position and orientation from the logic that applies the resulting state to the camera entity. This makes it possible to keep multiple independent camera states and smoothly transition between them, which allows for complex in-game transitions and cutscene animations.
+Dagon 2 provides a new flexible camera control system based on camera states, camera drivers, and a camera controller. The system separates the logic responsible for calculating a camera's position and orientation from the logic that applies the resulting state to the camera entity. This makes it possible to keep multiple independent camera states and interpolate between them, which allows for complex in-game transitions and cutscene animations.
 
 ## CameraState
 
