@@ -26,14 +26,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * A first-person camera control component.
+ * First-person camera control logic.
  *
  * Description:
- * The `dagon.ui.firstpersonview` module defines the `FirstPersonViewComponent`
+ * The `dagon.ui.firstpersonview` module defines the `FirstPersonView`
  * class, which enables first-person camera kinematics using mouse input.
  * The component supports relative and absolute mouse modes, pitch/turn limits,
- * and configurable sensitivities. It provides methods for moving forward/backward
- * and strafing left/right, as well as handling window focus events.
+ * and configurable sensitivities.
+ * `FirstPersonViewController` is provided to use with entities.
+ * `FirstPersonCameraDriver` is provided to use with `CameraController`.
  *
  * Copyright: Timur Gafarov 2017-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -43,6 +44,8 @@ module dagon.ui.firstpersonview;
 
 import std.math;
 
+import dlib.core.memory;
+import dlib.core.ownership;
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.quaternion;
@@ -54,23 +57,20 @@ import dagon.core.event;
 import dagon.core.scancodes;
 import dagon.core.time;
 import dagon.graphics.entity;
-
-///
-float approach(float current, float target, float time, float delta)
-{
-    float factor = 1.0f - exp(-delta / time);
-    return current + (target - current) * factor;
-}
+import dagon.graphics.camera;
 
 /**
- * First-person camera controller for entities.
+ * Abstract first-person camera view
  *
  * Description:
  * Enables mouse and keyboard-based camera orientation and movement,
  * supporting both relative and absolute mouse modes.
  * Handles pitch and turn limits and configurable sensitivities.
+ * The resulting orientation is stored separately in orientationV and orientationH.
+ * This class is not meant to be used directly, but rather as a backend
+ * to implement higher-level controllers.
  */
-class FirstPersonViewController: EntityController
+class FirstPersonView: EventListener
 {
     protected bool _active = true;
     protected bool _useRelativeMouseMode = true;
@@ -126,40 +126,19 @@ class FirstPersonViewController: EntityController
     /// Horizontal orientation quaternion.
     Quaternionf orientationH = Quaternionf.identity;
     
-    /// Base orientation quaternion.
-    Quaternionf baseOrientation = Quaternionf.identity;
-    
-    /// Current forward direction vector.
-    Vector3f direction = Vector3f(0.0f, 0.0f, 1.0f);
-
-    /// Forward direction ignoring pitch.
-    Vector3f directionHorizontal = Vector3f(0.0f, 0.0f, 1.0f);
-
-    /// Right direction vector.
-    Vector3f right = Vector3f(1.0f, 0.0f, 0.0f);
-
-    /// Up direction vector.
-    Vector3f up = Vector3f(0.0f, 1.0f, 0.0f);
-    
     ///
     bool isMoving = false;
     
-    /**
-     * Constructs a first-person view component for the given entity.
-     *
-     * Params:
-     *   eventManager = Event manager.
-     *   hostEntity   = Entity to attach the component to (usually a `Camera` object).
-     */
-    this(EventManager eventManager, Entity hostEntity)
+    ///
+    this(EventManager eventManager, Owner owner)
     {
-        super(eventManager, hostEntity);
+        super(eventManager, owner);
         active = true;
         useRelativeMouseMode = true;
         reset();
     }
     
-    /// Enables or disables the component.
+    /// Enables or disables the view.
     void active(bool mode) @property
     {
         _active = mode;
@@ -172,7 +151,7 @@ class FirstPersonViewController: EntityController
         }
     }
     
-    /// Returns whether the component is active.
+    /// Returns whether the view is active.
     bool active() const @property
     {
         return _active;
@@ -204,14 +183,14 @@ class FirstPersonViewController: EntityController
         prevMouseY = eventManager.mouseY;
     }
     
-    /// Updates the component each frame (handles input and orientation).
-    override void update(Time time)
+    /// Updates the view (handles input and orientation).
+    void update(Time time)
     {
         processEvents();
         
         isMoving = false;
         
-        if (_active & mouseActive)
+        if (_active && mouseActive)
         {
             float mouseRelH = 0.0f;
             float mouseRelV = 0.0f;
@@ -222,7 +201,7 @@ class FirstPersonViewController: EntityController
             }
             else
             {
-                mouseRelH =  (eventManager.mouseX - prevMouseX) * mouseSensitivity;
+                mouseRelH = (eventManager.mouseX - prevMouseX) * mouseSensitivity;
                 mouseRelV = (eventManager.mouseY - prevMouseY) * mouseSensitivity;
             }
             
@@ -270,33 +249,6 @@ class FirstPersonViewController: EntityController
         
         orientationV = rotationQuaternion(Vector3f(1.0f, 0.0f, 0.0f), degtorad(pitch));
         orientationH = rotationQuaternion(Vector3f(0.0f, 1.0f, 0.0f), degtorad(turn));
-        
-        entity.rotation = baseOrientation * orientationH * orientationV;
-        
-        entity.transformation =
-            (translationMatrix(entity.position) *
-            entity.rotation.toMatrix4x4 *
-            scaleMatrix(entity.scaling));
-        entity.invTransformation = entity.transformation.inverse;
-        
-        direction = entity.rotation.rotate(Vector3f(0.0f, 0.0f, 1.0f));
-        directionHorizontal = orientationH.rotate(Vector3f(0.0f, 0.0f, 1.0f));
-        right = orientationH.rotate(Vector3f(1.0f, 0.0f, 0.0f));
-        up = orientationH.rotate(Vector3f(0.0f, 1.0f, 0.0f));
-    }
-    
-    override void postUpdate(Time t)
-    {
-        if (entity.parent)
-        {
-            entity.modelMatrix = entity.parent.modelMatrix * entity.transformation;
-            entity.invModelMatrix = entity.modelMatrix.inverse;
-        }
-        else
-        {
-            entity.modelMatrix = entity.transformation;
-            entity.invModelMatrix = entity.invTransformation;
-        }
     }
     
     /// Called when the application gains focus.
@@ -309,6 +261,83 @@ class FirstPersonViewController: EntityController
     override void onFocusLoss()
     {
         mouseActive = false;
+    }
+}
+
+/**
+ * First-person camera controller for entities.
+ *
+ * Description:
+ * Utilizes FirstPersonView to enable first-person control.
+ */
+class FirstPersonViewController: EntityController
+{
+    /// Underlying FirstPersonView that implements the control logic.
+    FirstPersonView view;
+    
+    /// Implicit access to the view.
+    alias view this;
+    
+    /// Base orientation quaternion.
+    Quaternionf baseOrientation = Quaternionf.identity;
+    
+    /// Current forward direction vector.
+    Vector3f direction = Vector3f(0.0f, 0.0f, 1.0f);
+
+    /// Forward direction ignoring pitch.
+    Vector3f directionHorizontal = Vector3f(0.0f, 0.0f, 1.0f);
+
+    /// Right direction vector.
+    Vector3f right = Vector3f(1.0f, 0.0f, 0.0f);
+
+    /// Up direction vector.
+    Vector3f up = Vector3f(0.0f, 1.0f, 0.0f);
+    
+    /**
+     * Constructs a first-person view controller for the given entity.
+     *
+     * Params:
+     *   eventManager = Event manager.
+     *   hostEntity   = Entity to attach the controller to (usually a `Camera` object).
+     */
+    this(EventManager eventManager, Entity hostEntity)
+    {
+        super(eventManager, hostEntity);
+        view = New!FirstPersonView(eventManager, this);
+    }
+    
+    /// Updates the controller (handles input and orientation).
+    override void update(Time time)
+    {
+        view.update(time);
+        
+        entity.rotation = baseOrientation * view.orientationH * view.orientationV;
+        
+        entity.transformation =
+            (translationMatrix(entity.position) *
+            entity.rotation.toMatrix4x4 *
+            scaleMatrix(entity.scaling));
+        entity.invTransformation = entity.transformation.inverse;
+        
+        direction = entity.rotation.rotate(Vector3f(0.0f, 0.0f, 1.0f));
+        directionHorizontal = view.orientationH.rotate(Vector3f(0.0f, 0.0f, 1.0f));
+        right = view.orientationH.rotate(Vector3f(1.0f, 0.0f, 0.0f));
+        up = view.orientationH.rotate(Vector3f(0.0f, 1.0f, 0.0f));
+    }
+    
+    ///
+    override void postUpdate(Time t)
+    {
+        if (entity.parent)
+        {
+            entity.modelMatrix = entity.parent.modelMatrix * entity.transformation;
+            entity.invModelMatrix = entity.modelMatrix.inverse;
+        }
+        else
+        {
+            entity.modelMatrix = entity.transformation;
+            entity.invModelMatrix = entity.invTransformation;
+        }
     }
     
     /// Moves the entity forward by the given speed.
@@ -333,5 +362,51 @@ class FirstPersonViewController: EntityController
     void strafeLeft(float speed)
     {
         entity.position -= entity.transformation.right.normalized * speed;
+    }
+}
+
+///
+class FirstPersonCameraDriver: EventListener, CameraDriver
+{
+    /// Underlying FirstPersonView that implements the control logic.
+    FirstPersonView view;
+    
+    /// Implicit access to the view.
+    alias view this;
+    
+    /**
+     * If useCameraPosition is disabled, this vector is used as driver's output position.
+     * Otherwise stores camera's own position.
+     */
+    Vector3f position = Vector3f(0.0f, 0.0f, 0.0f);
+    
+    /// Base orientation quaternion.
+    Quaternionf baseOrientation = Quaternionf.identity;
+    
+    /// Field of view in degrees (vertical) for perspective projection.
+    float fov = 60.0f;
+    
+    /// If enabled, the driver outputs camera's own position.
+    bool useCameraPosition = true;
+    
+    /**
+     * Constructs a first-person driver.
+     */
+    this(EventManager eventManager, Owner owner)
+    {
+        super(eventManager, owner);
+        view = New!FirstPersonView(eventManager, this);
+    }
+    
+    /// Updates the driver (handles input and orientation).
+    override void update(Time time, Camera camera, CameraState* outState)
+    {
+        view.update(time);
+        
+        outState.rotation = baseOrientation * view.orientationH * view.orientationV;
+        if (useCameraPosition)
+            position = camera.position;
+        outState.position = position;
+        outState.fov = fov;
     }
 }

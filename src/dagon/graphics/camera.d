@@ -136,7 +136,7 @@ struct CameraState
 interface CameraDriver
 {
     ///
-    void update(Time t, CameraState* outState);
+    void update(Time t, Camera camera, CameraState* outState);
 }
 
 ///
@@ -167,10 +167,11 @@ class CameraController: EntityController
     float transitionTime = 0.0f;
     float transitionDuration = 0.0f;
     Easing easing = Easing.Linear;
-    bool finished = true;
     bool lerpFromTransitionState = false;
     
    public:
+    bool finished = true;
+    
     ///
     this(EventManager eventManager, Camera camera, CameraDriver initialDriver)
     {
@@ -222,7 +223,7 @@ class CameraController: EntityController
         if (lerpFromTransitionState)
             currentState = transitionState;
         else
-            currentDriver.update(t, &currentState);
+            currentDriver.update(t, camera, &currentState);
         
         if (currentDriver is targetDriver || transitionDuration <= 0.0f)
         {
@@ -233,7 +234,7 @@ class CameraController: EntityController
         else
         {
             CameraState targetState;
-            targetDriver.update(t, &targetState);
+            targetDriver.update(t, camera, &targetState);
             transitionTime += t.delta;
             
             float linearT = clamp(transitionTime / transitionDuration, 0.0f, 1.0f);
