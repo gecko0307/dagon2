@@ -101,7 +101,7 @@ Known Limitations
 
 Documentation
 -------------
-HTML documentation can be generated from source code using ddox (`dub build -b ddox`). Be aware that documentation is currently incomplete.
+API reference in HTML format can be generated from source code using ddox (`dub build -b ddox`). Be aware that documentation is currently incomplete.
 
 License
 -------
