@@ -3,6 +3,8 @@
 #define PI 3.14159265359
 const float PI2 = PI * 2.0;
 
+#define EPSILON 0.00001
+
 // Brian Karis, "Real Shading in Unreal Engine 4"
 vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 {
@@ -76,7 +78,7 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
     float totalWeight = 0.0;
     
     vec2 inputSize = vec2(textureSize(inputCubemap, 0));
-    float wt = 4.0 * PI / (6 * inputSize.x * inputSize.y);
+    float wt = 4.0 * PI / (6.0 * inputSize.x * inputSize.y);
     
     for (uint i = 0u; i < numSamples; i++)
     {
@@ -84,18 +86,21 @@ vec3 prefilterEnvMap(float roughness, vec3 R)
         vec3 H = importanceSampleGGX(Xi, roughness, N);
         vec3 L = 2.0 * dot(V, H) * H - V;
         float NL = clamp(dot(N, L), 0.0, 1.0);
-        float pdf = distributionGGX(NL, roughness) * 0.25;
-        float ws = 1.0 / (numSamples * pdf);
-        float mipLevel = max(0.5 * log2(ws / wt) + 1.0, 0.0);
-        vec3 inputColor = clamp(textureLod(inputCubemap, L, mipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
-        result += inputColor * NL;
-        totalWeight += NL;
+        
+        if (NL > 0.0)
+        {
+            float NH = clamp(dot(N, H), 0.0, 1.0);
+            float VH = clamp(dot(V, H), 0.0, 1.0);
+            float pdf = (distributionGGX(NH, roughness) * NH) / (4.0 * VH + EPSILON);
+            float ws = 1.0 / (float(numSamples) * pdf + EPSILON);
+            float mipLevel = max(0.5 * log2(ws / wt) + 1.0, 0.0);
+            vec3 inputColor = clamp(textureLod(inputCubemap, L, mipLevel).rgb, vec3(0.0), vec3(inputThreshold)) * inputScale;
+            result += inputColor * NL;
+            totalWeight += NL;
+        }
     }
     
-    if (totalWeight == 0.0)
-        return result;
-    else
-        return result / totalWeight;
+    return totalWeight > 0.0 ? (result / totalWeight) : result;
 }
 
 vec3 getDirectionForCubemapFace(uint faceIndex, vec2 uv)

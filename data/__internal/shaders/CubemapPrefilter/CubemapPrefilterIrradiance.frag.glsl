@@ -94,19 +94,20 @@ void main()
     vec3 N = getDirectionForCubemapFace(cubemapFaceIndex, texCoords);
 
     vec3 irradiance = vec3(0);
-    float totalWeight = 0.0;
-    
+
     for (uint i = 0; i < numSamples; ++i)
     {
         vec2 Xi = hammersley(i);
         vec3 L = importanceSample(Xi, N);
         float cosTheta = max(0.0, dot(L, N));
-        vec3 inputColor = max(textureLod(inputCubemap, L, 0).rgb, vec3(0.0)) * inputScale;
-        irradiance += inputColor * cosTheta;
-        totalWeight += cosTheta;
+        if (cosTheta > 0.0)
+        {
+            vec3 inputColor = max(textureLod(inputCubemap, L, 0).rgb, vec3(0.0)) * inputScale;
+            irradiance += inputColor * cosTheta;
+        }
     }
-    if (totalWeight > 0.0)
-        irradiance /= totalWeight;
+
+    irradiance *= invNumSamples;
 
     fragColor = vec4(irradiance, 1.0);
 }

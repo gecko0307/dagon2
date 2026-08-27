@@ -130,10 +130,10 @@ void main()
     
     // Multiple scattering (Fdez-Agüera)
     vec3 diffuse = baseColor * diffuseOcclusion * (1.0 - metallic) * (1.0 - f0_scalar);
-    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
-    float Ems = (1.0 - (brdf.x + brdf.y));
-    vec3 Favg = f0 + (1.0 - f0) / 21.0;
-    vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems);
+    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0); // Single scattering energy
+    float Ems = (1.0 - (brdf.x + brdf.y)); // Energy lost on the first bounce
+    vec3 Favg = f0 + (1.0 - f0) / 21.0; // Average Fresnel
+    vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems); // Multiple scattering energy
     vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
     vec3 radiance = (FssEss * reflection * specularOcclusion + (FmsEms + kD) * irradiance);
     
