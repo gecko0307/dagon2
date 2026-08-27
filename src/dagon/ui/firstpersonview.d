@@ -271,15 +271,15 @@ class FirstPersonViewController: EntityController
         orientationV = rotationQuaternion(Vector3f(1.0f, 0.0f, 0.0f), degtorad(pitch));
         orientationH = rotationQuaternion(Vector3f(0.0f, 1.0f, 0.0f), degtorad(turn));
         
-        Quaternionf orientation = baseOrientation * orientationH * orientationV;
+        entity.rotation = baseOrientation * orientationH * orientationV;
         
         entity.transformation =
             (translationMatrix(entity.position) *
-            orientation.toMatrix4x4 *
+            entity.rotation.toMatrix4x4 *
             scaleMatrix(entity.scaling));
         entity.invTransformation = entity.transformation.inverse;
         
-        direction = orientation.rotate(Vector3f(0.0f, 0.0f, 1.0f));
+        direction = entity.rotation.rotate(Vector3f(0.0f, 0.0f, 1.0f));
         directionHorizontal = orientationH.rotate(Vector3f(0.0f, 0.0f, 1.0f));
         right = orientationH.rotate(Vector3f(1.0f, 0.0f, 0.0f));
         up = orientationH.rotate(Vector3f(0.0f, 1.0f, 0.0f));

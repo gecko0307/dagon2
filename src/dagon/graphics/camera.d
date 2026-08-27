@@ -42,9 +42,16 @@ DEALINGS IN THE SOFTWARE.
 module dagon.graphics.camera;
 
 import dlib.core.ownership;
+import dlib.math.vector;
 import dlib.math.matrix;
+import dlib.math.quaternion;
 import dlib.math.transformation;
+import dlib.math.utils;
+import dlib.math.interpolation;
 
+import dagon.core.logger;
+import dagon.core.time;
+import dagon.core.event;
 import dagon.graphics.entity;
 
 /**
@@ -114,5 +121,187 @@ class Camera: Entity
     Matrix4x4f projectionMatrix(float aspectRatio)
     {
         return perspectiveMatrix(fov, aspectRatio, zNear, zFar);
+    }
+}
+
+///
+struct CameraState
+{
+    Vector3f position;
+    Quaternionf rotation;
+    float fov;
+}
+
+///
+interface CameraDriver
+{
+    ///
+    void update(Time t, CameraState* outState);
+}
+
+///
+enum Easing
+{
+    Linear = 0,
+    EaseInQuad = 1,
+    EaseOutQuad = 2,
+    EaseInOutQuad = 3,
+    EaseInBack = 4,
+    EaseOutBack = 5,
+    EaseInOutBack = 6,
+    EaseOutBounce = 7,
+    EaseOutElastic = 8
+}
+
+///
+class CameraController: EntityController
+{
+   public:
+    ///
+    Camera camera;
+   
+   protected:
+    CameraDriver currentDriver;
+    CameraDriver targetDriver;
+    CameraState transitionState;
+    float transitionTime = 0.0f;
+    float transitionDuration = 0.0f;
+    Easing easing = Easing.Linear;
+    bool finished = true;
+    bool lerpFromTransitionState = false;
+    
+   public:
+    ///
+    this(EventManager eventManager, Camera camera, CameraDriver initialDriver)
+    {
+        super(eventManager, camera);
+        this.camera = camera;
+        currentDriver = initialDriver;
+        targetDriver = initialDriver;
+    }
+    
+    ///
+    void transitionTo(CameraDriver driver, float duration, Easing easing = Easing.Linear)
+    {
+        if (duration <= 0.0f)
+        {
+            currentDriver = driver;
+            targetDriver = driver;
+            transitionTime = 0.0f;
+            transitionDuration = 0.0f;
+            this.easing = easing;
+            finished = true;
+            lerpFromTransitionState = false;
+            return;
+        }
+        
+        currentDriver = targetDriver;
+        targetDriver = driver;
+        transitionTime = 0.0f;
+        transitionDuration = duration;
+        this.easing = easing;
+        
+        if (!finished)
+        {
+            lerpFromTransitionState = true;
+            transitionState.position = camera.position;
+            transitionState.rotation = camera.rotation;
+            transitionState.fov = camera.fov;
+        }
+        
+        finished = false;
+    }
+    
+    ///
+    override void update(Time t)
+    {
+        if (currentDriver is null || targetDriver is null)
+            return;
+        
+        CameraState currentState;
+        if (lerpFromTransitionState)
+            currentState = transitionState;
+        else
+            currentDriver.update(t, &currentState);
+        
+        if (currentDriver is targetDriver || transitionDuration <= 0.0f)
+        {
+            camera.position = currentState.position;
+            camera.rotation = currentState.rotation;
+            camera.fov = currentState.fov;
+        }
+        else
+        {
+            CameraState targetState;
+            targetDriver.update(t, &targetState);
+            transitionTime += t.delta;
+            
+            float linearT = clamp(transitionTime / transitionDuration, 0.0f, 1.0f);
+            float nonLinearT;
+            switch(easing)
+            {
+                case Easing.EaseInQuad:
+                    nonLinearT = easeInQuad(linearT);
+                    break;
+                case Easing.EaseOutQuad:
+                    nonLinearT = easeOutQuad(linearT);
+                    break;
+                case Easing.EaseInOutQuad:
+                    nonLinearT = easeInOutQuad(linearT);
+                    break;
+                case Easing.EaseInBack:
+                    nonLinearT = easeInBack(linearT);
+                    break;
+                case Easing.EaseOutBack:
+                    nonLinearT = easeOutBack(linearT);
+                    break;
+                case Easing.EaseInOutBack:
+                    nonLinearT = easeInOutBack(linearT);
+                    break;
+                case Easing.EaseOutBounce:
+                    nonLinearT = easeOutBounce(linearT);
+                    break;
+                case Easing.EaseOutElastic:
+                    nonLinearT = easeOutElastic(linearT);
+                    break;
+                default:
+                    nonLinearT = linearT;
+                    break;
+            }
+            
+            camera.position = lerp(currentState.position, targetState.position, nonLinearT);
+            camera.rotation = slerp(currentState.rotation, targetState.rotation, nonLinearT);
+            camera.fov = lerp(currentState.fov, targetState.fov, nonLinearT);
+            
+            if (linearT >= 1.0f)
+            {
+                currentDriver = targetDriver;
+                transitionTime = 0.0f;
+                transitionDuration = 0.0f;
+                finished = true;
+                lerpFromTransitionState = false;
+            }
+        }
+        
+        camera.transformation =
+            (translationMatrix(camera.position) *
+            camera.rotation.toMatrix4x4 *
+            scaleMatrix(camera.scaling));
+        camera.invTransformation = camera.transformation.inverse;
+    }
+    
+    ///
+    override void postUpdate(Time t)
+    {
+        if (camera.parent)
+        {
+            camera.modelMatrix = camera.parent.modelMatrix * camera.transformation;
+            camera.invModelMatrix = camera.modelMatrix.inverse;
+        }
+        else
+        {
+            camera.modelMatrix = camera.transformation;
+            camera.invModelMatrix = camera.invTransformation;
+        }
     }
 }
