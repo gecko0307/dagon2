@@ -65,7 +65,7 @@ Dagon's deferred pipeline supports subsurface scattering based on Hanrahan-Krueg
 
 Ambient occlusion is a simplest form of global illumination. Within this technique, it is assumed that the scene is uniformly lit with ambient light that is attenuated in cavities and corners. The ambient light usually takes form of a diffuse (Lambertian) IBL, and occlusion factor is used to darken it, much like a shadow map blocks a regular light on a surface.
 
-In Dagon, ambient occlusion is computed in screen space, by raymarchig the depth buffer in random directions on a hemisphere around each point. This is not perfectly accurate, but still gives a descent look in most usage scenarios. To reduce noise inherent to any stochastic solver, Dagon utilizes a temporal accumulation filter, averaging the occlusion factor over multiple frames using motion vectors and reprojection.
+In Dagon, ambient occlusion is computed in screen space, by raymarchig the depth buffer in random directions on a hemisphere around each point. This is not perfectly accurate, but still gives a desent look in most usage scenarios. To reduce noise inherent to any stochastic solver, Dagon utilizes a temporal accumulation filter, averaging the occlusion factor over multiple frames using motion vectors and reprojection.
 
 In addition to the usual diffuse occlusion, Dagon supports approximated specular occlusion based on the formula suggested by Lagarde and de Rousiers (*Moving Frostbite to Physically Based Rendering, SIGGRAPH 2014*):
 
