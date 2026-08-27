@@ -41,7 +41,7 @@ Combined transformation makes up a 4x4 column-major floating-point matrix (`Matr
 
 where `[Tx, Ty, Tz]` is a translation vector, `[Lx, Ly, Lz]` is a left basis vector, `[Ux, Uy, Uz]` is an up basis vector, `[Fx, Fy, Fz]` is a forward basis vector.
 
-Basis vectors represent orthogonal directions of an entity (given a matrix with identity scaling, they are also already normalized). These directions are often used for simple kinematics and motion planning. For example, if an entity represents a character, you can make it walk forward or backward by incrementing position in "forward" direction (negated to move backward), or strafe by incrementing position in "left" direction (negated to move right).
+Basis vectors represent orthogonal directions of an entity. Given a matrix with identity scaling, they are also already normalized. These directions are often used for simple kinematics and motion planning. For example, if an entity represents a character, you can make it walk forward or backward by incrementing position in "forward" direction (negated to move backward), or strafe by incrementing position in "left" direction (negated to move right).
 
 ## Screen Space
 

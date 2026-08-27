@@ -32,11 +32,11 @@ Dagon is organized around several packages:
 ## Quick Links
 - [Basics](basics.md) - Understand the engine architecture
 - [Resources](resources.md) - Loading and managing game assets
-- [Shaders](shaders.md) - GPU programming
-- [Rendering](rendering.md) - Rendering pipeline and visual features
 - [Configuration](configuration.md) - Engine settings and configuration
+- [Rendering](rendering.md) - Render pipeline overview
+- [Shaders](shaders.md) - GPU programming
 - [Physics Engine](physics.md) - Jolt physics integration
-- [Scripting](gscript/_index.md) - Scripting with GScript3 language
+- [Scripting](gscript/README.md) - Scripting with GScript3 language
 
 ## Tutorials
 TODO
