@@ -55,6 +55,13 @@ import dagon.core.scancodes;
 import dagon.core.time;
 import dagon.graphics.entity;
 
+///
+float approach(float current, float target, float time, float delta)
+{
+    float factor = 1.0f - exp(-delta / time);
+    return current + (target - current) * factor;
+}
+
 /**
  * First-person camera controller for entities.
  *
@@ -97,6 +104,21 @@ class FirstPersonViewController: EntityController
 
     /// Camera turn angle (degrees).
     float turn = 0.0f;
+    
+    /// Enables inertial rotation.
+    bool enableInertia = false;
+
+    /// Time constant of rotational acceleration.
+    float inertialAcceleration = 0.08f;
+
+    /// Time constant of rotational deceleration.
+    float inertialDeceleration = 0.12f;
+
+    /// Current horizontal rotation velocity.
+    float turnVelocity = 0.0f;
+
+    /// Current vertical rotation velocity.
+    float pitchVelocity = 0.0f;
     
     /// Vertical orientation quaternion.
     Quaternionf orientationV = Quaternionf.identity;
@@ -174,6 +196,8 @@ class FirstPersonViewController: EntityController
     {
         pitch = 0.0f;
         turn = 0.0f;
+        pitchVelocity = 0.0f;
+        turnVelocity = 0.0f;
         if (!useRelativeMouseMode)
             eventManager.setMouseToCenter();
         prevMouseX = eventManager.mouseX;
@@ -208,8 +232,25 @@ class FirstPersonViewController: EntityController
             float vAxis = inputManager.getAxis("vertical");
             if (abs(hAxis) < axisDeadzone) hAxis = 0.0f;
             if (abs(vAxis) < axisDeadzone) vAxis = 0.0f;
-            pitch -= mouseRelV + vAxis * axisSensitivity;
-            turn -= mouseRelH + hAxis * axisSensitivity;
+            float pitchInput = mouseRelV + vAxis * axisSensitivity;
+            float turnInput = mouseRelH + hAxis * axisSensitivity;
+            
+            if (enableInertia)
+            {
+                float pitchFactor = 1.0f - exp(-time.delta / inertialDeceleration);
+                float turnFactor = 1.0f - exp(-time.delta / inertialDeceleration);
+                pitchVelocity += (pitchInput - pitchVelocity) * pitchFactor;
+                turnVelocity += (turnInput - turnVelocity) * turnFactor;
+                pitch -= pitchVelocity;
+                turn -= turnVelocity;
+            }
+            else
+            {
+                turn -= turnInput;
+                pitch -= pitchInput;
+                turnVelocity = turnInput;
+                pitchVelocity = pitchInput;
+            }
             
             if (pitch > pitchLimitMax)
             {
