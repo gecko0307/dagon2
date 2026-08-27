@@ -3,6 +3,7 @@
 Dagon provides a comprehensive hybrid 3D renderer (deferred+forward) built on SDL GPU with physically-based material workflow (PBR). It is designed to be data-compatible with Blender's Eevee and gives results very close to it.
 
 ## Deferred Rendering
+
 Deferred rendering is one of the two major techniques in rasterization. It breaks rendering into two main phases—geometry pass and light pass. First all visible geometry is rasterized into a set of fragment attribute buffers (often collectively called a G-buffer), which include depth buffer, normal buffer, color buffer, etc. Then a desired number of light bounding volumes are rasterized into a final radiance buffer. A light shader calculates radiance for a given fragment based on light's properties and G-buffer values corresponding to that fragment.
 
 Deferred rendering has the following advantages over forward rendering:
@@ -18,7 +19,7 @@ There are some disadvantages as well:
 * Less material variety. In a classic deferred renderer BRDF is defined by light volume shaders, so you can have different BRDFs per light, but not per material. This limitation is less critical if a renderer uses PBR principles (albedo, roughness and metallic maps, microfacet BRDF, image-based lighting, etc.). PBR, which is de-facto standard way of defining materials nowadays, allows greater variety of common materials, such as colored metals, shiny and rough dielectrics, and any combinations of them on the same surface. PBR extension of a deferred renderer comes at additional VRAM cost, but the outcome is very good. Again, objects with custom BRDFs (which you actually don't have too much in typical situations) can be rendered in forward mode
 * Deferred shading is incompatible with MSAA. Common workaround is to use post-process antialiasing (FXAA, TAA, SMAA).
 
-### PBR
+## PBR
 
 Dagon implements idiomatic PBR (metallic/roughness workflow) heavily based on the theory described in *Real Shading in Unreal Engine 4 (Karis, 2013)*. It utilizes physically-based GGX/Trowbridge-Reitz model, analogous to Disney Principled BRDF.
 
@@ -42,7 +43,7 @@ To ensure strict energy conservation and correct shading at grazing angles, Dago
 V(v, l) = G(v, l) / (4 * NV * NL)
 ```
 
-### Image-Based Lighting
+## Image-Based Lighting
 
 IBL is a standard technique to achieve approximated global illumination in a very computationally inexpensive way, which works best in outdoor scenes. The "infinitely far" environment of a scene (such as the sky and the surrounding landscape) is pre-baked into an environment map. Environment maps are typically captured using 360° photography, or rendered from 3D scenes. IBL is a very efficient way to add realism to computer games, especially in the PBR pipeline.
 
@@ -56,11 +57,11 @@ All environment maps can be pre-baked or generated in the engine at run time fro
 
 Equirectangular mapping uses a single 2D image and spherical coordinate space to encode the environment. Equirectangular projection maps spherical coordinates to planar coordinates: meridians to vertical straight lines of constant spacing, and circles of latitude to horizontal straight lines of constant spacing. Consequently, it preserves high precision along the equator and introduces severe distortion at the poles. Most of the HDR environment maps available on the Internet use this format because of its simplicity and efficiency.
 
-### Subsurface Scattering
+## Subsurface Scattering
 
 Dagon's deferred pipeline supports subsurface scattering based on Hanrahan-Krueger approximation of isotropic BSSRDF, like in the Disney Principled BRDF [Hanrahan, Krueger 1993].
 
-### Screen-Space Ambient Occlusion
+## Screen-Space Ambient Occlusion
 
 Ambient occlusion is a simplest form of global illumination. Within this technique, it is assumed that the scene is uniformly lit with ambient light that is attenuated in cavities and corners. The ambient light usually takes form of a diffuse (Lambertian) IBL, and occlusion factor is used to darken it, much like a shadow map blocks a regular light on a surface.
 
@@ -72,15 +73,15 @@ In addition to the usual diffuse occlusion, Dagon supports approximated specular
 pow(NV + AO, gloss) – 1 + AO
 ```
 
-### Multiple Scattering
+## Multiple Scattering
 
 Based on the paper *A Multiple-Scattering Microfacet Model for Real-Time Image-Based Lighting" (C. J. Fdez-Agüera, 2019)*.
 
 When light hits a rough surface (roughness close to 1.0), rays reflect off the microfacets and hit adjacent "micro-pits." In reality, they should bounce again and exit. However, standard Cook-Torrance model predicts that these blocked rays disappear. Because of this, rough metallic or dielectric objects appear too dark. The Fdez-Agüera method returns this lost energy back to the shader with minimal computational overhead, preserving the law of conservation of energy.
 
-### Screen-Space Reflections
+## Screen-Space Reflections
 
-### Screen-Space Reflections
+## Screen-Space Reflections
 
 Screen-space reflections are a technique to achieve approximated dynamic reflections in real time. It works per-pixel by raymarching through the depth buffer along the reflection vector and sampling the HDR buffer at the point where the ray hits reconstructed geometry. Given sufficient precision, the basic technique gives mirror-like reflections. To support reflections on rough surfaces, stochastic method is used: the ray is thrown at randomized direction, effectively sampling the specular lobe of the given BRDF. The engine perturbs the ray direction by reusing the same GGX importance sampling model utilized in the IBL pre-filtering pipeline [Karis 2013]. To drive this process with high-quality, uniform noise, the engine incorporates a GPU-optimized permuted congruential generator (PCG) to generate a pseudo-random per-pixel jitter. This eliminates visible lattice artifacts and structured patterns common to weaker PRNGs.
 
@@ -88,7 +89,7 @@ While stochastic sampling inherently introduces high-frequency Monte Carlo noise
 
 Like all screen-space effects, SSR suffers from inherent information discontinuities. It's only possible to reconstruct geometry that is directly visible on screen, and this results in holes and gaps in reflections when the ray hits nothing in the depth buffer. This is also why screen-space reflections disappear when objects go off-screen (for example, when the camera looks down). Thus SSR is only practical when combined with a fallback global reflection technique, which is usually environment probes.
 
-### HDR
+## HDR
 
 Dagon's renderer outputs radiance into a floating-point frame buffer without clamping the values to 0..1 range, so the buffer contains greater luminance information compared to traditional integer frame buffer. The final image that is visible on screen is a result of an additional tone mapping pass, which applies a non-linear luminance compression to the incoming values. Very dark and very bright pixels are compressed more, and pixels of a medium brightness are compressed less.
 
@@ -96,7 +97,7 @@ Dagon utilizes AgX tone mapper from Blender 4.0+ and Filament, which provides gr
 
 Dagon also supports direct output to wide-gamut HDR swapchain without tone mapping pass. This requires HDR-capable display and operating system support.
 
-### References
+## References
 
 - Holger Dammertz, [Hammersley Points on the Hemisphere](https://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html), 2012
 - Brian Karis (Epic Games), [Real Shading in Unreal Engine 4](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf). SIGGRAPH, 2013
