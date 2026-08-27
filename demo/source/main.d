@@ -72,10 +72,6 @@ class TestWorld: World
         
         auto ePlane = scene.addEntity();
         ePlane.drawable = New!ShapePlane(10, 10, 1, gpu, this);
-        
-        game.renderer.ssaoPass.ssaoShader.radius = 0.2f;
-        game.renderer.ssaoPass.ssaoShader.power = 5.0f;
-        game.renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy;
     }
     
     override void onUpdate(Time t) { }
