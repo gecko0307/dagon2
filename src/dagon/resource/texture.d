@@ -82,11 +82,21 @@ class TextureAsset: Asset
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
+        
+        // Default conversion options
         conversionOptions.width = 0;
         conversionOptions.height = 0;
         conversionOptions.depth = 1;
+        conversionOptions.compressionFormat = TextureCompressionFormat.None;
         conversionOptions.lutFormat = LUTFormat.Undefined;
         conversionOptions.hint = 0;
+        
+        // Default creation options
+        creationOptions.generateMipmaps = false;
+        creationOptions.repeatUV = false;
+        creationOptions.bilinearFiltering = true;
+        creationOptions.anisotropicFiltering = false;
+        creationOptions.writeable = false;
     }
     
     ///

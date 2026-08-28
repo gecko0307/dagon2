@@ -41,6 +41,7 @@ import dagon.core.time;
 import dagon.core.gpu;
 import dagon.graphics.texture;
 import dagon.graphics.scene;
+import dagon.graphics.lut;
 import dagon.game.basegame;
 import dagon.resource.asset;
 import dagon.resource.image;
@@ -85,12 +86,20 @@ class World: EventListener, GsObject
         this.baseGame = baseGame;
         this.gpu = baseGame.gpu;
         
+        // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
+        
+        defaultImageConversionOptions.width = 0;
+        defaultImageConversionOptions.height = 0;
+        defaultImageConversionOptions.depth = 1;
         defaultImageConversionOptions.compressionFormat = TextureCompressionFormat.None;
+        defaultImageConversionOptions.lutFormat = LUTFormat.Undefined;
+        defaultImageConversionOptions.hint = 0;
+        
         defaultTextureCreationOptions.generateMipmaps = true;
         defaultTextureCreationOptions.repeatUV = true;
+        defaultTextureCreationOptions.bilinearFiltering = true;
         defaultTextureCreationOptions.anisotropicFiltering = true;
-        
-        // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
+        defaultTextureCreationOptions.writeable = false;
         
         gsProperties = dict!(GsDynamic, string);
     }

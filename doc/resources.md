@@ -18,9 +18,40 @@ vertexModule.create("filename.vert.glsl", "shaders/filename.vert.glsl",
 
 Internally, `ShaderModule` compiles the source to SPIR-V and caches it to disk for reuse. It is then recompiled only if the source file is newer than the SPIR-V file.
 
+You can load SPIR-V modules directly:
+
+```d
+uint[] spirvBuffer = cast(uint[])read("filename.vert.spv");
+vertexModule.create("filename.vert.spv", spirvBuffer, PipelineStage.Vertex);
+```
+
 ## Textures
 
-TODO
+Textures are loaded using `World.loadTexture` method:
+
+```d
+TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
+```
+
+It decodes files using standard `TextureAsset` class which covers all image formats supported by the engine. It also supports compression and can optionally cache textures to DDS files for faster subsequent loading. `ImageConversionOptions` define compression format and some other pre-processing options, and `TextureCreationOptions` is used to initialize a GPU texture:
+
+```d
+ImageConversionOptions conversionOptions = {
+    compressionFormat: TextureCompressionFormat.BC3
+};
+
+TextureCreationOptions creationOptions = {
+    generateMipmaps: true,
+    repeatUV: true,
+    bilinearFiltering: true,
+    anisotropicFiltering: true,
+    samplerCreateInfo: null
+};
+
+TextureAsset aTexture = loadTexture("assets/my_texture.png", &conversionOptions, &creationOptions);
+```
+
+For full control over the sampler, you can pass a pointer to custom `SDL_GPUSamplerCreateInfo` as `creationOptions.samplerCreateInfo`. If it is not null, it will override `repeatUV`, `bilinearFiltering` and `anisotropicFiltering`.
 
 ## 3D Models
 

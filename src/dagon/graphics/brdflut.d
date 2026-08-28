@@ -293,7 +293,8 @@ class BRDFLUTRenderer: Renderer
         TextureCreationOptions options = {
             generateMipmaps: false,
             repeatUV: false,
-            anisotropicFiltering: false
+            anisotropicFiltering: false,
+            colorTarget: true
         };
         
         Texture brdfLut = New!Texture(gpu, textureOwner);

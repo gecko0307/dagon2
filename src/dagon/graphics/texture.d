@@ -60,6 +60,8 @@ struct TextureCreationOptions
     bool bilinearFiltering = true;
     bool anisotropicFiltering = false;
     bool writeable = false;
+    bool colorTarget = false;
+    SDL_GPUSamplerCreateInfo* samplerCreateInfo = null;
 }
 
 class Texture: Owner
@@ -107,39 +109,50 @@ class Texture: Owner
         else
             mipLevels = buffer.mipLevels;
         
-        // TODO: customization via TextureCreationOptions
         SDL_GPUSamplerCreateInfo samplerCreateInfo;
-        if (options.bilinearFiltering)
+        if (options.samplerCreateInfo)
         {
-            samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
-            samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
-            samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+            samplerCreateInfo = *options.samplerCreateInfo;
+            samplerCreateInfo.min_lod = 0.0f;
+            samplerCreateInfo.max_lod = mipLevels - 1;
         }
         else
         {
-            samplerCreateInfo.min_filter = SDL_GPU_FILTER_NEAREST;
-            samplerCreateInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
-            samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+            if (options.bilinearFiltering)
+            {
+                samplerCreateInfo.min_filter = SDL_GPU_FILTER_LINEAR;
+                samplerCreateInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
+                samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+            }
+            else
+            {
+                samplerCreateInfo.min_filter = SDL_GPU_FILTER_NEAREST;
+                samplerCreateInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
+                samplerCreateInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+            }
+            
+            if (options.repeatUV)
+            {
+                samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+                samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+                samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
+            }
+            else
+            {
+                samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+                samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+                samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+            }
+            
+            samplerCreateInfo.min_lod = 0.0f;
+            samplerCreateInfo.max_lod = mipLevels - 1;
+            samplerCreateInfo.mip_lod_bias = 0.0f;
+            samplerCreateInfo.max_anisotropy = 16.0f;
+            samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
+            samplerCreateInfo.enable_anisotropy = options.anisotropicFiltering;
+            samplerCreateInfo.enable_compare = false;
         }
-        if (options.repeatUV)
-        {
-            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
-        }
-        else
-        {
-            samplerCreateInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-            samplerCreateInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-            samplerCreateInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        }
-        samplerCreateInfo.mip_lod_bias = 0.0f;
-        samplerCreateInfo.max_anisotropy = 16.0f;
-        samplerCreateInfo.compare_op = SDL_GPU_COMPAREOP_ALWAYS;
-        samplerCreateInfo.min_lod = 0.0f;
-        samplerCreateInfo.max_lod = mipLevels - 1;
-        samplerCreateInfo.enable_anisotropy = options.anisotropicFiltering;
-        samplerCreateInfo.enable_compare = false;
+        
         sampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
         if (sampler is null)
             return false;
@@ -147,7 +160,9 @@ class Texture: Owner
         SDL_GPUTextureCreateInfo texCreateInfo;
         texCreateInfo.type = buffer.format.type;
         texCreateInfo.format = buffer.format.format;
-        texCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
+        texCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
+        if (options.colorTarget)
+            texCreateInfo.usage |= SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
         if (options.writeable)
             texCreateInfo.usage |= SDL_GPU_TEXTUREUSAGE_COMPUTE_STORAGE_WRITE;
         texCreateInfo.width = buffer.size.width;

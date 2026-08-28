@@ -1668,6 +1668,7 @@ class Application: EventListener, Updateable
      */
     void run()
     {
+        logInfo("Running the main loop...");
         Time t = Time(0.0, 0.0);
         while(eventManager.running)
         {

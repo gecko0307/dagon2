@@ -786,7 +786,8 @@ class CubemapRenderer: Renderer
         TextureCreationOptions options = {
             generateMipmaps: true,
             repeatUV: false,
-            anisotropicFiltering: false
+            anisotropicFiltering: false,
+            colorTarget: true
         };
         
         Texture inputCubemap = New!Texture(gpu, null);

@@ -91,14 +91,13 @@ void main()
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_NORMAL_TEXTURE) != 0)
     {
         mat3 tangentToEye = cotangentFrame(N, eyePosition, uv);
-        vec3 tanE = normalize(E * tangentToEye);
-        tanE.y = -tanE.y;
         
         if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_HEIGHT_TEXTURE) != 0)
         {
             // Parallax mapping
+            vec3 tanE = normalize(E * tangentToEye);
             float height = texture(heightTexture, texCoords).r;
-            uv += (height * parallaxScale + parallaxBias) * tanE.xy;
+            uv += tanE.xy * (height * parallaxScale + parallaxBias);
         }
         
         vec3 tanN = normalize(texture(normalTexture, uv).rgb * 2.0 - 1.0);
