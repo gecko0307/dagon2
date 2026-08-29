@@ -56,7 +56,7 @@ import dagon.graphics.texturebuffer;
 // uncomment this to see debug messages:
 //version = PNGDebug;
 
-immutable(ubyte)[8] PNGSignature = [137, 80, 78, 71, 13, 10, 26, 10];
+immutable(ubyte)[8] PNGSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
 // Standard chunks
 immutable(ubyte)[4] IHDR = ['I', 'H', 'D', 'R']; // Image header

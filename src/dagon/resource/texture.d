@@ -64,23 +64,39 @@ static this()
     bc7enc_compress_block_params_init(&bc7Params);
 }
 
+alias MagicPNG = PNGSignature;
+alias MagicDDS = DDSSignature;
+immutable(ubyte)[] MagicJPEGRaw = [0xFF, 0xD8, 0xFF, 0xDB];
+immutable(ubyte)[] MagicJPEGJFIF = [0xFF, 0xD8, 0xFF, 0xE0];
+immutable(ubyte)[] MagicJPEGEXIF = [0xFF, 0xD8, 0xFF, 0xE1];
+immutable(ubyte)[] MagicRadiance = [0x23, 0x3F, 0x52, 0x41, 0x44, 0x49, 0x41, 0x4E, 0x43, 0x45, 0x0A]; //"#?RADIANCE\n"
+immutable(ubyte)[] MagicRGBE = [0x23, 0x3F, 0x52, 0x47, 0x42, 0x45, 0x0A]; //"#?RGBE\n"
+immutable(ubyte)[] MagicKTX = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+immutable(ubyte)[] MagicKTX2 = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+immutable(ubyte)[] MagicGIF87a = [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]; //"GIF87a"
+immutable(ubyte)[] MagicGIF89a = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]; //"GIF89a"
+
 ///
 ImageFileFormat detectImageFileFormat(InputStream istrm)
 {
     ubyte[12] magic;
     
     if (!istrm.fillArray(magic))
+        // Very small file, likely corrupt
         return ImageFileFormat.Unknown;
     
     istrm.setPosition(0);
 
-    if (magic[0..4] == [0x89, 0x50, 0x4E, 0x47]) return ImageFileFormat.PNG;
-    if (magic[0..2] == [0xFF, 0xD8]) return ImageFileFormat.JPEG;
-    if (magic[0..4] == [0x44, 0x44, 0x53, 0x20]) return ImageFileFormat.DDS;
-    if (magic[0..10] == "#?RADIANCE") return ImageFileFormat.HDR;
-    if (magic[0..6] == "#?RGBE") return ImageFileFormat.HDR;
-    if (magic[0..12] == [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]) return ImageFileFormat.KTX;
-    if (magic[0..12] == [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]) return ImageFileFormat.KTX2;
+    if (magic[0..MagicPNG.length] == MagicPNG) return ImageFileFormat.PNG;
+    if (magic[0..MagicJPEGRaw.length] == MagicJPEGRaw) return ImageFileFormat.JPEG;
+    if (magic[0..MagicJPEGJFIF.length] == MagicJPEGJFIF) return ImageFileFormat.JPEG;
+    if (magic[0..MagicJPEGEXIF.length] == MagicJPEGEXIF) return ImageFileFormat.JPEG;
+    if (magic[0..MagicDDS.length] == MagicDDS) return ImageFileFormat.DDS;
+    if (magic[0..MagicRadiance.length] == MagicRadiance) return ImageFileFormat.HDR;
+    if (magic[0..MagicRGBE.length] == MagicRGBE) return ImageFileFormat.HDR;
+    if (magic[0..MagicKTX.length] == MagicKTX) return ImageFileFormat.KTX;
+    if (magic[0..MagicKTX2.length] == MagicKTX2) return ImageFileFormat.KTX2;
+    if (magic[0..MagicGIF87a.length] == MagicGIF87a || magic[0..MagicGIF89a.length] == MagicGIF89a) return ImageFileFormat.GIF;
     // TODO: possibly other formats
 
     return ImageFileFormat.Unknown;

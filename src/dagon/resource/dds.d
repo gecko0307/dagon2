@@ -54,6 +54,8 @@ import dagon.graphics.texture;
 
 //version = DDSDebug;
 
+immutable(ubyte)[] DDSSignature = [0x44, 0x44, 0x53, 0x20]; //"DDS "
+
 /**
  * Structure describing the pixel format in a DDS file.
  */
@@ -377,19 +379,19 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
         return false;
     }
     
-    char[4] magic;
+    char[4] signature;
     
-    if (!istrm.fillArray(magic))
+    if (!istrm.fillArray(signature))
     {
         return error("loadDDS error: not a DDS file or corrupt data");
     }
     
     version(DDSDebug)
     {
-        logDebug("Signature: ", magic);
+        logDebug("Signature: ", signature);
     }
     
-    if (magic != "DDS ")
+    if (signature != DDSSignature)
     {
         return error("loadDDS error: not a DDS file");
     }
