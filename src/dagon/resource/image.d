@@ -56,7 +56,7 @@ import dagon.graphics.lut;
 
 /// List of file extensions supported by SDL3_Image.
 immutable string[] supportedImageFormats = [
-    ".bmp", ".gif", ".jpg", ".jpeg", ".lbm", ".pcx", ".png",
+    ".bmp", ".dib", ".gif", ".jpg", ".jpeg", ".lbm", ".iff", ".pcx", ".png",
     ".pnm", ".ppm", ".pgm", ".pbm", ".qoi", ".tga", ".xcf", ".xpm",
     ".tif", ".tiff", ".webp", ".avif", ".jxl", ".svg", ".ico"
 ];
@@ -79,10 +79,10 @@ ImageFileFormat imageFormatByExtension(string formatExtension)
 {
     switch(formatExtension)
     {
-        case ".bmp": return ImageFileFormat.BMP;
+        case ".bmp", ".dib": return ImageFileFormat.BMP;
         case ".gif": return ImageFileFormat.GIF;
         case ".jpg", ".jpeg": return ImageFileFormat.JPEG;
-        case ".lbm": return ImageFileFormat.LBM;
+        case ".lbm", ".ibm", ".ilbm", ".iff": return ImageFileFormat.LBM;
         case ".pcx": return ImageFileFormat.PCX;
         case ".png": return ImageFileFormat.PNG;
         case ".pnm", ".ppm", ".pgm", ".pbm": return ImageFileFormat.PNM;

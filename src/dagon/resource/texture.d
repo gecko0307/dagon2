@@ -64,19 +64,39 @@ static this()
     bc7enc_compress_block_params_init(&bc7Params);
 }
 
+// Known image file signatures
 alias MagicPNG = PNGSignature;
 alias MagicDDS = DDSSignature;
-immutable(ubyte)[] MagicJPEGRaw = [0xFF, 0xD8, 0xFF, 0xDB];
-immutable(ubyte)[] MagicJPEGJFIF = [0xFF, 0xD8, 0xFF, 0xE0];
-immutable(ubyte)[] MagicJPEGEXIF = [0xFF, 0xD8, 0xFF, 0xE1];
-immutable(ubyte)[] MagicRadiance = [0x23, 0x3F, 0x52, 0x41, 0x44, 0x49, 0x41, 0x4E, 0x43, 0x45, 0x0A]; //"#?RADIANCE\n"
-immutable(ubyte)[] MagicRGBE = [0x23, 0x3F, 0x52, 0x47, 0x42, 0x45, 0x0A]; //"#?RGBE\n"
-immutable(ubyte)[] MagicKTX = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-immutable(ubyte)[] MagicKTX2 = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-immutable(ubyte)[] MagicGIF87a = [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]; //"GIF87a"
-immutable(ubyte)[] MagicGIF89a = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]; //"GIF89a"
+immutable(ubyte)[4] MagicJPEG_Raw = [0xFF, 0xD8, 0xFF, 0xDB];
+immutable(ubyte)[4] MagicJPEG_JFIF = [0xFF, 0xD8, 0xFF, 0xE0];
+immutable(ubyte)[4] MagicJPEG_EXIF = [0xFF, 0xD8, 0xFF, 0xE1];
+immutable(ubyte)[2] MagicJPEG_XL_Naked = [0xFF, 0x0A];
+immutable(ubyte)[12] MagicJPEG_XL_ISOBMFF = [0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A];
+immutable(ubyte)[11] MagicRadiance = [0x23, 0x3F, 0x52, 0x41, 0x44, 0x49, 0x41, 0x4E, 0x43, 0x45, 0x0A]; // "#?RADIANCE\n"
+immutable(ubyte)[7] MagicRGBE = [0x23, 0x3F, 0x52, 0x47, 0x42, 0x45, 0x0A]; // "#?RGBE\n"
+immutable(ubyte)[12] MagicKTX = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+immutable(ubyte)[12] MagicKTX2 = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+immutable(ubyte)[2] MagicBMP = [0x42, 0x4D];
+immutable(ubyte)[6] MagicGIF87a = [0x47, 0x49, 0x46, 0x38, 0x37, 0x61]; // "GIF87a"
+immutable(ubyte)[6] MagicGIF89a = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]; // "GIF89a"
+immutable(ubyte)[4] MagicTIFF_LE = [0x49, 0x49, 0x2A, 0x00];
+immutable(ubyte)[4] MagicTIFF_BE = [0x4D, 0x4D, 0x00, 0x2A];
+immutable(ubyte)[4] MagicRIFF = [0x52, 0x49, 0x46, 0x46];
+immutable(ubyte)[4] MagicIFF = [0x46, 0x4F, 0x52, 0x4D]; // "FORM"
+immutable(ubyte)[4] MagicICO = [0x00, 0x00, 0x01, 0x00];
+immutable(ubyte)[4] MagicQOI = [0x71, 0x6F, 0x69, 0x66]; // "qoif"
+immutable(ubyte)[2] MagicPBM_ASCII = [0x50, 0x31]; // "P1"
+immutable(ubyte)[2] MagicPGM_ASCII = [0x50, 0x32]; // "P2"
+immutable(ubyte)[2] MagicPPM_ASCII = [0x50, 0x33]; // "P3"
+immutable(ubyte)[2] MagicPBM_Bin = [0x50, 0x34]; // "P4"
+immutable(ubyte)[2] MagicPGM_Bin = [0x50, 0x35]; // "P5"
+immutable(ubyte)[2] MagicPPM_Bin = [0x50, 0x36]; // "P6"
+immutable(ubyte)[2] MagicPAM = [0x50, 0x37]; // "P7"
+immutable(ubyte)[8] MagicXCF = [0x67, 0x69, 0x6D, 0x70, 0x20, 0x78, 0x63, 0x66]; // "gimp xcf"
+immutable(ubyte)[9] MagicXPM = [0x2F, 0x2A, 0x20, 0x58, 0x50, 0x4D, 0x20, 0x2A, 0x2F]; // "/* XPM */"
+immutable(ubyte)[1] MagicPCX = [0x0A];
 
-///
+/// Detects image file format from magic bytes.
 ImageFileFormat detectImageFileFormat(InputStream istrm)
 {
     ubyte[12] magic;
@@ -88,16 +108,33 @@ ImageFileFormat detectImageFileFormat(InputStream istrm)
     istrm.setPosition(0);
 
     if (magic[0..MagicPNG.length] == MagicPNG) return ImageFileFormat.PNG;
-    if (magic[0..MagicJPEGRaw.length] == MagicJPEGRaw) return ImageFileFormat.JPEG;
-    if (magic[0..MagicJPEGJFIF.length] == MagicJPEGJFIF) return ImageFileFormat.JPEG;
-    if (magic[0..MagicJPEGEXIF.length] == MagicJPEGEXIF) return ImageFileFormat.JPEG;
+    if (magic[0..MagicJPEG_Raw.length] == MagicJPEG_Raw) return ImageFileFormat.JPEG;
+    if (magic[0..MagicJPEG_JFIF.length] == MagicJPEG_JFIF) return ImageFileFormat.JPEG;
+    if (magic[0..MagicJPEG_EXIF.length] == MagicJPEG_EXIF) return ImageFileFormat.JPEG;
     if (magic[0..MagicDDS.length] == MagicDDS) return ImageFileFormat.DDS;
     if (magic[0..MagicRadiance.length] == MagicRadiance) return ImageFileFormat.HDR;
     if (magic[0..MagicRGBE.length] == MagicRGBE) return ImageFileFormat.HDR;
     if (magic[0..MagicKTX.length] == MagicKTX) return ImageFileFormat.KTX;
     if (magic[0..MagicKTX2.length] == MagicKTX2) return ImageFileFormat.KTX2;
+    if (magic[0..MagicRIFF.length] == MagicRIFF && magic[8..12] == [0x57, 0x45, 0x42, 0x50]) return ImageFileFormat.WebP;
+    if (magic[0..MagicBMP.length] == MagicBMP) return ImageFileFormat.BMP;
     if (magic[0..MagicGIF87a.length] == MagicGIF87a || magic[0..MagicGIF89a.length] == MagicGIF89a) return ImageFileFormat.GIF;
-    // TODO: possibly other formats
+    if (magic[0..MagicTIFF_LE.length] == MagicTIFF_LE || magic[0..MagicTIFF_BE.length] == MagicTIFF_BE) return ImageFileFormat.TIFF;
+    if (magic[0..MagicICO.length] == MagicICO) return ImageFileFormat.ICO;
+    if (magic[0..MagicJPEG_XL_Naked.length] == MagicJPEG_XL_Naked) return ImageFileFormat.JPEG_XL;
+    if (magic[0..MagicJPEG_XL_ISOBMFF.length] == MagicJPEG_XL_ISOBMFF) return ImageFileFormat.JPEG_XL;
+    if (magic[0..MagicQOI.length] == MagicQOI) return ImageFileFormat.QOI;
+    if (magic[0..MagicXCF.length] == MagicXCF) return ImageFileFormat.XCF;
+    if (magic[0..MagicPBM_ASCII.length] == MagicPBM_ASCII) return ImageFileFormat.PNM;
+    if (magic[0..MagicPGM_ASCII.length] == MagicPGM_ASCII) return ImageFileFormat.PNM;
+    if (magic[0..MagicPPM_ASCII.length] == MagicPPM_ASCII) return ImageFileFormat.PNM;
+    if (magic[0..MagicPBM_Bin.length] == MagicPBM_Bin) return ImageFileFormat.PNM;
+    if (magic[0..MagicPGM_Bin.length] == MagicPGM_Bin) return ImageFileFormat.PNM;
+    if (magic[0..MagicPPM_Bin.length] == MagicPPM_Bin) return ImageFileFormat.PNM;
+    if (magic[0..MagicPAM.length] == MagicPAM) return ImageFileFormat.PNM;
+    if (magic[0..MagicXPM.length] == MagicXPM) return ImageFileFormat.XPM;
+    if (magic[0..MagicPCX.length] == MagicPCX) return ImageFileFormat.PCX;
+    if (magic[0..MagicIFF.length] == MagicIFF && magic[8..12] == [0x49, 0x4C, 0x42, 0x4D]) return ImageFileFormat.LBM;
 
     return ImageFileFormat.Unknown;
 }
