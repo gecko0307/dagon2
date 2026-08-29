@@ -5,27 +5,27 @@ A texture is a raster image used for per-pixel data sampling in shaders. Texture
 ## Image File Formats
 
 Dagon supports all popular image formats via SDL_Image, libktx and a number of built-in decoders.
-- **PNG** - lossless format, best for data exchange between different software
-- **JPEG** - lossy compression, best for large static images such as UI backgrounds and splash screens
+- **PNG** - lossless format, best for data exchange between programs
+- **JPEG** - lossy compression, best for large images such as backgrounds and splash screens
 - **BMP** - standard lossless format on Windows, used by some old image editors
 - **TGA** - legacy lossless format originated in early graphics cards for IBM-PC, used by some old image editors
 - **WebP** - modern image format that supports both lossy and lossless compression, offers better quality-to-size ratio than JPEG and PNG
 - **TIFF** - flexible image container, supports lossless compression and high bit depths, commonly used in professional imaging
 - **JPEG XL** - next-generation image format designed to replace JPEG, supports lossless and high-quality lossy compression with HDR and wide color gamut support
-- **AVIF** - modern highly efficient image format based on AV1 codec, provides excellent compression efficiency and HDR support
-- **HDR** (Radiance RGBE) - high dynamic range image format, commonly used for storing equirectangular environment maps
-- **DDS** (DirectDraw Surface) - texture container, typically stores GPU-ready compressed textures (BCn), optimized for fast loading
+- **AVIF** - modern, highly efficient image format based on AV1 codec, provides excellent compression efficiency and HDR support
+- **HDR** (Radiance RGBE) - high dynamic range image format, commonly used for storing equirectangular environment maps and other high-precision photometry data
+- **DDS** (DirectDraw Surface) - texture container, stores GPU-ready compressed textures (BCn). Optimized for fast loading
 - **KTX** (Khronos Texture) - texture container, modern alternative to DDS
 - **KTX2** (Khronos Texture 2.0) - advanced KTX version with support for Basis Universal supercompression, designed for efficient cross-platform compressed texture delivery
-- **SVG** - standard vector image format, mainly used for UI icons and scalable graphics
+- **SVG** - standard vector image format, mainly used for UI elements and scalable graphics
 - **ICO** - Windows icon format
 - **GIF** - legacy indexed-color format, mostly used for small animated images. Dagon doesn't support GIF animation
 - **QOI** - extremely fast lossless image format optimized for rapid decoding with minimal overhead
-- **XCF** - native GIMP project format, supports layers and high bit depths, sometimes useful for production pipelines
+- **XCF** - native GIMP project format, supports layers and high bit depths. In some cases useful for production pipelines
 - **PNM** - a family of simple uncompressed image formats (PBM/PGM/PPM), mainly used for testing and data interchange
 - **XPM** - text-based image format originally designed for X Window System, occasionally used for icons
 - **PCX** - legacy format from early PC graphics software, now mostly obsolete
-- **LBM** (InterLeaved BitMap) - bitmap format originating from Amiga systems, rarely used today.
+- **LBM** (InterLeaved BitMap) - bitmap format originating from Amiga systems, very rarely found today.
 
 Not all features supported by each format are available to Dagon applications. Dagon's texture system is not an image editor backend, it was mainly designed as a lightweight and efficient intermediary for decoding and uploading images to VRAM, not manipulating them. For example, Dagon doesn't support:
 - Animated images (frame-by-frame animation is usually implemented by offsetting texture coordinates on a spritesheet which is independent of image format)
@@ -47,9 +47,10 @@ Popular uncompressed pixel formats include:
 - RGBA32F – 4 channels, 32-bit floating-point per channel
 - RGBA16F – 4 channels, 16-bit floating-point per channel
 
-The most GPU-efficient format for color textures is RGBA8. Dagon's image loader automatically converts integer pixel formats to RGBA8. For storing textures in exotic or block-compressed formats, DDS and KTX containers can be used.
+The most GPU-efficient format for color textures is RGBA8. Dagon's image loader automatically converts all integer pixel formats to RGBA8. For storing textures in exotic or block-compressed formats, DDS and KTX containers can be used.
 
 ## sRGB vs Linear Color
+
 Dagon primarily works with two color spaces:
 
 * **Linear Rec.709**: color space which values are proportional to actual physical light intensity.
@@ -87,6 +88,7 @@ asset.conversionOptions.compressionFormat = TextureCompressionFormat.BC3;
 ```
 
 ## Container Formats: DDS vs KTX
+
 DDS and KTX are both industry-standard texture container formats. There is not much difference between the two from performance standpoint: in both cases, textures are typically stored in GPU-ready form and can be directly uploaded. Both formats support 2D and 3D textures, skyboxes, and prebaked mipmaps.
 
 DDS (DirectDraw Surface) is a classic container originating from Direct3D. It supports all Direct3D/DXGI texture formats and is well-suited for DXTn/BCn compression. It is widely supported by texture compression and preprocessing tools.
@@ -97,12 +99,6 @@ Dagon includes native DDS importer and exporter with no external dependencies, w
 
 In practice, DDS remains a solid choice for traditional asset pipelines, especially when using BCn compression. It is usually faster to integrate and debug due to its simplicity and widespread support. KTX2, on the other hand, is more future-proof and useful to store textures in a size-efficient and fully platform-independent way.
 
-Some great tools to work with textures:
-- [Texture Tools Exporter](https://developer.nvidia.com/texture-tools-exporter) - compressor by NVIDIA, supports a lot of formats and works with both DDS and KTX. Includes mipmap generator, cubemap generator, and normal map generator
-- [KTX-Software](https://github.com/khronosgroup/ktx-software) - official set of tools from Khronos to work with KTX and KTX2
-- [IBLBaker](https://github.com/derkreature/IBLBaker) - a tool for environment map prefiltering
-- [ImageViewer](https://github.com/kopaka1822/ImageViewer) - multi-format texture viewer. Supports viewing layers, mipmaps, 360° cubemaps, and even 3D textures.
-
 ## Cubemaps
 
 Cubemaps are textures composed of 6 square faces, used for environment mapping and image-based lighting. Cubemaps can be constructed from individual faces or loaded directly from DDS or KTX. In the latter case it is possible to store prebaked mipmap which is useful for efficiency: no need to pre-filter the cubemap in runtime. The downside is that a high-resolution HDR cubemap with a full mipchain significantly increases the file size.
@@ -110,3 +106,11 @@ Cubemaps are textures composed of 6 square faces, used for environment mapping a
 ## 3D Textures
 
 3D textures (volume textures) store voxel data with width × height × depth. Dagon supports loading 3D textures from DDS and KTX.
+
+## Tools
+
+Some great texture tools:
+- [Texture Tools Exporter](https://developer.nvidia.com/texture-tools-exporter) - compressor by NVIDIA, supports a lot of formats and works with both DDS and KTX. Includes mipmap generator, cubemap generator, and normal map generator
+- [KTX-Software](https://github.com/khronosgroup/ktx-software) - official set of tools from Khronos to work with KTX and KTX2
+- [IBLBaker](https://github.com/derkreature/IBLBaker) - a tool for environment map prefiltering
+- [ImageViewer](https://github.com/kopaka1822/ImageViewer) - multi-format texture viewer. Supports viewing layers, mipmaps, cubemaps, and even 3D textures.
