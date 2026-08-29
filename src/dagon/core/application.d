@@ -173,6 +173,7 @@ enum ImageFileFormat
     HDR,
     DDS,
     KTX,
+    KTX2,
     SVG,
     GIF,
     QOI,
@@ -184,7 +185,6 @@ enum ImageFileFormat
     ICO,
     JPG = JPEG,
     WEBP = WebP,
-    KTX2 = KTX,
     TIF = TIFF,
     PPM = PNM,
     PGM = PNM,
@@ -1310,9 +1310,15 @@ class Application: EventListener, Updateable
         _imageFileFormatSupported[ImageFileFormat.LBM] = true;
         _imageFileFormatSupported[ImageFileFormat.ICO] = true;
         if (loadedKTXSupport != KTXSupport.noLibrary)
+        {
             _imageFileFormatSupported[ImageFileFormat.KTX] = true;
+            _imageFileFormatSupported[ImageFileFormat.KTX2] = true;
+        }
         else
+        {
             _imageFileFormatSupported[ImageFileFormat.KTX] = false;
+            _imageFileFormatSupported[ImageFileFormat.KTX2] = false;
+        }
         
         // Init resource cache
         resourceCache = New!ResourceCache(this);

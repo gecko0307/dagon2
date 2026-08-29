@@ -53,6 +53,7 @@ import dagon.resource.image;
 import dagon.resource.dds;
 import dagon.resource.ktx;
 import dagon.resource.hdr;
+import dagon.resource.png;
 
 ///
 __gshared bc7enc_compress_block_params bc7Params;
@@ -64,8 +65,33 @@ static this()
 }
 
 ///
+ImageFileFormat detectImageFileFormat(InputStream istrm)
+{
+    ubyte[12] magic;
+    
+    if (!istrm.fillArray(magic))
+        return ImageFileFormat.Unknown;
+    
+    istrm.setPosition(0);
+
+    if (magic[0..4] == [0x89, 0x50, 0x4E, 0x47]) return ImageFileFormat.PNG;
+    if (magic[0..2] == [0xFF, 0xD8]) return ImageFileFormat.JPEG;
+    if (magic[0..4] == [0x44, 0x44, 0x53, 0x20]) return ImageFileFormat.DDS;
+    if (magic[0..10] == "#?RADIANCE") return ImageFileFormat.HDR;
+    if (magic[0..6] == "#?RGBE") return ImageFileFormat.HDR;
+    if (magic[0..12] == [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]) return ImageFileFormat.KTX;
+    if (magic[0..12] == [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]) return ImageFileFormat.KTX2;
+    // TODO: possibly other formats
+
+    return ImageFileFormat.Unknown;
+}
+
+///
 class TextureAsset: Asset
 {
+    ///
+    ImageFileFormat fileFormat = ImageFileFormat.Unknown;
+    
     ///
     TextureBuffer buffer;
     
@@ -138,19 +164,46 @@ class TextureAsset: Asset
             
             string extension = filename.extension.toLower;
             
+            // Try to detect format by magic bytes first
+            fileFormat = detectImageFileFormat(istrm);
+            if (fileFormat == ImageFileFormat.Unknown)
+                fileFormat = imageFormatByExtension(extension);
+            
             // TODO: custom loader functions that override default ones
-            if (extension == ".dds")
-                loaded = loadDDS(istrm, &buffer);
-            else if (extension == ".ktx" && isImageFileFormatSupported(ImageFileFormat.KTX))
-                loaded = loadKTX1(istrm, &buffer);
-            else if (extension == ".ktx2" && isImageFileFormatSupported(ImageFileFormat.KTX2))
-                loaded = loadKTX2(istrm, &buffer, cast(TranscodeHint)conversionOptions.hint);
-            else if (extension == ".hdr")
-                loaded = loadHDR(istrm, &buffer);
-            else if (isSupportedImageFormat(extension))
-                loaded = loadImage(istrm, extension, &buffer, &conversionOptions);
-            else
-                logError("Unsupported image file format");
+            switch(fileFormat)
+            {
+                case ImageFileFormat.DDS:
+                    loaded = loadDDS(istrm, &buffer);
+                    break;
+                case ImageFileFormat.KTX:
+                    if (isImageFileFormatSupported(ImageFileFormat.KTX))
+                        loaded = loadKTX1(istrm, &buffer);
+                    else
+                        loaded = false;
+                    break;
+                case ImageFileFormat.KTX2:
+                    if (isImageFileFormatSupported(ImageFileFormat.KTX2))
+                        loaded = loadKTX2(istrm, &buffer, cast(TranscodeHint)conversionOptions.hint);
+                    else
+                        loaded = false;
+                    break;
+                case ImageFileFormat.HDR:
+                    loaded = loadHDR(istrm, &buffer);
+                    break;
+                case ImageFileFormat.PNG:
+                    // Use custom PNG decoder because of conversion bugs in SDL_Image
+                    loaded = loadPNG(istrm, &buffer);
+                    break;
+                default:
+                    if (isSupportedImageFormat(extension))
+                        loaded = loadImage(istrm, extension, &buffer, &conversionOptions);
+                    else
+                    {
+                        loaded = false;
+                        logError("Unsupported image file format");
+                    }
+                    break;
+            }
             
             if (!loaded)
             {

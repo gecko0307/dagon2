@@ -50,6 +50,7 @@ import dlib.core.stream;
 
 import dagon.core.sdl3;
 import dagon.core.logger;
+import dagon.core.application;
 import dagon.graphics.texturebuffer;
 import dagon.graphics.lut;
 
@@ -64,13 +65,43 @@ immutable string[] supportedImageFormats = [
  * Checks if the given file extension is supported by SDL3_Image.
  *
  * Params:
- *   formatExtension = The file extension including the dot (e.g., ".png").
+ *   formatExtension = The lowercase file extension including the dot (e.g., ".png").
  * Returns:
  *   `true` if supported, `false` otherwise.
  */
 bool isSupportedImageFormat(string formatExtension)
 {
     return supportedImageFormats.canFind(formatExtension);
+}
+
+///
+ImageFileFormat imageFormatByExtension(string formatExtension)
+{
+    switch(formatExtension)
+    {
+        case ".bmp": return ImageFileFormat.BMP;
+        case ".gif": return ImageFileFormat.GIF;
+        case ".jpg", ".jpeg": return ImageFileFormat.JPEG;
+        case ".lbm": return ImageFileFormat.LBM;
+        case ".pcx": return ImageFileFormat.PCX;
+        case ".png": return ImageFileFormat.PNG;
+        case ".pnm", ".ppm", ".pgm", ".pbm": return ImageFileFormat.PNM;
+        case ".qoi": return ImageFileFormat.QOI;
+        case ".tga": return ImageFileFormat.TGA;
+        case ".xcf": return ImageFileFormat.XCF;
+        case ".xpm": return ImageFileFormat.XPM;
+        case ".tif", ".tiff": return ImageFileFormat.TIFF;
+        case ".webp": return ImageFileFormat.WebP;
+        case ".avif": return ImageFileFormat.AVIF;
+        case ".jxl": return ImageFileFormat.JPEG_XL;
+        case ".svg": return ImageFileFormat.SVG;
+        case ".ico": return ImageFileFormat.ICO;
+        case ".dds": return ImageFileFormat.DDS;
+        case ".ktx": return ImageFileFormat.KTX;
+        case ".ktx2": return ImageFileFormat.KTX2;
+        case ".hdr": return ImageFileFormat.HDR;
+        default: return ImageFileFormat.Unknown;
+    }
 }
 
 ///
@@ -129,6 +160,7 @@ SDL_Surface* loadImage(InputStream istrm)
     return surface;
 }
 
+///
 SDL_Surface* convertRGB48BEtoRGBA32(SDL_Surface* src)
 {
     if (src == null || src.format != SDL_PIXELFORMAT_RGB48) return null;

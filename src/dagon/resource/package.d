@@ -33,8 +33,11 @@ public
     import dagon.resource.cache;
     import dagon.resource.daf;
     import dagon.resource.dds;
+    import dagon.resource.hdr;
     import dagon.resource.image;
+    import dagon.resource.ktx;
     import dagon.resource.model;
     import dagon.resource.obj;
+    import dagon.resource.png;
     import dagon.resource.texture;
 }
