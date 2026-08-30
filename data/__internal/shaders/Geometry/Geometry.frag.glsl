@@ -75,6 +75,7 @@ layout(set = 2, binding = 5) uniform samplerCube skyboxTexture;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
+    mat4 viewMatrix;
     vec4 baseColor;
     vec4 emission;
     vec4 brdf;
@@ -119,6 +120,8 @@ void main()
         N = normalize(tangentToEye * tanN);
     }
     
+    vec3 wN = N * mat3(ubo.viewMatrix);
+    
     float shadedMask = float((ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED) != 0);
     float motionBlurMask = ubo.materialOptions[OPT_MOTION_BLUR_MASK];
     
@@ -160,7 +163,7 @@ void main()
     float sss = ubo.brdf[BRDF_SSS];
     
     outColor = vec4(baseColor.rgb, sss);
-    outNormal = vec4(N, 1.0);
+    outNormal = vec4(wN * 0.5 + 0.5, 1.0); // fit the normal to 0..1
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);

@@ -45,6 +45,7 @@ layout(set = 2, binding = 6) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
+    mat4 viewMatrix;
     mat4 invViewMatrix;
     mat4 invModelMatrix;
     mat4 invProjectionMatrix;
@@ -121,6 +122,8 @@ void main()
         normalAlpha = 1.0;
     }
     
+    vec3 wN = N * mat3(ubo.viewMatrix);
+    
     float shadedMask = ubo.alphaOptions.y;
     
     const float colorAlpha = 1.0;
@@ -150,7 +153,7 @@ void main()
     float alpha = baseColor.a * ubo.alphaOptions.a;
     
     outColor = vec4(baseColor.rgb, colorAlpha * alpha);
-    outNormal = vec4(N, normalAlpha * alpha);
+    outNormal = vec4(wN * 0.5 + 0.5, normalAlpha * alpha); // fit the normal to 0..1
     outRoughnessMetallic = vec4(f0, roughness, metallic, rougnessMetallicAlpha * alpha);
     outEmission = vec4(emission, emissionAlpha * alpha);
 }

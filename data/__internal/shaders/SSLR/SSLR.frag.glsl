@@ -251,7 +251,9 @@ void main()
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
+    vec3 wN = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
+    
+    vec3 N = mat3(ubo.viewMatrix) * wN;
     vec3 E = normalize(eyePos);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);

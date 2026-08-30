@@ -70,11 +70,11 @@ void main()
     vec3 N = normalize(eyeNormal);
     vec3 E = normalize(-eyePosition);
     
-    vec3 worldPos = (ubo.invViewMatrix * vec4(eyePosition, 1.0)).xyz;
-    vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
-    vec3 wE = normalize(worldPos - worldCamPos);
-    vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
-    vec3 wR = reflect(wE, wN);
+    //vec3 worldPos = (ubo.invViewMatrix * vec4(eyePosition, 1.0)).xyz;
+    //vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
+    //vec3 wE = normalize(worldPos - worldCamPos);
+    //vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
+    //vec3 wR = reflect(wE, wN);
     
     vec4 baseColor = ubo.baseColor;
     

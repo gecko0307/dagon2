@@ -57,6 +57,7 @@ struct LightVolumeShaderVertexUniformBuffer
 
 struct LightVolumeShaderFragmentUniformBuffer
 {
+    Matrix4x4f viewMatrix;
     Matrix4x4f invViewMatrix;
     Matrix4x4f invModelMatrix;
     Matrix4x4f invProjectionMatrix;
@@ -95,6 +96,7 @@ class LightVolumeShader: Shader
         vsUBO.normalMatrix = Matrix4x4f.identity;
         vsUBO.projectionMatrix = Matrix4x4f.identity;
         
+        fsUBO.viewMatrix = Matrix4x4f.identity;
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invModelMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
@@ -114,6 +116,7 @@ class LightVolumeShader: Shader
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         
+        fsUBO.viewMatrix = pass.view.viewMatrix;
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         fsUBO.invModelMatrix = entity.invModelMatrix;
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;

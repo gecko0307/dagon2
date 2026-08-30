@@ -81,16 +81,12 @@ void main()
     vec3 ndc = vec3(texCoords, depth);
     ndc.y = 1.0 - ndc.y; // Adapt to Vulkan
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
-    vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
-    vec3 E = normalize(-eyePos);
-    float NE = clamp(dot(N, E), 0.0, 1.0);
-    
-    vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
-    vec3 wE = normalize(worldPos - worldCamPos);
-    vec3 wN = normalize((vec4(N, 0.0) * ubo.viewMatrix).xyz);
+    vec3 wN = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
+    vec3 wE = normalize(mat3(ubo.invViewMatrix) * eyePos);
     vec3 wR = reflect(wE, wN);
+    
+    float NE = clamp(dot(wN, -wE), 0.0, 1.0);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;

@@ -59,6 +59,7 @@ struct GeometryShaderVertexUniformBuffer
 
 struct GeometryShaderFragmentUniformBuffer
 {
+    Matrix4x4f viewMatrix;
     Color4f baseColor;
     Color4f emission;
     Vector4f brdf;
@@ -97,6 +98,7 @@ class GeometryShader: Shader
         vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
         vsUBO.uvTransformation = Matrix4x4f.identity;
         
+        fsUBO.viewMatrix = Matrix4x4f.identity;
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.brdf = Vector4f(0.5f, 0.0f, 0.5f, 0.0f);
@@ -111,11 +113,15 @@ class GeometryShader: Shader
         auto entity = state.entity;
         auto material = state.material;
         
+        // Set vertex shader matrices
         vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
         vsUBO.projectionMatrix = pass.view.projectionMatrix;
         vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
         vsUBO.uvTransformation = material.uvTransformation;
+        
+        // Set fragment shader matrices
+        fsUBO.viewMatrix = pass.view.viewMatrix;
         
         // Set colors
         fsUBO.baseColor = material.baseColor;
