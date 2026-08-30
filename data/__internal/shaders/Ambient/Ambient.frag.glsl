@@ -83,7 +83,7 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb); // * 2.0 - 1.0);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(-eyePos);
     float NE = clamp(dot(N, E), 0.0, 1.0);
     
@@ -114,14 +114,6 @@ void main()
         vec2(1.0, 0.0);
     
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    
-    // Single scattering
-    /*
-    vec3 kD = (1.0 - F) * (1.0 - metallic);
-    vec3 diffuse = kD * irradiance * baseColor;
-    vec3 specular = reflection * clamp(F * brdf.x + brdf.y, 0.0, 1.0);
-    vec3 radiance = diffuse * diffuseOcclusion + specular * specularOcclusion;
-    */
     
     // Multiple scattering (Fdez-Agüera)
     vec3 diffuse = baseColor * diffuseOcclusion * (1.0 - metallic) * (1.0 - f0_scalar);

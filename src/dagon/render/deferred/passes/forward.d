@@ -130,7 +130,7 @@ class ForwardShader: Shader
         
         // Set colors
         fsUBO.baseColor = material.baseColor;
-        fsUBO.emission = material.emissionColor * material.emissionEnergy;
+        fsUBO.emission = material.emissionColor.toLinear * material.emissionEnergy;
 
         // Set BRDF parameters
         fsUBO.brdf[GeomBRDF.Roughness] = material.roughness;

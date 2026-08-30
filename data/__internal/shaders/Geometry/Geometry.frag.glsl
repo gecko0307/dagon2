@@ -119,7 +119,7 @@ void main()
         N = normalize(tangentToEye * tanN);
     }
     
-    float shadedMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED);
+    float shadedMask = float((ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED) != 0);
     float motionBlurMask = ubo.materialOptions[OPT_MOTION_BLUR_MASK];
     
     vec4 baseColor = ubo.baseColor;
@@ -141,7 +141,7 @@ void main()
     {
         if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
             emission *= toLinear(texture(emissionTexture, uv).rgb);
-        //emission += toLinear(baseColor.rgb) * (1.0 - shadedMask);
+        emission += toLinear(baseColor.rgb) * (1.0 - shadedMask);
     }
     
     float alpha = baseColor.a * ubo.materialOptions[OPT_ALPHA];

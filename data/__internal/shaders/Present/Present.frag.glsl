@@ -10,7 +10,7 @@ vec3 sRGB(vec3 v)
 #define COLOR_PROFILE_LINEAR 2
 #define COLOR_PROFILE_GAMMA44 3
 
-layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
+layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -23,7 +23,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    vec4 inputColor = texture(colorBuffer, texCoords);
+    vec4 inputColor = texture(radianceBuffer, texCoords);
     
     vec3 outputColor = inputColor.rgb;
     if (ubo.flags[0] == COLOR_PROFILE_GAMMA22)

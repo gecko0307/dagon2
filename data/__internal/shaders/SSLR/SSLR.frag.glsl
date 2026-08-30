@@ -104,6 +104,11 @@ layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
+/*
+ * Stochastic screen-space ray tracing function.
+ * Samples radiance buffer along the eye-space vector R from eye-space position P.
+ * Roughness is used to reduce noise: fade out/early exit for surfaces that are too rough.
+ */
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
     float roughnessFactor = 1.0 - clamp((roughness - 0.2) / (0.7 - 0.2), 0.0, 1.0);
@@ -246,7 +251,7 @@ void main()
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb); // * 2.0 - 1.0);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb);
     vec3 E = normalize(eyePos);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
@@ -277,7 +282,7 @@ void main()
     float velocityLength = length(uvVelocity);
     float alpha = mix(0.02, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
 
-    vec4 accumulatedReflection = mix(prevReflection, reflection, alpha);
+    vec4 accumulatedReflection = mix(prevReflection, reflection, alpha * shadingMask);
     
     outColor = accumulatedReflection;
 }
