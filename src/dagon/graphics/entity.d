@@ -146,11 +146,14 @@ class Entity: Owner, Updateable, GsObject
     /// Base visibility alpha.
     float opacity = 1.0f;
 
-    /// Motion blur factor in [0, 1].
+    /// Motion blur factor [0, 1].
     float motionBlurMask = 1.0f;
 
     /// Visibility flag.
     bool visible = true;
+    
+    /// Shadeless flag.
+    bool shadeless = false;
 
     /// Cast shadows flag.
     bool castShadow = true;

@@ -26,6 +26,8 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.render.deferred.passes.forward;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
@@ -46,8 +48,7 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
-import dagon.render.deferred.passes.geometry;
-import dagon.render.deferred.passes.ambient;
+import dagon.render.deferred.passes.gparams;
 import dagon.render.postprocessing.context;
 
 struct ForwardShaderVertexUniformBuffer
@@ -61,33 +62,13 @@ struct ForwardShaderVertexUniformBuffer
 struct ForwardShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
-    //Vector4f baseColor;
-    //Vector4f roughnessMetallic;
-    //Vector4f emission;
+    Color4f baseColor;
+    Color4f emission;
+    Vector4f brdf;
+    Vector4f materialOptions;
     Color4f ambientColor;
-    Vector4f alphaOptions;
     uint[4] flags;
     Vector4f resolution;
-}
-
-enum ForwardFlags: uint
-{
-    Texture = 0,
-    MaxSpecularMipLevel = 1,
-    Entity = 2
-}
-
-enum ForwardTextureFlags: uint
-{
-    HasBaseColorTexture = 1 << 0,
-    HasNormalTexture = 1 << 1,
-    HasHeightTexture = 1 << 2,
-    HasSpecularTexture = 1 << 3
-}
-
-enum ForwardEntityFlags: uint
-{
-    Static = 1 << 0
 }
 
 class ForwardShader: Shader
@@ -122,8 +103,13 @@ class ForwardShader: Shader
         vsUBO.prevModelViewMatrix = Matrix4x4f.identity;
         
         fsUBO.invViewMatrix = Matrix4x4f.identity;
+        
+        fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+        fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.brdf = Vector4f(0.5f, 0.0f, 0.5f, 0.0f);
+        fsUBO.materialOptions = Vector4f(1.0f, 0.5f, 1.0f, 0.0f);
         fsUBO.ambientColor = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.alphaOptions = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
     
@@ -142,31 +128,59 @@ class ForwardShader: Shader
         
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         
-        if (!entity.dynamic && entity.receiveDecals)
-            fsUBO.flags[ForwardFlags.Entity] |= ForwardEntityFlags.Static;
+        // Set colors
+        fsUBO.baseColor = material.baseColor;
+        fsUBO.emission = material.emissionColor * material.emissionEnergy;
+
+        // Set BRDF parameters
+        fsUBO.brdf[GeomBRDF.Roughness] = material.roughness;
+        fsUBO.brdf[GeomBRDF.Metallic] = material.metallic;
+        fsUBO.brdf[GeomBRDF.F0] = pow((material.ior - 1.0f) / (material.ior + 1.0f), 2.0f) * (material.iorLevel * 2.0f);
+        fsUBO.brdf[GeomBRDF.SubsurfaceScattering] = material.subsurfaceScattering;
         
+        // Set material options
+        fsUBO.materialOptions[GeomMaterialOptions.Alpha] = entity.opacity * material.opacity;
+        fsUBO.materialOptions[GeomMaterialOptions.AlphaClipThreshold] = material.alphaClipThreshold;
+        fsUBO.materialOptions[GeomMaterialOptions.MotionBlurMask] = entity.motionBlurMask;
+        fsUBO.materialOptions[GeomMaterialOptions.SkyboxMipLevel] = material.skyboxTextureMipLevel;
+        
+        // Set ambient properties
         fsUBO.ambientColor = scene.ambientColor;
         fsUBO.ambientColor.a = scene.ambientEnergy;
         
-        fsUBO.alphaOptions.x = material.alphaClipThreshold;
-        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
-        fsUBO.alphaOptions.z = entity.motionBlurMask;
-        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
-        
+        // Set render resolution
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         
+        // Clear all bit flags
+        fsUBO.flags[GeomFlags.Texture] = 0;
+        fsUBO.flags[GeomFlags.Output] = 0;
+        fsUBO.flags[GeomFlags.Entity] = 0;
+        fsUBO.flags[GeomFlags.Misc] = 0;
+        
+        // Set output flags
+        if (material.outputDepth)
+            fsUBO.flags[GeomFlags.Output] |= GeomOutputFlags.Depth;
+        
+        // Set entity flags
+        if (!entity.dynamic && entity.receiveDecals)
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Static;
+        if (!material.shadeless)
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
+        
+        // Set texture present flags and bind assigned textures
+        // TODO:
         /*
         if (specularTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, specularTexture);
-            fsUBO.flags[TransparentFlags.Texture] |= TransparentTextureFlags.HasSpecularTexture;
-            fsUBO.flags[TransparentFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasSpecularTexture;
+            fsUBO.flags[GeomFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
         }
         else
         {
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
-            fsUBO.flags[TransparentFlags.MaxSpecularMipLevel] = 0;
+            fsUBO.flags[GeomFlags.MaxSpecularMipLevel] = 0;
         }
         */
         

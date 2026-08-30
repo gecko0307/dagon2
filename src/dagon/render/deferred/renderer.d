@@ -104,7 +104,7 @@ class DeferredRenderer: Renderer
         
         GBufferConfig gbufferConfig = {
             colorTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
-            normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT, //SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM
+            normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
             roughnessMetallicTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
             emissionTargetFormat: SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT,
             velocityTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,

@@ -49,7 +49,7 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
-import dagon.render.deferred.passes.geometry;
+import dagon.render.deferred.passes.gparams;
 
 struct CSMShaderVertexUniformBuffer
 {
@@ -60,7 +60,7 @@ struct CSMShaderVertexUniformBuffer
 struct CSMShaderFragmentUniformBuffer
 {
     Color4f baseColor;
-    Vector4f alphaOptions;
+    Vector4f materialOptions;
     uint[4] flags;
 }
 
@@ -94,7 +94,7 @@ class CSMShader: Shader
         vsUBO.projectionMatrix = Matrix4x4f.identity;
         
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-        fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
+        fsUBO.materialOptions = Vector4f(1.0f, 0.5f, 1.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -109,21 +109,31 @@ class CSMShader: Shader
         vsUBO.modelViewMatrix = area.viewMatrix * entity.modelMatrix;
         vsUBO.projectionMatrix = area.projectionMatrix;
         
-        fsUBO.flags[GeometryFlags.Texture] = 0;
-        fsUBO.flags[GeometryFlags.Output] = 0;
-        fsUBO.flags[GeometryFlags.Entity] = 0;
-        fsUBO.flags[3] = 0;
         fsUBO.baseColor = material.baseColor;
         
-        fsUBO.alphaOptions.x = material.alphaClipThreshold;
-        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
-        fsUBO.alphaOptions.z = entity.motionBlurMask;
-        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
+        // Set material options
+        fsUBO.materialOptions[GeomMaterialOptions.Alpha] = entity.opacity * material.opacity;
+        fsUBO.materialOptions[GeomMaterialOptions.AlphaClipThreshold] = material.alphaClipThreshold;
+        fsUBO.materialOptions[GeomMaterialOptions.MotionBlurMask] = entity.motionBlurMask;
+        fsUBO.materialOptions[GeomMaterialOptions.SkyboxMipLevel] = material.skyboxTextureMipLevel;
         
+        // Clear all bit flags
+        fsUBO.flags[GeomFlags.Texture] = 0;
+        fsUBO.flags[GeomFlags.Output] = 0;
+        fsUBO.flags[GeomFlags.Entity] = 0;
+        fsUBO.flags[GeomFlags.Misc] = 0;
+        
+        // Set entity flags
+        if (!entity.dynamic && entity.receiveDecals)
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Static;
+        if (!(material.shadeless || entity.shadeless))
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
+        
+        // Set texture present flags and bind assigned textures
         if (material.baseColorTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasBaseColorTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasBaseColorTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 0);

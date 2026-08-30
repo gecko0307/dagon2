@@ -46,6 +46,7 @@ import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
+import dagon.render.deferred.passes.gparams;
 
 struct GeometryShaderVertexUniformBuffer
 {
@@ -59,39 +60,11 @@ struct GeometryShaderVertexUniformBuffer
 struct GeometryShaderFragmentUniformBuffer
 {
     Color4f baseColor;
-    Vector4f roughnessMetallic;
     Color4f emission;
-    Vector4f alphaOptions;
+    Vector4f brdf;
+    Vector4f materialOptions;
     uint[4] flags;
-    float[4] fparams;
     Vector4f resolution;
-}
-
-enum GeometryFlags
-{
-    Texture = 0,
-    Output = 1,
-    Entity = 2
-}
-
-enum GeometryTextureFlags: uint
-{
-    HasBaseColorTexture = 1 << 0,
-    HasNormalTexture = 1 << 1,
-    HasHeightTexture = 1 << 2,
-    HasRoughnessMetallicTexture = 1 << 3,
-    HasEmissionTexture = 1 << 4,
-    HasSkyboxTexture = 1 << 5
-}
-
-enum GeometryOutputFlags: uint
-{
-    Depth = 1 << 0
-}
-
-enum GeometryEntityFlags: uint
-{
-    Static = 1 << 0
 }
 
 class GeometryShader: Shader
@@ -125,14 +98,9 @@ class GeometryShader: Shader
         vsUBO.uvTransformation = Matrix4x4f.identity;
         
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-        fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
-        fsUBO.alphaOptions = Vector4f(0.5f, 1.0f, 1.0f, 1.0f);
-        
-        fsUBO.fparams[0] = 0.0f;
-        fsUBO.fparams[1] = 0.0f;
-        fsUBO.fparams[2] = 0.0f;
-        fsUBO.fparams[3] = 0.0f;
+        fsUBO.brdf = Vector4f(0.5f, 0.0f, 0.5f, 0.0f);
+        fsUBO.materialOptions = Vector4f(1.0f, 0.5f, 1.0f, 0.0f);
         
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -149,39 +117,47 @@ class GeometryShader: Shader
         vsUBO.prevModelViewMatrix = pass.view.prevViewMatrix * entity.prevModelMatrix;
         vsUBO.uvTransformation = material.uvTransformation;
         
-        fsUBO.flags[GeometryFlags.Texture] = 0;
-        fsUBO.flags[GeometryFlags.Output] = 0;
-        fsUBO.flags[GeometryFlags.Entity] = 0;
-        fsUBO.flags[3] = 0;
+        // Set colors
         fsUBO.baseColor = material.baseColor;
+        fsUBO.emission = material.emissionColor.toLinear * material.emissionEnergy;
         
-        if (material.outputDepth)
-            fsUBO.flags[GeometryFlags.Output] |= GeometryOutputFlags.Depth;
+        // Set BRDF parameters
+        fsUBO.brdf[GeomBRDF.Roughness] = material.roughness;
+        fsUBO.brdf[GeomBRDF.Metallic] = material.metallic;
+        fsUBO.brdf[GeomBRDF.F0] = pow((material.ior - 1.0f) / (material.ior + 1.0f), 2.0f) * (material.iorLevel * 2.0f);
+        fsUBO.brdf[GeomBRDF.SubsurfaceScattering] = material.subsurfaceScattering;
         
-        if (!entity.dynamic && entity.receiveDecals)
-            fsUBO.flags[GeometryFlags.Entity] |= GeometryEntityFlags.Static;
+        // Set material options
+        fsUBO.materialOptions[GeomMaterialOptions.Alpha] = entity.opacity * material.opacity;
+        fsUBO.materialOptions[GeomMaterialOptions.AlphaClipThreshold] = material.alphaClipThreshold;
+        fsUBO.materialOptions[GeomMaterialOptions.MotionBlurMask] = entity.motionBlurMask;
+        fsUBO.materialOptions[GeomMaterialOptions.SkyboxMipLevel] = material.skyboxTextureMipLevel;
         
-        fsUBO.roughnessMetallic.g = material.roughness;
-        fsUBO.roughnessMetallic.b = material.metallic;
-        
-        fsUBO.emission = material.emissionColor * material.emissionEnergy;
-        
-        fsUBO.alphaOptions.x = material.alphaClipThreshold;
-        fsUBO.alphaOptions.y = cast(float)!material.shadeless;
-        fsUBO.alphaOptions.z = entity.motionBlurMask;
-        fsUBO.alphaOptions.w = entity.opacity * material.opacity;
-        
-        fsUBO.fparams[0] = pow((material.ior - 1.0) / (material.ior + 1.0), 2.0) * (material.iorLevel * 2.0);
-        fsUBO.fparams[1] = material.skyboxTextureMipLevel;
-        fsUBO.fparams[2] = material.subsurfaceScattering;
-        
+        // Set render resolution
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         
+        // Clear all bit flags
+        fsUBO.flags[GeomFlags.Texture] = 0;
+        fsUBO.flags[GeomFlags.Output] = 0;
+        fsUBO.flags[GeomFlags.Entity] = 0;
+        fsUBO.flags[GeomFlags.Misc] = 0;
+        
+        // Set output flags
+        if (material.outputDepth)
+            fsUBO.flags[GeomFlags.Output] |= GeomOutputFlags.Depth;
+        
+        // Set entity flags
+        if (!entity.dynamic && entity.receiveDecals)
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Static;
+        if (!(material.shadeless || entity.shadeless))
+            fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
+        
+        // Set texture present flags and bind assigned textures
         if (material.baseColorTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasBaseColorTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasBaseColorTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 0);
@@ -189,7 +165,7 @@ class GeometryShader: Shader
         if (material.normalTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, material.normalTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasNormalTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasNormalTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
@@ -197,7 +173,7 @@ class GeometryShader: Shader
         if (material.heightTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 2, material.heightTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasHeightTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasHeightTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 2);
@@ -205,7 +181,7 @@ class GeometryShader: Shader
         if (material.roughnessMetallicTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 3, material.roughnessMetallicTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasRoughnessMetallicTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasRoughnessMetallicTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 3);
@@ -213,7 +189,7 @@ class GeometryShader: Shader
         if (material.emissionTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 4, material.emissionTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasEmissionTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasEmissionTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
@@ -221,7 +197,7 @@ class GeometryShader: Shader
         if (material.skyboxTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 5, material.skyboxTexture);
-            fsUBO.flags[GeometryFlags.Texture] |= GeometryTextureFlags.HasSkyboxTexture;
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasSkyboxTexture;
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 5);
