@@ -26,6 +26,8 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.render.deferred.passes.geometry;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
@@ -169,7 +171,7 @@ class GeometryShader: Shader
         fsUBO.alphaOptions.z = entity.motionBlurMask;
         fsUBO.alphaOptions.w = entity.opacity * material.opacity;
         
-        fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
+        fsUBO.fparams[0] = pow((material.ior - 1.0) / (material.ior + 1.0), 2.0) * (material.iorLevel * 2.0);
         fsUBO.fparams[1] = material.skyboxTextureMipLevel;
         fsUBO.fparams[2] = material.subsurfaceScattering;
         

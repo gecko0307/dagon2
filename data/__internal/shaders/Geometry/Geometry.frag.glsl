@@ -146,7 +146,7 @@ void main()
     float sss = ubo.fparams[FPARAM_SSS];
     
     outColor = vec4(baseColor.rgb, sss);
-    outNormal = vec4(N * 0.5 + 0.5, 1.0);
+    outNormal = vec4(N, 1.0); // * 0.5 + 0.5
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);

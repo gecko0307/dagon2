@@ -1,11 +1,10 @@
 # Credits
 
-## Authors
-* Core engine, GScript3 runtime, Jolt Physics binding, extensions, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
-
-## Contributors
+## Authors and Contributors
+* Core engine, extensions, DAF exporter - [Timur Gafarov aka gecko0307](https://github.com/gecko0307)
 * Input manager - [Mateusz Muszyński aka Timu5](https://github.com/Timu5)
 * OBJ group parser - [Vlad Davydov aka Tynuk](https://github.com/Tynukua)
+* PNG decoder patches - [Vadim Lopatin aka buggins](https://github.com/buggins), [Martin Cejp aka minexew](https://github.com/minexew)
 
 ## Adapted third-party code
 * Wintab binding - [Vadim Lopatin aka buggins](https://github.com/buggins)

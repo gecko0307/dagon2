@@ -221,7 +221,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             // Fade out reflectionat edges
             vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
-            float distanceFade = 1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
+            float distanceFade = 1.0; //1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
             float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
 
             return vec4(texture(radianceBuffer, finalUV).rgb, alpha);
@@ -246,7 +246,7 @@ void main()
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb); // * 2.0 - 1.0);
     vec3 E = normalize(eyePos);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);

@@ -399,7 +399,7 @@ class DagonAsset: Asset
             material.opacity = mat.opacity;
             material.alphaClipThreshold = mat.alphaClipThreshold;
             material.shadeless = cast(bool)mat.shadeless;
-            material.blendMode = mat.blendMode;
+            material.blendMode = BlendMode.Opaque; //mat.blendMode;
             
             if (mat.baseColorTexture >= 0)
                 material.baseColorTexture = textureAssets[mat.baseColorTexture].texture;

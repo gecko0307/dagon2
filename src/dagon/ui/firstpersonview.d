@@ -247,8 +247,8 @@ class FirstPersonView: EventListener
             prevMouseY = eventManager.mouseY;
         }
         
-        orientationV = rotationQuaternion(Vector3f(1.0f, 0.0f, 0.0f), degtorad(pitch));
-        orientationH = rotationQuaternion(Vector3f(0.0f, 1.0f, 0.0f), degtorad(turn));
+        orientationV = rotationQuaternion!float(Axis.x, degtorad(pitch));
+        orientationH = rotationQuaternion!float(Axis.y, degtorad(turn));
     }
     
     /// Called when the application gains focus.
@@ -314,9 +314,9 @@ class FirstPersonViewController: EntityController
         entity.rotation = baseOrientation * view.orientationH * view.orientationV;
         
         entity.transformation =
-            (translationMatrix(entity.position) *
+            translationMatrix(entity.position) *
             entity.rotation.toMatrix4x4 *
-            scaleMatrix(entity.scaling));
+            scaleMatrix(entity.scaling);
         entity.invTransformation = entity.transformation.inverse;
         
         direction = entity.rotation.rotate(Vector3f(0.0f, 0.0f, 1.0f));

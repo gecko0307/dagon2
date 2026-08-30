@@ -30,9 +30,8 @@ DEALINGS IN THE SOFTWARE.
  * Provides an input manager.
  *
  * Description:
- * The `dagon.core.input` module defines input binding types, the `Binding` struct, 
- * and the `InputManager` class, which allows mapping named actions to keyboard, 
- * mouse, and gamepad inputs, as well as querying button and axis states.
+ * The `dagon.core.input` module provides an `InputManager` class that allows
+ * mapping named actions to keyboard, mouse and gamepad inputs.
  *
  * Copyright: Mateusz Muszyński, Timur Gafarov 2019-2026
  * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).

@@ -34,6 +34,7 @@ import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.image.color;
 
+import dagon.core.logger;
 import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.crashhandler;
@@ -281,7 +282,7 @@ class AmbientPass: RenderPass
         state.depthBuffer = InputBuffer(gbuffer.depthBuffer, gbuffer.depthSamplerNearest);
         state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSamplerNearest);
         state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSamplerNearest);
-        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
+        state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSamplerNearest);
         //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
         //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.occlusionBuffer = InputBuffer(gbuffer.currentOcclusionBuffer, gbuffer.colorSampler);

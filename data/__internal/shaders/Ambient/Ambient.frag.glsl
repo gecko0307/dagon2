@@ -1,9 +1,5 @@
 #version 460
 
-#define PI 3.14159265359
-const float PI2 = PI * 2.0;
-const float INVPI = 1.0 / PI;
-
 // Converts normalized device coordinates to eye space position
 vec3 unproject(mat4 invProjMatrix, vec3 ndc)
 {
@@ -40,7 +36,6 @@ layout(set = 2, binding = 4) uniform samplerCube specularTexture;
 layout(set = 2, binding = 5) uniform samplerCube irradianceTexture;
 layout(set = 2, binding = 6) uniform sampler2D brdfLUT;
 layout(set = 2, binding = 7) uniform sampler2D occlusionBuffer;
-//layout(set = 2, binding = 8) uniform sampler2D velocityBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -49,7 +44,6 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invProjectionMatrix;
     vec4 ambientColor;
     uvec4 flags;
-    vec4 fparams;
 } ubo;
 
 layout(location = 0) in vec2 texCoords;
@@ -85,18 +79,18 @@ void main()
 {
     float depth = texture(depthBuffer, texCoords).x;
     vec3 ndc = vec3(texCoords, depth);
-    ndc.y = 1.0 - ndc.y;
+    ndc.y = 1.0 - ndc.y; // Adapt to Vulkan
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
-    vec3 N = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
+    vec3 N = normalize(texture(normalBuffer, texCoords).rgb); // * 2.0 - 1.0);
     vec3 E = normalize(-eyePos);
     float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
     vec3 wE = normalize(worldPos - worldCamPos);
-    vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
-    vec3 wR = normalize(reflect(wE, wN));
+    vec3 wN = normalize((vec4(N, 0.0) * ubo.viewMatrix).xyz);
+    vec3 wR = reflect(wE, wN);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
@@ -114,6 +108,7 @@ void main()
     
     vec3 irradiance = sampleIrradiance(wN);
     vec3 reflection = sampleSpecularReflection(wR, sqrt(roughness));
+    
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);

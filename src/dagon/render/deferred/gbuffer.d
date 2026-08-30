@@ -85,10 +85,14 @@ class GBuffer: Owner
     SDL_GPUSampler* depthSamplerNearest;
     SDL_GPUSampler* colorSamplerNearest;
     
+    GBufferConfig config;
+    
     this(GPU gpu, GBufferConfig* config, Owner owner)
     {
         super(owner);
         this.gpu = gpu;
+        
+        this.config = *config;
         
         width = gpu.application.drawableWidth;
         height = gpu.application.drawableHeight;
@@ -260,33 +264,33 @@ class GBuffer: Owner
         depthStencilTargetInfo.texture = depthBuffer;
         
         // Color
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        textureCreateInfo.format = config.colorTargetFormat;
         textureCreateInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,
         colorBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[0].texture = colorBuffer;
         
         // Normal
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = config.normalTargetFormat;
         normalBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[1].texture = normalBuffer;
         
         // Roughness-metallic
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        textureCreateInfo.format = config.roughnessMetallicTargetFormat;
         roughnessMetallicBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[2].texture = roughnessMetallicBuffer;
         
         // Emission
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = config.emissionTargetFormat;
         emissionBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[3].texture = emissionBuffer;
         
         // Velocity
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = config.velocityTargetFormat;
         velocityBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[4].texture = velocityBuffer;
         
         // Radiance
-        textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        textureCreateInfo.format = config.radianceTargetFormat;
         radianceBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[5].texture = radianceBuffer;
         colorTargetsInfo[5].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);

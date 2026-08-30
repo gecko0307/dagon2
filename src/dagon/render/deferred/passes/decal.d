@@ -290,28 +290,28 @@ class DecalPass: RenderPass
         };
         
         // Color target 0 - color buffer
-        colorTargetsDescription[0].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[0].format = gbuffer.config.colorTargetFormat;
         colorTargetsDescription[0].blend_state = blendState;
         colorTargets[0].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[0].store_op = SDL_GPU_STOREOP_STORE;
         colorTargets[0].texture = gbuffer.colorBuffer;
         
         // Target 1 - normal buffer
-        colorTargetsDescription[1].format = SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[1].format = gbuffer.config.normalTargetFormat;
         colorTargetsDescription[1].blend_state = blendState;
         colorTargets[1].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[1].store_op = SDL_GPU_STOREOP_STORE;
         colorTargets[1].texture = gbuffer.normalBuffer;
         
         // Target 2 - roughness/metallic buffer
-        colorTargetsDescription[2].format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetsDescription[2].format = gbuffer.config.roughnessMetallicTargetFormat;
         colorTargetsDescription[2].blend_state = blendState;
         colorTargets[2].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[2].store_op = SDL_GPU_STOREOP_STORE;
         colorTargets[2].texture = gbuffer.roughnessMetallicBuffer;
         
         // Target 3 - emission buffer
-        colorTargetsDescription[3].format = SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT; //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetsDescription[3].format = gbuffer.config.emissionTargetFormat;
         colorTargetsDescription[3].blend_state = blendState;
         colorTargets[3].load_op = SDL_GPU_LOADOP_LOAD;
         colorTargets[3].store_op = SDL_GPU_STOREOP_STORE;
