@@ -26,7 +26,7 @@ layout(location = 5) in vec4 prevPosition;
 
 // Indices in ubo.brdf
 #define BRDF_ROUGHNESS 0
-#define BRDF_METALLLIC 1
+#define BRDF_METALLIC 1
 #define BRDF_F0 2
 #define BRDF_SSS 3
 

@@ -34,7 +34,7 @@ layout(location = 5) in vec4 prevPosition;
 
 // Indices in ubo.brdf
 #define BRDF_ROUGHNESS 0
-#define BRDF_METALLLIC 1
+#define BRDF_METALLIC 1
 #define BRDF_F0 2
 #define BRDF_SSS 3
 
@@ -128,7 +128,7 @@ void main()
     
     float f0 = ubo.brdf[BRDF_F0];
     
-    vec4 roughnessMetallic = vec4(0.0, ubo.brdf.xy, 0.0);
+    vec4 roughnessMetallic = vec4(0.0, ubo.brdf[BRDF_ROUGHNESS], ubo.brdf[BRDF_METALLIC], 0.0);
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE) != 0)
         roughnessMetallic = texture(roughnessMetallicTexture, uv);
     float roughness = max(roughnessMetallic.g, 0.001);

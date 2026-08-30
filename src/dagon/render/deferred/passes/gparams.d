@@ -32,16 +32,16 @@ module dagon.render.deferred.passes.gparams;
 enum GeomBRDF: uint
 {
     /// Material roughness.
-    Roughness = 1,
+    Roughness = 0,
     
     /// Material metallic.
-    Metallic = 2,
+    Metallic = 1,
     
     /// Base reflectivity, calculated from ior.
-    F0 = 3,
+    F0 = 2,
     
     /// Material SSS.
-    SubsurfaceScattering = 4
+    SubsurfaceScattering = 3
 }
 
 /// Meaning of indices in ubo.materialOptions vector.
