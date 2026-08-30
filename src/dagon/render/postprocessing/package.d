@@ -33,6 +33,7 @@ public
     import dagon.render.postprocessing.passes.motionblur;
     import dagon.render.postprocessing.passes.tonemapping;
     import dagon.render.postprocessing.passes.fxaa;
+    import dagon.render.postprocessing.passes.smaa;
     import dagon.render.postprocessing.passes.sharpening;
     import dagon.render.postprocessing.passes.sslr;
     import dagon.render.postprocessing.passes.npr;

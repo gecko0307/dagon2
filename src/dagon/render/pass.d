@@ -73,6 +73,9 @@ abstract class RenderPass: Owner
     /// The shader that this pass uses.
     Shader shader;
     
+    ///
+    bool isSubpass = false;
+    
    protected:
     SDL_GPURenderPass* renderPass;
     SDL_GPUColorTargetInfo* colorTargetsInfo;
@@ -88,11 +91,13 @@ abstract class RenderPass: Owner
      * Params:
      *   renderer = The renderer object to associate with this pass.
      */
-    this(Renderer renderer)
+    this(Renderer renderer, bool isSubpass = false)
     {
         super(renderer);
+        this.isSubpass = isSubpass;
         this.renderer = renderer;
-        renderer.addRenderPass(this);
+        if (!isSubpass)
+            renderer.addRenderPass(this);
     }
     
     /// Destructor. Releases the graphics pipeline if it exists.
@@ -346,7 +351,7 @@ abstract class RenderPass: Owner
     }
     
     /**
-     * Handles resizing of the render targets.
+     * Handles safe resizing of the render targets.
      *
      * Params:
      *   width = New width of the render target.

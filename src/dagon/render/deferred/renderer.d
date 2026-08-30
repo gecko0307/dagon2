@@ -58,6 +58,7 @@ import dagon.render.postprocessing.passes.motionblur;
 import dagon.render.postprocessing.passes.lensdistortion;
 import dagon.render.postprocessing.passes.tonemapping;
 import dagon.render.postprocessing.passes.fxaa;
+import dagon.render.postprocessing.passes.smaa;
 import dagon.render.postprocessing.passes.sharpening;
 import dagon.render.postprocessing.passes.present;
 
@@ -91,6 +92,7 @@ class DeferredRenderer: Renderer
     LensDistortionPass lensDistortionPass;
     TonemappingPass tonemappingPass;
     FXAAPass fxaaPass;
+    SMAAPass smaaPass;
     SharpeningPass sharpeningPass;
     PresentPass presentPass;
     
@@ -104,7 +106,7 @@ class DeferredRenderer: Renderer
         
         GBufferConfig gbufferConfig = {
             colorTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
-            normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM, //SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
+            normalTargetFormat: SDL_GPU_TEXTUREFORMAT_R10G10B10A2_UNORM,
             roughnessMetallicTargetFormat: SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
             emissionTargetFormat: SDL_GPU_TEXTUREFORMAT_R11G11B10_UFLOAT,
             velocityTargetFormat: SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
@@ -134,10 +136,14 @@ class DeferredRenderer: Renderer
         lensDistortionPass = New!LensDistortionPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);
+        smaaPass = New!SMAAPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
         
         applyProfile(DeferredRendererProfile.HighQuality);
+        
+        // Temporary, SMAA is not ready yet
+        smaaPass.active = false;
     }
     
     void applyProfile(DeferredRendererProfile profile)
