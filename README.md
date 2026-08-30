@@ -23,7 +23,7 @@ New features and major changes from Dagon 0.x/1.x:
 - Moved to SDL3
 - The renderer now leverages SDL GPU, targeting Vulkan
 - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
-- Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. All stochastic techniques now use permuted congruential generator as a hash function
+- Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. All stochastic techniques now use permuted congruential generator as a hash function
 - Shader workflow is now based on GLSL 4.60 and includes a built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
 - Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`. KTX support is now a core feature
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
