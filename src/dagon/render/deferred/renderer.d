@@ -49,8 +49,8 @@ import dagon.render.deferred.passes.selfillumination;
 import dagon.render.deferred.passes.sunlight;
 import dagon.render.deferred.passes.lightvolume;
 import dagon.render.deferred.passes.fog;
+import dagon.render.deferred.passes.forward;
 import dagon.render.postprocessing.context;
-import dagon.render.postprocessing.passes.transparent;
 import dagon.render.postprocessing.passes.reflection;
 import dagon.render.postprocessing.passes.sslr;
 import dagon.render.postprocessing.passes.npr;
@@ -82,8 +82,8 @@ class DeferredRenderer: Renderer
     SunLightPass sunLightPass;
     LightVolumePass lightVolumePass;
     FogPass fogPass;
+    ForwardPass forwardPass;
     BufferCopyPass bufferCopyPass;
-    TransparentPass transparentPass;
     SSLRPass sslrPass;
     ReflectionPass reflectionPass;
     NPRPass nprPass;
@@ -124,9 +124,9 @@ class DeferredRenderer: Renderer
         sunLightPass = New!SunLightPass(this, gbuffer);
         lightVolumePass = New!LightVolumePass(this, gbuffer);
         fogPass = New!FogPass(this, gbuffer);
-        bufferCopyPass = New!BufferCopyPass(this, ppContext);
         // TODO: particles pass
-        transparentPass = New!TransparentPass(this, ppContext);
+        forwardPass = New!ForwardPass(this, gbuffer);
+        bufferCopyPass = New!BufferCopyPass(this, ppContext);
         sslrPass = New!SSLRPass(this, ppContext);
         reflectionPass = New!ReflectionPass(this, ppContext);
         nprPass = New!NPRPass(this, ppContext);

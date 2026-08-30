@@ -19,7 +19,7 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 - [x] Sun light pass
 - [x] Light volumes pass
 - [x] Fog pass
-- [x] Transparent pass
+- [ ] Forward pass
 - [ ] Particles pass
 - [ ] DoF pass
 - [x] Motion blur pass

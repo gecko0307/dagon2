@@ -60,7 +60,7 @@ class PostProcessingContext: Owner
         this.gpu = gpu;
         this.gbuffer = gbuffer;
         
-        bufferFormat = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        bufferFormat = gbuffer.config.radianceTargetFormat;
         
         uint drawableWidth = gpu.application.drawableWidth;
         uint drawableHeight = gpu.application.drawableHeight;
@@ -164,7 +164,7 @@ class BufferCopyPass: RenderPass
     
     override void render(GraphicsState* state)
     {
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "COPY");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "BUFFER COPY");
         
         auto copyPass = SDL_BeginGPUCopyPass(renderer.commandBuffer);
         SDL_GPUTextureLocation texLocationSrc = {
@@ -185,5 +185,7 @@ class BufferCopyPass: RenderPass
         SDL_EndGPUCopyPass(copyPass);
         
         debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
+        
+        ppContext.swapTargets();
     }
 }

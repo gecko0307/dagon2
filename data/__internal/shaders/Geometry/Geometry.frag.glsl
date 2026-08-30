@@ -77,7 +77,7 @@ layout(location = 4) out vec4 outVelocity;
 
 out float gl_FragDepth;
 
-const float ySign = -1.0;
+const float tanNormalYFactor = -1.0;
 
 const float parallaxScale = 0.03;
 const float parallaxBias = -0.01;
@@ -101,7 +101,7 @@ void main()
         }
         
         vec3 tanN = normalize(texture(normalTexture, uv).rgb * 2.0 - 1.0);
-        tanN.y *= ySign;
+        tanN.y *= tanNormalYFactor;
         N = normalize(tangentToEye * tanN);
     }
     
@@ -132,13 +132,14 @@ void main()
     }
     
     float alpha = baseColor.a * ubo.alphaOptions.a;
-    if (alpha < ubo.alphaOptions.x) // alpha clipping
+    if (alpha < ubo.alphaOptions.x) // Alpha clipping
         discard;
     
+    // Screen-space velocity
     vec2 posScreen = (currPosition.xy / currPosition.w) * 0.5 + 0.5;
-    posScreen.y = 1.0 - posScreen.y;
+    posScreen.y = 1.0 - posScreen.y; // Adapt to Vulkan
     vec2 prevPosScreen = (prevPosition.xy / prevPosition.w) * 0.5 + 0.5;
-    prevPosScreen.y = 1.0 - prevPosScreen.y;
+    prevPosScreen.y = 1.0 - prevPosScreen.y; // Adapt to Vulkan
     vec2 velocity = posScreen - prevPosScreen;
     
     float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
@@ -146,7 +147,7 @@ void main()
     float sss = ubo.fparams[FPARAM_SSS];
     
     outColor = vec4(baseColor.rgb, sss);
-    outNormal = vec4(N, 1.0); // * 0.5 + 0.5
+    outNormal = vec4(N, 1.0);
     outRoughnessMetallic = vec4(f0, roughness, metallic, shadedMask);
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);

@@ -40,4 +40,5 @@ public
     import dagon.render.deferred.passes.fog;
     import dagon.render.deferred.passes.csm;
     import dagon.render.deferred.passes.decal;
+    import dagon.render.deferred.passes.forward;
 }

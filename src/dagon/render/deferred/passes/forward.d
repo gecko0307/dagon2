@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.postprocessing.passes.transparent;
+module dagon.render.deferred.passes.forward;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -50,7 +50,7 @@ import dagon.render.deferred.passes.geometry;
 import dagon.render.deferred.passes.ambient;
 import dagon.render.postprocessing.context;
 
-struct TransparentShaderVertexUniformBuffer
+struct ForwardShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
@@ -58,7 +58,7 @@ struct TransparentShaderVertexUniformBuffer
     Matrix4x4f prevModelViewMatrix;
 }
 
-struct TransparentShaderFragmentUniformBuffer
+struct ForwardShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
     //Vector4f baseColor;
@@ -70,14 +70,14 @@ struct TransparentShaderFragmentUniformBuffer
     Vector4f resolution;
 }
 
-enum TransparentFlags: uint
+enum ForwardFlags: uint
 {
     Texture = 0,
     MaxSpecularMipLevel = 1,
     Entity = 2
 }
 
-enum TransparentTextureFlags: uint
+enum ForwardTextureFlags: uint
 {
     HasBaseColorTexture = 1 << 0,
     HasNormalTexture = 1 << 1,
@@ -85,16 +85,16 @@ enum TransparentTextureFlags: uint
     HasSpecularTexture = 1 << 3
 }
 
-enum TransparentEntityFlags: uint
+enum ForwardEntityFlags: uint
 {
     Static = 1 << 0
 }
 
-class TransparentShader: Shader
+class ForwardShader: Shader
 {
    protected:
-    TransparentShaderVertexUniformBuffer vsUBO;
-    TransparentShaderFragmentUniformBuffer fsUBO;
+    ForwardShaderVertexUniformBuffer vsUBO;
+    ForwardShaderFragmentUniformBuffer fsUBO;
     
    public:
     bool enableGammaCorrection = true;
@@ -104,16 +104,16 @@ class TransparentShader: Shader
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Transparent.vert.glsl", "data/__internal/shaders/Transparent/Transparent.vert.glsl",
+        vertexModule.create("Forward.vert.glsl", "data/__internal/shaders/Forward/Forward.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Transparent.frag.glsl", "data/__internal/shaders/Transparent/Transparent.frag.glsl",
+        fragmentModule.create("Forward.frag.glsl", "data/__internal/shaders/Forward/Forward.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create TransparentShader");
+            exitWithError("Failed to create ForwardShader");
         }
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
@@ -143,7 +143,7 @@ class TransparentShader: Shader
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         
         if (!entity.dynamic && entity.receiveDecals)
-            fsUBO.flags[TransparentFlags.Entity] |= TransparentEntityFlags.Static;
+            fsUBO.flags[ForwardFlags.Entity] |= ForwardEntityFlags.Static;
         
         fsUBO.ambientColor = scene.ambientColor;
         fsUBO.ambientColor.a = scene.ambientEnergy;
@@ -156,8 +156,7 @@ class TransparentShader: Shader
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
-        
+        /*
         if (specularTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, specularTexture);
@@ -169,34 +168,33 @@ class TransparentShader: Shader
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
             fsUBO.flags[TransparentFlags.MaxSpecularMipLevel] = 0;
         }
+        */
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
     }
 }
 
-class TransparentPass: RenderPass
+class ForwardPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    PostProcessingContext ppContext;
-    TransparentShader transparentShader;
+    ForwardShader forwardShader;
     SDL_GPUColorTargetInfo colorTargetInfo;
     SDL_GPUDepthStencilTargetInfo depthTargetInfo;
     
-    this(Renderer renderer, PostProcessingContext ppContext)
+    this(Renderer renderer, GBuffer gbuffer)
     {
         super(renderer);
         this.gpu = renderer.gpu;
-        this.gbuffer = ppContext.gbuffer;
-        this.ppContext = ppContext;
+        this.gbuffer = gbuffer;
         
-        transparentShader = New!TransparentShader(gpu, this);
-        shader = transparentShader;
+        forwardShader = New!ForwardShader(gpu, this);
+        shader = forwardShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = transparentShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = transparentShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = forwardShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = forwardShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
         SDL_GPUVertexBufferDescription[3] vbDescriptions;
@@ -243,7 +241,7 @@ class TransparentPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetDescription colorTargetDescription;
-        colorTargetDescription.format = ppContext.bufferFormat;
+        colorTargetDescription.format = gbuffer.config.radianceTargetFormat;
         colorTargetDescription.blend_state.enable_blend = false;
         colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
         colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
@@ -276,7 +274,6 @@ class TransparentPass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = ppContext.writeBuffer;
         
         depthTargetInfo.clear_depth = 1.0f;
         depthTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
@@ -305,18 +302,11 @@ class TransparentPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = ppContext.writeBuffer;
+        colorTargetInfo.texture = gbuffer.radianceBuffer;
         depthTargetInfo.texture = gbuffer.depthBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "TRANSPARENT");
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "FORWARD");
         beginPass();
-        
-        //state.colorBuffer = InputBuffer(gbuffer.colorBuffer, gbuffer.colorSampler);
-        //state.normalBuffer = InputBuffer(gbuffer.normalBuffer, gbuffer.colorSampler);
-        //state.roughnessMetallicBuffer = InputBuffer(gbuffer.roughnessMetallicBuffer, gbuffer.colorSampler);
-        //state.emissionBuffer = InputBuffer(gbuffer.emissionBuffer, gbuffer.colorSampler);
-        //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
-        state.radianceBuffer = InputBuffer(gbuffer.radianceBuffer, gbuffer.colorSampler);
         
         foreach(entity; state.scene.entities)
         {
@@ -328,14 +318,12 @@ class TransparentPass: RenderPass
                 else
                     state.material = renderer.defaultMaterial;
                 
-                transparentShader.bindParameters(state);
+                forwardShader.bindParameters(state);
                 entity.drawable.render(state);
             }
         }
         
         endPass();
         debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
-        
-        ppContext.swapTargets();
     }
 }
