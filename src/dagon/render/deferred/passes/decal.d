@@ -58,6 +58,7 @@ struct DecalShaderFragmentUniformBuffer
     Matrix4x4f invViewMatrix;
     Matrix4x4f invModelMatrix;
     Matrix4x4f invProjectionMatrix;
+    Matrix4x4f uvTransformation;
     Color4f baseColor;
     Vector4f roughnessMetallic;
     Color4f emission;
@@ -113,6 +114,7 @@ class DecalShader: Shader
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invModelMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
+        fsUBO.uvTransformation = Matrix4x4f.identity;
         fsUBO.baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.roughnessMetallic = Vector4f(0.0f, 0.5f, 0.0f, 0.0f);
         fsUBO.emission = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
@@ -138,6 +140,7 @@ class DecalShader: Shader
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         fsUBO.invModelMatrix = entity.invModelMatrix;
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
+        fsUBO.uvTransformation = material.uvTransformation;
         
         fsUBO.flags[DecalFlags.Texture] = 0;
         fsUBO.flags[1] = 0;

@@ -48,6 +48,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 invViewMatrix;
     mat4 invModelMatrix;
     mat4 invProjectionMatrix;
+    mat4 uvTransformation;
     vec4 baseColor;
     vec4 roughnessMetallic;
     vec4 emission;
@@ -94,9 +95,9 @@ void main()
     vec3 fdy = dFdy(eyePos);
     vec3 N = -normalize(cross(fdx, fdy));
     
-    // Texcoord (go from -1..1 to 0..1)
+    // Texcoords (convert from -1..1 to 0..1)
     vec2 texCoords = objPos.xz * 0.5 + 0.5;
-    //texCoords = (textureMatrix * vec3(texCoords, 1.0)).xy;
+    texCoords = (mat3(ubo.uvTransformation) * vec3(texCoords, 1.0)).xy;
     vec2 uv = texCoords;
     
     float normalAlpha = 0.0;

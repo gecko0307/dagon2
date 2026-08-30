@@ -163,4 +163,27 @@ class Material: Owner
             m.a31, m.a32, m.a33, 0.0f,
             0.0f,  0.0f,  0.0f,  1.0f);
     }
+    
+    ///
+    void uvOffset(Vector2f v)
+    {
+        uvTransformation.a13 = v.x;
+        uvTransformation.a23 = v.y;
+    }
+    
+    ///
+    void uvScale(Vector2f s)
+    {
+        uvTransformation.a11 = s.x;
+        uvTransformation.a22 = s.y;
+    }
+    
+    // TODO: uvRotation
+    
+    ///
+    void setSprite(Vector2f uvSize, Vector2f uvPosition)
+    {
+        uvScale = uvSize;
+        uvOffset = uvPosition;
+    }
 }
