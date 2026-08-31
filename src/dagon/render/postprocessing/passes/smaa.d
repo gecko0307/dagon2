@@ -160,11 +160,11 @@ class SMAABlendingWeightsShader: Shader
         
         fsUBO.resolution = vsUBO.resolution;
         
-        //if (edgeBuffer)
+        if (edgeBuffer)
             pass.bindInputBuffer(PipelineStage.Fragment, 0, edgeBuffer);
-        //if (areaLUT)
+        if (areaLUT)
             pass.bindTexture(PipelineStage.Fragment, 1, areaLUT);
-        //if (searchLUT)
+        if (searchLUT)
             pass.bindTexture(PipelineStage.Fragment, 2, searchLUT);
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);

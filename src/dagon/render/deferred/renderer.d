@@ -161,7 +161,8 @@ class DeferredRenderer: Renderer
             motionBlurPass.active = true;
             tonemappingPass.active = true;
             lensDistortionPass.active = true;
-            fxaaPass.active = true;
+            fxaaPass.active = false;
+            smaaPass.active = true;
             sharpeningPass.active = true;
             
             motionBlurPass.motionBlurShader.samples = 16;
@@ -204,6 +205,7 @@ class DeferredRenderer: Renderer
             tonemappingPass.active = true;
             lensDistortionPass.active = false;
             fxaaPass.active = true;
+            smaaPass.active = false;
             sharpeningPass.active = false;
             
             ssaoPass.ssaoShader.temporalAccumulation = true;
@@ -233,12 +235,9 @@ class DeferredRenderer: Renderer
     
     override void onUpdate(Time t)
     {
-        fxaaPass.active = false;
-        smaaPass.active = true;
-        
-        // The pipeline works primarily in linear, except FXAA which works in gamma space.
-        // To optimize the shader, we do the conversion in the tonemapping pass.
-        tonemappingPass.tonemappingShader.linearOutput = !smaaPass.active;
+        // The pipeline works primarily in linear, except anti-aliasing which works in gamma space,
+        // So, we do the necessary conversion in the tonemapping pass.
+        tonemappingPass.tonemappingShader.linearOutput = !(smaaPass.active || fxaaPass.active);
         
         state.occlusionEnabled = ssaoPass.active;
     }

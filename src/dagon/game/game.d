@@ -221,8 +221,25 @@ class Game: BaseGame
         if ("lensDistortion.enabled" in rendererConfig.props)
             renderer.lensDistortionPass.active = cast(bool)(rendererConfig.props["lensDistortion.enabled"].toUInt);
         
-        if ("fxaa.enabled" in rendererConfig.props)
-            renderer.fxaaPass.active = cast(bool)(rendererConfig.props["fxaa.enabled"].toUInt);
+        if ("antialiasing" in rendererConfig.props)
+        {
+            string aa = rendererConfig.props["antialiasing"].toString;
+            if (aa == "FXAA")
+            {
+                renderer.fxaaPass.active = true;
+                renderer.smaaPass.active = false;
+            }
+            else if (aa == "SMAA")
+            {
+                renderer.fxaaPass.active = false;
+                renderer.smaaPass.active = true;
+            }
+            else
+            {
+                renderer.fxaaPass.active = false;
+                renderer.smaaPass.active = false;
+            }
+        }
         
         if ("sharpening.enabled" in rendererConfig.props)
             renderer.sharpeningPass.active = cast(bool)(rendererConfig.props["sharpening.enabled"].toUInt);
