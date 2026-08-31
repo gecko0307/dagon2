@@ -5,6 +5,8 @@
  * Belen Masia, Fernando Navarro and Diego Gutierrez.
  */
 
+#define SMAA_MAX_SEARCH_STEPS 8
+
 layout(location = 0) in vec2 va_position;
 layout(location = 1) in vec2 va_texcoords;
 
@@ -24,7 +26,7 @@ void main()
     
     offset[0] = fma(ubo.resolution.xyxy, vec4(-0.25, -0.125,  1.25, -0.125), va_texcoords.xyxy);
     offset[1] = fma(ubo.resolution.xyxy, vec4(-0.125, -0.25, -0.125,  1.25), va_texcoords.xyxy);
-    offset[2] = fma(vec4(offset[0].xz, offset[1].yw), vec4(-2.0, 2.0, -2.0, 2.0), ubo.resolution.xxyy * float(SMAA_MAX_SEARCH_STEPS));
+    offset[2] = fma(ubo.resolution.xxyy, vec4(-2.0, 2.0, -2.0, 2.0) * float(SMAA_MAX_SEARCH_STEPS), vec4(offset[0].xz, offset[1].yw));
     
     vec2 clipVertex = va_position * 2.0 - 1.0;
     clipVertex.y = -clipVertex.y;

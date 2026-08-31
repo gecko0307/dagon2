@@ -103,6 +103,130 @@ class SMAAEdgeDetectionShader: Shader
     }
 }
 
+struct SMAABlendingWeightsShaderVertexUniformBuffer
+{
+    Vector4f resolution;
+}
+
+struct SMAABlendingWeightsShaderFragmentUniformBuffer
+{
+    Vector4f resolution;
+}
+
+class SMAABlendingWeightsShader: Shader
+{
+   protected:
+    SMAABlendingWeightsShaderVertexUniformBuffer vsUBO;
+    SMAABlendingWeightsShaderVertexUniformBuffer fsUBO;
+    
+   public:
+    InputBuffer* edgeBuffer;
+    Texture areaLUT;
+    Texture searchLUT;
+    
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+        
+        vertexModule = New!ShaderModule(gpu, this);
+        vertexModule.create("SMAABlendingWeights.vert.glsl", "data/__internal/shaders/SMAA/SMAABlendingWeights.vert.glsl",
+            ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
+        
+        fragmentModule = New!ShaderModule(gpu, this);
+        fragmentModule.create("SMAABlendingWeights.frag.glsl", "data/__internal/shaders/SMAA/SMAABlendingWeights.frag.glsl",
+            ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
+        
+        if (!vertexModule.valid || !fragmentModule.valid)
+        {
+            exitWithError("Failed to create SMAABlendingWeightsShader");
+        }
+        
+        vsUBO.resolution = Vector4f(
+            1.0f / cast(float)gpu.application.drawableWidth,
+            1.0f / cast(float)gpu.application.drawableHeight,
+            cast(float)gpu.application.drawableWidth,
+            cast(float)gpu.application.drawableHeight);
+        fsUBO.resolution = vsUBO.resolution;
+    }
+    
+    override void bindParameters(GraphicsState* state)
+    {
+        auto pass = state.pass;
+        
+        vsUBO.resolution.x = 1.0f / cast(float)gpu.application.drawableWidth;
+        vsUBO.resolution.y = 1.0f / cast(float)gpu.application.drawableHeight;
+        vsUBO.resolution.z = cast(float)gpu.application.drawableWidth;
+        vsUBO.resolution.w = cast(float)gpu.application.drawableHeight;
+        
+        fsUBO.resolution = vsUBO.resolution;
+        
+        //if (edgeBuffer)
+            pass.bindInputBuffer(PipelineStage.Fragment, 0, edgeBuffer);
+        //if (areaLUT)
+            pass.bindTexture(PipelineStage.Fragment, 1, areaLUT);
+        //if (searchLUT)
+            pass.bindTexture(PipelineStage.Fragment, 2, searchLUT);
+        
+        pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
+    }
+}
+
+struct SMAANeighborhoodBlendingShaderUniformBuffer
+{
+    Vector4f resolution;
+}
+
+class SMAANeighborhoodBlendingShader: Shader
+{
+   protected:
+    SMAANeighborhoodBlendingShaderUniformBuffer ubo;
+    
+   public:
+    InputBuffer* blendingWeightsBuffer;
+    
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+        
+        vertexModule = New!ShaderModule(gpu, this);
+        vertexModule.create("SMAANeighborhoodBlending.vert.glsl", "data/__internal/shaders/SMAA/SMAANeighborhoodBlending.vert.glsl",
+            ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
+        
+        fragmentModule = New!ShaderModule(gpu, this);
+        fragmentModule.create("SMAANeighborhoodBlending.frag.glsl", "data/__internal/shaders/SMAA/SMAANeighborhoodBlending.frag.glsl",
+            ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
+        
+        if (!vertexModule.valid || !fragmentModule.valid)
+        {
+            exitWithError("Failed to create SMAANeighborhoodBlendingShader");
+        }
+        
+        ubo.resolution = Vector4f(
+            1.0f / cast(float)gpu.application.drawableWidth,
+            1.0f / cast(float)gpu.application.drawableHeight,
+            cast(float)gpu.application.drawableWidth,
+            cast(float)gpu.application.drawableHeight);
+    }
+    
+    override void bindParameters(GraphicsState* state)
+    {
+        auto pass = state.pass;
+        
+        ubo.resolution.x = 1.0f / cast(float)gpu.application.drawableWidth;
+        ubo.resolution.y = 1.0f / cast(float)gpu.application.drawableHeight;
+        ubo.resolution.z = cast(float)gpu.application.drawableWidth;
+        ubo.resolution.w = cast(float)gpu.application.drawableHeight;
+        
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
+        if (blendingWeightsBuffer)
+            pass.bindInputBuffer(PipelineStage.Fragment, 1, blendingWeightsBuffer);
+        
+        pass.bindUniformBuffer(PipelineStage.Vertex, 0, &ubo);
+        pass.bindUniformBuffer(PipelineStage.Fragment, 0, &ubo);
+    }
+}
+
 class SMAAEdgeDetectionSubPass: RenderPass
 {
     GPU gpu;
@@ -161,7 +285,7 @@ class SMAAEdgeDetectionSubPass: RenderPass
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
         SDL_GPUColorTargetDescription colorTargetDescription;
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8G8_UNORM; //ppContext.bufferFormat;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8G8_UNORM;
         colorTargetDescription.blend_state.enable_blend = false;
         
         pipelineCreateInfo.target_info.num_color_targets = 1;
@@ -187,7 +311,7 @@ class SMAAEdgeDetectionSubPass: RenderPass
         colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = smaaPass.edgeBuffer; //ppContext.writeBuffer;
+        colorTargetInfo.texture = smaaPass.edgeBuffer.texture;
         
         colorTargetsInfo = &colorTargetInfo;
         numColorTargets = 1;
@@ -197,19 +321,230 @@ class SMAAEdgeDetectionSubPass: RenderPass
     
     override void render(GraphicsState* state)
     {
-        if (state.scene is null)
-            return;
-        
         state.entity = null;
         
-        colorTargetInfo.texture = smaaPass.edgeBuffer;
+        colorTargetInfo.texture = smaaPass.edgeBuffer.texture;
         beginPass();
-        {
-            state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
-            smaaEdgeDetectionShader.bindParameters(state);
-            renderer.renderScreenQuad(state);
-        }
+        state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
+        smaaEdgeDetectionShader.bindParameters(state);
+        renderer.renderScreenQuad(state);
         endPass();
+    }
+}
+
+class SMAABlendingWeightsSubPass: RenderPass
+{
+    GPU gpu;
+    GBuffer gbuffer;
+    PostProcessingContext ppContext;
+    SMAABlendingWeightsShader smaaBlendingWeightsShader;
+    SDL_GPUColorTargetInfo colorTargetInfo;
+    SMAAPass smaaPass;
+    
+    this(Renderer renderer, PostProcessingContext ppContext, SMAAPass smaaPass)
+    {
+        super(renderer, true);
+        this.gpu = renderer.gpu;
+        this.gbuffer = ppContext.gbuffer;
+        this.ppContext = ppContext;
+        this.smaaPass = smaaPass;
+        
+        smaaBlendingWeightsShader = New!SMAABlendingWeightsShader(gpu, this);
+        shader = smaaBlendingWeightsShader;
+        
+        SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
+        pipelineCreateInfo.vertex_shader = smaaBlendingWeightsShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = smaaBlendingWeightsShader.fragmentModule.shader;
+        pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+        
+        SDL_GPUVertexBufferDescription[2] vbDescriptions;
+        
+        vbDescriptions[0].slot = VertexAttribute.Position;
+        vbDescriptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[0].instance_step_rate = 0;
+        vbDescriptions[0].pitch = Vector2f.sizeof;
+        
+        vbDescriptions[1].slot = VertexAttribute.Texcoord;
+        vbDescriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[1].instance_step_rate = 0;
+        vbDescriptions[1].pitch = Vector2f.sizeof;
+
+        pipelineCreateInfo.vertex_input_state.num_vertex_buffers = vbDescriptions.length;
+        pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
+        
+        SDL_GPUVertexAttribute[2] vertexAttributes;
+        
+        // Position
+        vertexAttributes[0].buffer_slot = VertexAttribute.Position;
+        vertexAttributes[0].location = VertexAttribute.Position;
+        vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[0].offset = 0;
+        
+        // Texcoords
+        vertexAttributes[1].buffer_slot = VertexAttribute.Texcoord;
+        vertexAttributes[1].location = VertexAttribute.Texcoord;
+        vertexAttributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[1].offset = 0;
+        
+        pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
+        pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
+        
+        SDL_GPUColorTargetDescription colorTargetDescription;
+        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        colorTargetDescription.blend_state.enable_blend = false;
+        
+        pipelineCreateInfo.target_info.num_color_targets = 1;
+        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
+        pipelineCreateInfo.target_info.has_depth_stencil_target = false;
+        
+        pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+        pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+        pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_slope_factor = 1.0f;
+        pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
+        pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
+        
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
+        pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;
+        
+        graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
+        
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
+        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo.texture = smaaPass.blendingWeightsBuffer.texture;
+        
+        colorTargetsInfo = &colorTargetInfo;
+        numColorTargets = 1;
+        depthStencilTargetInfo = null;
+        enableDepthTarget = false;
+    }
+    
+    override void render(GraphicsState* state)
+    {
+        state.entity = null;
+        
+        colorTargetInfo.texture = smaaPass.blendingWeightsBuffer.texture;
+        beginPass();
+        smaaBlendingWeightsShader.edgeBuffer = &smaaPass.edgeBuffer;
+        smaaBlendingWeightsShader.areaLUT = smaaPass.areaLUT;
+        smaaBlendingWeightsShader.searchLUT = smaaPass.searchLUT;
+        smaaBlendingWeightsShader.bindParameters(state);
+        renderer.renderScreenQuad(state);
+        endPass();
+    }
+}
+
+class SMAANeighborhoodBlendingSubPass: RenderPass
+{
+    GPU gpu;
+    GBuffer gbuffer;
+    PostProcessingContext ppContext;
+    SMAANeighborhoodBlendingShader smaaNeighborhoodBlendingShader;
+    SDL_GPUColorTargetInfo colorTargetInfo;
+    SMAAPass smaaPass;
+    
+    this(Renderer renderer, PostProcessingContext ppContext, SMAAPass smaaPass)
+    {
+        super(renderer, true);
+        this.gpu = renderer.gpu;
+        this.gbuffer = ppContext.gbuffer;
+        this.ppContext = ppContext;
+        this.smaaPass = smaaPass;
+        
+        smaaNeighborhoodBlendingShader = New!SMAANeighborhoodBlendingShader(gpu, this);
+        shader = smaaNeighborhoodBlendingShader;
+        
+        SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
+        pipelineCreateInfo.vertex_shader = smaaNeighborhoodBlendingShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = smaaNeighborhoodBlendingShader.fragmentModule.shader;
+        pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+        
+        SDL_GPUVertexBufferDescription[2] vbDescriptions;
+        
+        vbDescriptions[0].slot = VertexAttribute.Position;
+        vbDescriptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[0].instance_step_rate = 0;
+        vbDescriptions[0].pitch = Vector2f.sizeof;
+        
+        vbDescriptions[1].slot = VertexAttribute.Texcoord;
+        vbDescriptions[1].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[1].instance_step_rate = 0;
+        vbDescriptions[1].pitch = Vector2f.sizeof;
+
+        pipelineCreateInfo.vertex_input_state.num_vertex_buffers = vbDescriptions.length;
+        pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
+        
+        SDL_GPUVertexAttribute[2] vertexAttributes;
+        
+        // Position
+        vertexAttributes[0].buffer_slot = VertexAttribute.Position;
+        vertexAttributes[0].location = VertexAttribute.Position;
+        vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[0].offset = 0;
+        
+        // Texcoords
+        vertexAttributes[1].buffer_slot = VertexAttribute.Texcoord;
+        vertexAttributes[1].location = VertexAttribute.Texcoord;
+        vertexAttributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        vertexAttributes[1].offset = 0;
+        
+        pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
+        pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
+        
+        SDL_GPUColorTargetDescription colorTargetDescription;
+        colorTargetDescription.format = ppContext.bufferFormat;
+        colorTargetDescription.blend_state.enable_blend = false;
+        
+        pipelineCreateInfo.target_info.num_color_targets = 1;
+        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
+        pipelineCreateInfo.target_info.has_depth_stencil_target = false;
+        
+        pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
+        pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+        pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
+        pipelineCreateInfo.rasterizer_state.depth_bias_slope_factor = 1.0f;
+        pipelineCreateInfo.rasterizer_state.enable_depth_bias = false;
+        pipelineCreateInfo.rasterizer_state.enable_depth_clip = false;
+        
+        pipelineCreateInfo.depth_stencil_state.compare_op = SDL_GPU_COMPAREOP_LESS;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_test = false;
+        pipelineCreateInfo.depth_stencil_state.enable_depth_write = false;
+        pipelineCreateInfo.depth_stencil_state.enable_stencil_test = false;
+        
+        graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
+        
+        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo.texture = ppContext.writeBuffer;
+        
+        colorTargetsInfo = &colorTargetInfo;
+        numColorTargets = 1;
+        depthStencilTargetInfo = null;
+        enableDepthTarget = false;
+    }
+    
+    override void render(GraphicsState* state)
+    {
+        state.entity = null;
+        
+        colorTargetInfo.texture = ppContext.writeBuffer;
+        
+        beginPass();
+        state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
+        smaaNeighborhoodBlendingShader.blendingWeightsBuffer = &smaaPass.blendingWeightsBuffer;
+        smaaNeighborhoodBlendingShader.bindParameters(state);
+        renderer.renderScreenQuad(state);
+        endPass();
+        
+        ppContext.swapTargets();
     }
 }
 
@@ -219,7 +554,11 @@ class SMAAPass: RenderPass
     GBuffer gbuffer;
     PostProcessingContext ppContext;
     SMAAEdgeDetectionSubPass edgeDetection;
-    SDL_GPUTexture* edgeBuffer;
+    SMAABlendingWeightsSubPass blendingWeights;
+    SMAANeighborhoodBlendingSubPass neighborhoodBlending;
+    InputBuffer edgeBuffer;
+    InputBuffer blendingWeightsBuffer;
+    SDL_GPUSampler* bufferSampler;
     Texture areaLUT;
     Texture searchLUT;
     bool valid = true;
@@ -232,6 +571,27 @@ class SMAAPass: RenderPass
         this.ppContext = ppContext;
         
         createBuffers(ppContext.gbuffer.width, ppContext.gbuffer.height);
+        
+        SDL_GPUSamplerCreateInfo samplerCreateInfo = {
+            min_filter: SDL_GPU_FILTER_LINEAR,
+            mag_filter: SDL_GPU_FILTER_LINEAR,
+            mipmap_mode: SDL_GPU_SAMPLERMIPMAPMODE_LINEAR,
+            address_mode_u: SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+            address_mode_v: SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+            address_mode_w: SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+            mip_lod_bias: 0.0f,
+            max_anisotropy: 1.0f,
+            min_lod: 0.0f,
+            max_lod: 0.0f,
+            enable_anisotropy: false,
+            enable_compare: false,
+            compare_op: SDL_GPU_COMPAREOP_ALWAYS
+        };
+        
+        bufferSampler = SDL_CreateGPUSampler(gpu.device, &samplerCreateInfo);
+        
+        edgeBuffer.sampler = bufferSampler;
+        blendingWeightsBuffer.sampler = bufferSampler;
         
         TextureCreationOptions lutOptions = {
             generateMipmaps: false,
@@ -255,11 +615,16 @@ class SMAAPass: RenderPass
         }
         
         edgeDetection = New!SMAAEdgeDetectionSubPass(renderer, ppContext, this);
+        blendingWeights = New!SMAABlendingWeightsSubPass(renderer, ppContext, this);
+        neighborhoodBlending = New!SMAANeighborhoodBlendingSubPass(renderer, ppContext, this);
     }
     
     ~this()
     {
         releaseBuffers();
+        
+        if (bufferSampler)
+            SDL_ReleaseGPUSampler(gpu.device, bufferSampler);
     }
     
     protected Texture loadLUT(string path, TextureCreationOptions* options)
@@ -292,7 +657,7 @@ class SMAAPass: RenderPass
     {
         releaseBuffers();
         
-        SDL_GPUTextureCreateInfo edgeBufferCreateInfo = {
+        SDL_GPUTextureCreateInfo bufferCreateInfo = {
             type: SDL_GPU_TEXTURETYPE_2D,
             width: width,
             height: height,
@@ -302,13 +667,18 @@ class SMAAPass: RenderPass
             sample_count: SDL_GPU_SAMPLECOUNT_1,
             usage: SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET
         };
-        edgeBuffer = SDL_CreateGPUTexture(gpu.device, &edgeBufferCreateInfo);
+        edgeBuffer.texture = SDL_CreateGPUTexture(gpu.device, &bufferCreateInfo);
+        
+        bufferCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        blendingWeightsBuffer.texture = SDL_CreateGPUTexture(gpu.device, &bufferCreateInfo);
     }
     
     void releaseBuffers()
     {
-        if (edgeBuffer)
-            SDL_ReleaseGPUTexture(gpu.device, edgeBuffer);
+        if (edgeBuffer.texture)
+            SDL_ReleaseGPUTexture(gpu.device, edgeBuffer.texture);
+        if (blendingWeightsBuffer.texture)
+            SDL_ReleaseGPUTexture(gpu.device, blendingWeightsBuffer.texture);
     }
     
     override void resize(uint width, uint height)
@@ -321,6 +691,13 @@ class SMAAPass: RenderPass
         if (!valid)
             return;
         
+        state.pass = edgeDetection;
         edgeDetection.render(state);
+        
+        state.pass = blendingWeights;
+        blendingWeights.render(state);
+        
+        state.pass = neighborhoodBlending;
+        neighborhoodBlending.render(state);
     }
 }

@@ -141,9 +141,6 @@ class DeferredRenderer: Renderer
         presentPass = New!PresentPass(this, ppContext);
         
         applyProfile(DeferredRendererProfile.HighQuality);
-        
-        // Temporary, SMAA is not ready yet
-        smaaPass.active = false;
     }
     
     void applyProfile(DeferredRendererProfile profile)
@@ -236,9 +233,12 @@ class DeferredRenderer: Renderer
     
     override void onUpdate(Time t)
     {
+        fxaaPass.active = false;
+        smaaPass.active = true;
+        
         // The pipeline works primarily in linear, except FXAA which works in gamma space.
         // To optimize the shader, we do the conversion in the tonemapping pass.
-        tonemappingPass.tonemappingShader.linearOutput = !fxaaPass.active;
+        tonemappingPass.tonemappingShader.linearOutput = !smaaPass.active;
         
         state.occlusionEnabled = ssaoPass.active;
     }
