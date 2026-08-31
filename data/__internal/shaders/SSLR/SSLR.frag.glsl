@@ -282,7 +282,10 @@ void main()
     vec2 prevTexCoords = texCoords - uvVelocity;
     vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
     float velocityLength = length(uvVelocity);
-    float alpha = mix(0.02, 1.0, clamp(velocityLength * 50.0, 0.0, 1.0));
+    float velocityInfluence = mix(40, 50, reflection.a); // 50
+    float minAlpha = 0.015; // 0.02
+    float maxAlpha = mix(0.5, 1.0, reflection.a); // 1.0
+    float alpha = mix(minAlpha, maxAlpha, clamp(velocityLength * velocityInfluence, 0.0, 1.0));
 
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha * shadingMask);
     
