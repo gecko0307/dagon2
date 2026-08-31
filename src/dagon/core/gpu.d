@@ -189,12 +189,14 @@ class GPU: Owner
                 }
             }
             
-            if (application.vsync == VSyncMode.Enabled)
+            presentMode = SDL_GPU_PRESENTMODE_VSYNC;
+            
+            if (application.vsync == VSyncMode.VSync)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_VSYNC))
                     presentMode = SDL_GPU_PRESENTMODE_VSYNC;
             }
-            else if (application.vsync == VSyncMode.Disabled)
+            else if (application.vsync == VSyncMode.Immediate)
             {
                 if (SDL_WindowSupportsGPUPresentMode(device, application.window, SDL_GPU_PRESENTMODE_IMMEDIATE))
                     presentMode = SDL_GPU_PRESENTMODE_IMMEDIATE;
@@ -206,6 +208,21 @@ class GPU: Owner
             }
             
             SDL_SetGPUSwapchainParameters(device, application.window, swapchainComposition, presentMode);
+            
+            switch(presentMode)
+            {
+                case SDL_GPU_PRESENTMODE_VSYNC:
+                    application.vsync = VSyncMode.VSync;
+                    break;
+                case SDL_GPU_PRESENTMODE_IMMEDIATE:
+                    application.vsync = VSyncMode.Immediate;
+                    break;
+                case SDL_GPU_PRESENTMODE_MAILBOX:
+                    application.vsync = VSyncMode.Mailbox;
+                    break;
+                default:
+                    break;
+            }
             
             swapchainTextureFormat = SDL_GetGPUSwapchainTextureFormat(device, application.window);
             

@@ -244,10 +244,10 @@ int maxTextureSize()
 /// Vertical synchronization mode.
 enum VSyncMode: int
 {
-    Disabled = 0,
-    Enabled = 1,
+    Immediate = 0,
+    VSync = 1,
     Mailbox = 2,
-    Adaptive = -1 // Not supported in Dagon 2
+    Adaptive = -1 // Only for backwards compatibility, not supported in Dagon 2
 }
 
 /// Structure that represents a version number.
