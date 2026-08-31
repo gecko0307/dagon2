@@ -12,6 +12,7 @@
 * BC7 compressor - [Rich Geldreich](https://github.com/richgel999)
 * SSAO implementation is based on the code by [Reinder Nijhoff](https://www.shadertoy.com/view/Ms33WB)
 * FXAA 3.11 implementation is based on the code by Timothy Lottes (NVIDIA)
+* SMAA implementation is based on the code by [Jorge Jimenez](https://github.com/iryoku), Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez
 * Sharpening shader is based on AMD's [FidelityFX™ CAS](https://gpuopen.com/fidelityfx-cas/)
 * Cubemap prefiltering shader is based on the code by [Joey de Vries](https://learnopengl.com/)
 * Hammersley point set calculation is based on the radical inverse function by [Holger Dammertz](http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html)

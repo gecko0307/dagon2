@@ -1,8 +1,11 @@
 #version 460
 
 /*
- * SMAA implementation is based on code by Jorge Jimenez, Jose I. Echevarria,
- * Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * Subpixel Morphological Anti-Aliasing (neighborhood blending pass).
+ * Implementation is based on the code by Jorge Jimenez,
+ * Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * https://github.com/iryoku/smaa
+ * See license/SMAA.txt for details.
  */
 
 layout(location = 0) in vec2 va_position;

@@ -1,15 +1,16 @@
 #version 460
 
 /*
- * SMAA implementation is based on code by Jorge Jimenez, Jose I. Echevarria,
- * Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * Subpixel Morphological Anti-Aliasing (blending weights calculation pass).
+ * SMAA implementation is based on the code by Jorge Jimenez,
+ * Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * https://github.com/iryoku/smaa
+ * See license/SMAA.txt for details.
  */
 
 #define SMAA_MAX_SEARCH_STEPS_DIAG 8
-//#define SMAA_FORCE_DIAGONAL_DETECTION 1
 
 #define SMAA_CORNER_ROUNDING 25
-//#define SMAA_FORCE_CORNER_DETECTION
 
 #define SMAA_AREATEX_MAX_DISTANCE 16
 #define SMAA_AREATEX_MAX_DISTANCE_DIAG 20

@@ -1,8 +1,11 @@
 #version 460
 
 /*
- * SMAA implementation is based on code by Jorge Jimenez, Jose I. Echevarria,
- * Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * Subpixel Morphological Anti-Aliasing (edge detection pass).
+ * SMAA implementation is based on the code by Jorge Jimenez,
+ * Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * https://github.com/iryoku/smaa
+ * See license/SMAA.txt for details.
  */
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;

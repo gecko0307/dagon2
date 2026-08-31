@@ -1,11 +1,14 @@
 #version 460
 
 /*
- * SMAA implementation is based on code by Jorge Jimenez, Jose I. Echevarria,
- * Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * Subpixel Morphological Anti-Aliasing (blending weights calculation pass).
+ * SMAA implementation is based on the code by Jorge Jimenez,
+ * Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * https://github.com/iryoku/smaa
+ * See license/SMAA.txt for details.
  */
 
-#define SMAA_MAX_SEARCH_STEPS 8
+#define SMAA_MAX_SEARCH_STEPS 16
 
 layout(location = 0) in vec2 va_position;
 layout(location = 1) in vec2 va_texcoords;

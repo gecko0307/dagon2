@@ -1,8 +1,11 @@
 #version 460
 
 /*
- * SMAA implementation is based on code by Jorge Jimenez, Jose I. Echevarria,
- * Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * Subpixel Morphological Anti-Aliasing (neighborhood blending pass).
+ * SMAA implementation is based on the code by Jorge Jimenez,
+ * Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.
+ * https://github.com/iryoku/smaa
+ * See license/SMAA.txt for details.
  */
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
@@ -35,8 +38,8 @@ vec4 smaaNeighborhoodBlending(vec2 texcoord, vec4 offset[2], sampler2D colorTex,
     {
         vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 
-        // Up to 4 lines can be crossing a pixel (one through each edge). We
-        // favor blending by choosing the line with the maximum weight for each direction
+        // Up to 4 lines can be crossing a pixel (one through each edge).
+        // We favor blending by choosing the line with the maximum weight for each direction
         vec2 offset;
         offset.x = a.a > a.b? a.a : -a.b; // left vs. right 
         offset.y = a.g > a.r? a.g : -a.r; // top vs. bottom
