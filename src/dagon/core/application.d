@@ -1324,7 +1324,6 @@ class Application: EventListener, Updateable
         resourceCache = New!ResourceCache(this);
         _resourceCache = resourceCache;
         
-        // Init shader cache
         if ("gpu.shaderCache.enabled" in config.props)
             enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
         if ("gpu.shaderCache.path" in config.props)
