@@ -33,6 +33,7 @@ New features and major changes from Dagon 0.x/1.x:
 - Temporal SSAO
 - Fog effect is now applied in a separate pass. Ground fog support
 - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
+- Subpixel Morphological Anti-Aliasing (SMAA) support
 - HDR (scRGB) output support
 - Mailbox VSync mode support. CPU-friendly frame scheduler
 - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
