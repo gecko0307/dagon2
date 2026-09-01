@@ -57,6 +57,7 @@ struct ReflectionShaderVertexUniformBuffer
 struct ReflectionShaderFragmentUniformBuffer
 {
     Vector4f resolution;
+    int[4] iparams;
 }
 
 class ReflectionShader: Shader
@@ -66,6 +67,9 @@ class ReflectionShader: Shader
     ReflectionShaderFragmentUniformBuffer fsUBO;
     
    public:
+    bool blurEnabled = false;
+    uint blurRadius = 2;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -92,6 +96,11 @@ class ReflectionShader: Shader
         
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
+        fsUBO.resolution.z = 1.0f / cast(float)pass.view.width;
+        fsUBO.resolution.w = 1.0f / cast(float)pass.view.height;
+        
+        fsUBO.iparams[0] = blurEnabled;
+        fsUBO.iparams[1] = blurRadius;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.reflectionBuffer);

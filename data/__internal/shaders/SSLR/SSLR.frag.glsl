@@ -79,7 +79,6 @@ layout(set = 2, binding = 7) uniform sampler2D brdfLUT;
 
 #define FLAGS_MAX_LOD_LEVEL 1
 
-#define FPARAM_TIME 0
 #define FPARAM_TIME_DELTA 1
 
 layout(set = 3, binding = 0) uniform UniformBuffer
@@ -89,16 +88,24 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     mat4 projectionMatrix;
     mat4 invProjectionMatrix;
     vec4 resolution;
-    vec4 fparams; // [0] = time, [1] = delta
-    uvec4 iparams;
+    vec4 fparams; // [time, timeDelta, maxDistance, invSamples]
+    vec4 fparams2; // [hitThickness, velocitySensitivity, historyWeight, motionWeight]
+    uvec4 iparams; // [hasBRDFLut, samples, refineSamples, 0]
 } ubo;
 
-// TODO: make uniforms
-const float maxDistance = 10.0;
-const int samples = 40;
-const float invSamples = 1.0 / float(samples);
-const int refineSamples = 4;
-const float thickness = 0.3;
+#define time ubo.fparams.x
+#define timeDelta ubo.fparams.y
+#define maxDistance ubo.fparams.z
+#define invSamples ubo.fparams.w
+
+#define hitThickness ubo.fparams2.x
+#define velocitySensitivity ubo.fparams2.y
+#define historyWeight ubo.fparams2.z
+#define motionWeight ubo.fparams2.w
+
+#define hasBRDFLut bool(ubo.iparams.x)
+#define samples ubo.iparams.y
+#define refineSamples ubo.iparams.z
 
 layout(location = 0) in vec2 texCoords;
 
@@ -116,7 +123,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
         return vec4(0.0);
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float jitter = hash(texCoords * 467.759 + ubo.fparams[FPARAM_TIME]) * 0.9;
+    float jitter = hash(texCoords * 467.759 + time) * 0.9;
     float prevT = 0.0;
 
     float P00 = ubo.projectionMatrix[0][0];
@@ -136,7 +143,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
     float I23 = ubo.invProjectionMatrix[2][3];
     float I33 = ubo.invProjectionMatrix[3][3];
 
-    for (int i = 0; i <= samples; i++)
+    for (uint i = 0; i <= samples; i++)
     {
         float t = (float(i) + jitter) * invSamples * maxDistance;
         vec3 samplePos = P + R * t;
@@ -169,13 +176,13 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
         float sceneZ = resZ / resW;
 
         // Hit test
-        if (samplePos.z < sceneZ && samplePos.z > sceneZ - thickness)
+        if (samplePos.z < sceneZ && samplePos.z > sceneZ - hitThickness)
         {
             float tLo = prevT;
             float tHi = t;
 
             // Binary search refinement
-            for (int j = 0; j < refineSamples; j++)
+            for (uint j = 0; j < refineSamples; j++)
             {
                 float tMid = 0.5 * (tLo + tHi);
                 vec3 midPos = P + R * tMid;
@@ -226,8 +233,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             // Fade out reflectionat edges
             vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
             float screenFade = edgeFactor.x * edgeFactor.y;
-            float distanceFade = 1.0; //1.0 - clamp(tFinal / maxDistance, 0.0, 1.0);
-            float alpha = clamp(screenFade * distanceFade, 0.0, 1.0) * roughnessFactor;
+            float alpha = clamp(screenFade, 0.0, 1.0) * roughnessFactor;
 
             return vec4(texture(radianceBuffer, finalUV).rgb, alpha);
         }
@@ -255,6 +261,7 @@ void main()
     
     vec3 N = mat3(ubo.viewMatrix) * wN;
     vec3 E = normalize(eyePos);
+    float NE = clamp(dot(N, E), 0.0, 1.0);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
@@ -265,8 +272,8 @@ void main()
     vec3 baseColor = toLinear(color.rgb);
     
     vec2 xi = vec2(
-        hash(texCoords + ubo.fparams[FPARAM_TIME]),
-        hash(texCoords * 1.1 + ubo.fparams[FPARAM_TIME])
+        hash(texCoords + time),
+        hash(texCoords * 1.1 + time)
     );
     vec3 H = importanceSampleGGX(xi, roughness, N);
     vec3 R = normalize(reflect(E, mix(N, H, roughness)));
@@ -274,18 +281,23 @@ void main()
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     vec3 F = fresnelRoughness(max(dot(H, E), 0.0), f0, roughness);
     
+    /*
+    vec2 brdf = (bool(ubo.iparams[0]))?
+        texture(brdfLUT, vec2(NE, roughness)).rg :
+        vec2(1.0, 0.0);
+    F = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
+    */
+    
     vec4 reflection = sslr(eyePos, R, roughness);
-    reflection = vec4(reflection.rgb * F, reflection.a);
+    reflection.rgb *= F;
     
     // Temporal accumulation
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec2 prevTexCoords = texCoords - uvVelocity;
     vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
     float velocityLength = length(uvVelocity);
-    float velocityInfluence = mix(40, 50, reflection.a); // 50
-    float minAlpha = 0.015; // 0.02
-    float maxAlpha = mix(0.5, 1.0, reflection.a); // 1.0
-    float alpha = mix(minAlpha, maxAlpha, clamp(velocityLength * velocityInfluence, 0.0, 1.0));
+    const float velocityFactor = clamp(velocityLength * velocitySensitivity, 0.0, 1.0);
+    float alpha = mix(historyWeight, motionWeight, velocityFactor);
 
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha * shadingMask);
     

@@ -169,7 +169,24 @@ class Game: BaseGame
             renderer.gbuffer.halfResolutionReflection = cast(bool)(rendererConfig.props["sslr.halfResolution"].toUInt);
             renderer.invalidateBuffers();
         }
-        // TODO: other SSLR options
+        if ("sslr.samples" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.samples = rendererConfig.props["sslr.samples"].toUInt;
+        if ("sslr.refineSamples" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.refineSamples = rendererConfig.props["sslr.refineSamples"].toUInt;
+        if ("sslr.maxRayDistance" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.maxRayDistance = rendererConfig.props["sslr.maxRayDistance"].toFloat;
+        if ("sslr.hitThickness" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.hitThickness = rendererConfig.props["sslr.hitThickness"].toFloat;
+        if ("sslr.velocitySensitivity" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.velocitySensitivity = rendererConfig.props["sslr.velocitySensitivity"].toFloat;
+        if ("sslr.historyWeight" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.historyWeight = rendererConfig.props["sslr.historyWeight"].toFloat;
+        if ("sslr.motionWeight" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.motionWeight = rendererConfig.props["sslr.motionWeight"].toFloat;
+        if ("sslr.blur" in rendererConfig.props)
+            renderer.reflectionPass.reflectionShader.blurEnabled = cast(bool)(rendererConfig.props["sslr.blur"].toUInt);
+        if ("sslr.blurRadius" in rendererConfig.props)
+            renderer.reflectionPass.reflectionShader.blurRadius = rendererConfig.props["sslr.blurRadius"].toUInt;
         
         if ("motionBlur.enabled" in rendererConfig.props)
             renderer.motionBlurPass.active = cast(bool)(rendererConfig.props["motionBlur.enabled"].toUInt);

@@ -61,8 +61,9 @@ struct SSLRShaderFragmentUniformBuffer
     Matrix4x4f projectionMatrix;
     Matrix4x4f invProjectionMatrix;
     Vector4f resolution;
-    float[4] fparams;
-    uint[4] iparams;
+    float[4] fparams;  // [time, timeDelta, maxDistance, invSamples]
+    float[4] fparams2; // [hitThickness, velocitySensitivity, historyWeight, motionWeight]
+    uint[4] iparams;   // [hasBRDFLut, samples, refineSamples, 0]
 }
 
 class SSLRShader: Shader
@@ -74,6 +75,56 @@ class SSLRShader: Shader
     float delta = 0.0f;
     
    public:
+    /**
+     * The maximum number of steps the ray-tracer takes along the reflection ray direction to find a surface intersection.
+     * Higher values increase accuracy, allowing rays to catch smaller details.
+     * Lower values improve performance but can cause missing reflections or banding artifacts.
+     */
+    uint samples = 40;
+    
+    /**
+     * The number of refinement steps taken after a rough intersection is found.
+     * It performs a binary search between the last "miss" and the first "hit" cell.
+     * This process eliminates jagged edges along surface boundaries with minimal performance cost.
+     */
+    uint refineSamples = 4;
+    
+    /**
+     * The maximum world-space distance a reflection ray can travel before giving up.
+     * Surfaces further away than this value will not be reflected.
+     */
+    float maxRayDistance = 10.0f;
+    
+    /**
+     * The assumed thickness of objects in the depth buffer during an intersection.
+     * Prevents rays from passing entirely through thin objects.
+     */
+    float hitThickness = 0.3f;
+    
+    /**
+     * A multiplier applied to the speed of a reflection pixel.
+     * Controls the influence of the screen-space velocity to the reflection coherence.
+     * Lower values make the denoiser more tolerant to movements, but increase trailing.
+     * Higher values cause the denoiser to instantly drop the history at the slightest
+     * movement, preventing trailing/ghosting artifacts but increasing stochastic noise.
+     */
+    float velocitySensitivity = 60.0f;
+    
+    /**
+     * The blend weight given to the current frame's reflection when a pixel
+     * is completely static (velocity == 0).
+     * Lower value means that the static reflection will be as noise-free as possible.
+     */
+    float historyWeight = 0.02f;
+    
+    /**
+     * The blend weight given to the current frame's reflection when a pixel's
+     * movement exceeds the velocity threshold.
+     * Higher value discards the history buffer during fast motion, sacrificing
+     * noise cleanup, but completely eliminating trailing/ghosting artifacts.
+     */
+    float motionWeight = 1.0f;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -96,10 +147,21 @@ class SSLRShader: Shader
         fsUBO.projectionMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        
         fsUBO.fparams[0] = time;
         fsUBO.fparams[1] = delta;
-        fsUBO.fparams[2] = 0.0f;
-        fsUBO.fparams[3] = 0.0f;
+        fsUBO.fparams[2] = maxRayDistance;
+        fsUBO.fparams[3] = 1.0f / cast(float)samples;
+        
+        fsUBO.fparams2[0] = hitThickness;
+        fsUBO.fparams2[1] = velocitySensitivity;
+        fsUBO.fparams2[2] = historyWeight;
+        fsUBO.fparams2[3] = motionWeight;
+        
+        fsUBO.iparams[0] = false;
+        fsUBO.iparams[1] = samples;
+        fsUBO.iparams[2] = refineSamples;
+        fsUBO.iparams[3] = 0;
     }
     
     void update(Time t)
@@ -123,8 +185,6 @@ class SSLRShader: Shader
         fsUBO.invProjectionMatrix = view.invProjectionMatrix;
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
-        fsUBO.fparams[0] = time;
-        fsUBO.fparams[1] = delta;
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.depthBuffer);
@@ -133,6 +193,16 @@ class SSLRShader: Shader
         pass.bindInputBuffer(PipelineStage.Fragment, 4, &state.roughnessMetallicBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 5, &state.reflectionBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 6, &state.velocityBuffer);
+        
+        fsUBO.fparams[0] = time;
+        fsUBO.fparams[1] = delta;
+        fsUBO.fparams[2] = maxRayDistance;
+        fsUBO.fparams[3] = 1.0f / cast(float)samples;
+        
+        fsUBO.fparams2[0] = hitThickness;
+        fsUBO.fparams2[1] = velocitySensitivity;
+        fsUBO.fparams2[2] = historyWeight;
+        fsUBO.fparams2[3] = motionWeight;
         
         if (brdfLUT && scene.brdfLUTEnabled)
         {
@@ -144,6 +214,8 @@ class SSLRShader: Shader
             pass.bindDefaultTexture(PipelineStage.Fragment, 7);
             fsUBO.iparams[0] = false;
         }
+        fsUBO.iparams[1] = samples;
+        fsUBO.iparams[2] = refineSamples;
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
