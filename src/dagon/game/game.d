@@ -220,6 +220,16 @@ class Game: BaseGame
         
         if ("lensDistortion.enabled" in rendererConfig.props)
             renderer.lensDistortionPass.active = cast(bool)(rendererConfig.props["lensDistortion.enabled"].toUInt);
+        if ("lensDistortion.scale" in rendererConfig.props)
+            renderer.lensDistortionPass.lensDistortionShader.scale = rendererConfig.props["lensDistortion.scale"].toFloat;
+        if ("lensDistortion.dispersion" in rendererConfig.props)
+            renderer.lensDistortionPass.lensDistortionShader.dispersion = rendererConfig.props["lensDistortion.dispersion"].toFloat;
+        if ("lensDistortion.useRadialDistortion" in rendererConfig.props)
+            renderer.lensDistortionPass.lensDistortionShader.useRadialDistortion = cast(bool)(rendererConfig.props["lensDistortion.useRadialDistortion"].toUInt);
+        if ("lensDistortion.k1" in rendererConfig.props)
+            renderer.lensDistortionPass.lensDistortionShader.k1 = rendererConfig.props["lensDistortion.k1"].toFloat;
+        if ("lensDistortion.k2" in rendererConfig.props)
+            renderer.lensDistortionPass.lensDistortionShader.k2 = rendererConfig.props["lensDistortion.k2"].toFloat;
         
         if ("antialiasing" in rendererConfig.props)
         {

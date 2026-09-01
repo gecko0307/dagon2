@@ -10,7 +10,7 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
-    vec4 fparams; // scale, dispersion
+    vec4 fparams; // scale, dispersion, k1, k2
     uvec4 iparams;
 } ubo;
 
@@ -19,10 +19,10 @@ layout(location = 0) in vec2 texCoords;
 layout(location = 0) out vec4 outColor;
 
 float aspectRatio = ubo.resolution.x / ubo.resolution.y;
-float scale = ubo.fparams.x;
-float dispersion = ubo.fparams.y;
-float k1 = ubo.fparams.z;
-float k2 = ubo.fparams.w;
+#define scale ubo.fparams.x
+#define dispersion ubo.fparams.y
+#define k1 ubo.fparams.z
+#define k2 ubo.fparams.w
 
 vec2 distortion(vec2 uv, float amt)
 {

@@ -88,12 +88,12 @@ class DeferredRenderer: Renderer
     SSLRPass sslrPass;
     ReflectionPass reflectionPass;
     NPRPass nprPass;
-    MotionBlurPass motionBlurPass;
-    LensDistortionPass lensDistortionPass;
     TonemappingPass tonemappingPass;
     FXAAPass fxaaPass;
     SMAAPass smaaPass;
     SharpeningPass sharpeningPass;
+    LensDistortionPass lensDistortionPass;
+    MotionBlurPass motionBlurPass;
     PresentPass presentPass;
     
     DeferredRendererProfile profile;
@@ -132,11 +132,11 @@ class DeferredRenderer: Renderer
         sslrPass = New!SSLRPass(this, ppContext);
         reflectionPass = New!ReflectionPass(this, ppContext);
         nprPass = New!NPRPass(this, ppContext);
-        motionBlurPass = New!MotionBlurPass(this, ppContext);
-        lensDistortionPass = New!LensDistortionPass(this, ppContext);
         tonemappingPass = New!TonemappingPass(this, ppContext);
         fxaaPass = New!FXAAPass(this, ppContext);
         smaaPass = New!SMAAPass(this, ppContext);
+        lensDistortionPass = New!LensDistortionPass(this, ppContext);
+        motionBlurPass = New!MotionBlurPass(this, ppContext);
         sharpeningPass = New!SharpeningPass(this, ppContext);
         presentPass = New!PresentPass(this, ppContext);
         
