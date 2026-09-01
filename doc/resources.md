@@ -33,7 +33,7 @@ Textures are loaded using `World.loadTexture` method:
 TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
 ```
 
-It decodes files using standard `TextureAsset` class which covers all image formats supported by the engine. It also supports compression and can optionally cache textures to DDS files for faster subsequent loading. `ImageConversionOptions` define compression format and some other pre-processing options, and `TextureCreationOptions` is used to initialize a GPU texture:
+It decodes files using standard `TextureAsset` class which covers all image formats supported by the engine, relying on SDL3_Image library. It also supports compression and can optionally cache textures to DDS files for faster subsequent loading. `ImageConversionOptions` define compression format and some other pre-processing options, and `TextureCreationOptions` is used to initialize a GPU texture:
 
 ```d
 ImageConversionOptions conversionOptions = {
