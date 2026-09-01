@@ -41,12 +41,12 @@ Built-in *.conf files are fully reserved for Dagon's internal mechanisms, and it
 Log settings:
 
 * `log.enabled` - `0` or `1`, disables or enables the logger. Default is `1`
-* `log.level` - minimum verbosity level of the logger. Default is `"debug"` in debug builds and `"info"` in release builds. Supported options are:
+* `log.level` - string, minimum verbosity level of the logger. Default is `"debug"` in debug builds and `"info"` in release builds. Supported options are:
   * `"debug"` - debug mode, prints all messages
   * `"info"` - prints informational messages, warnings and errors
   * `"warning"` - prints warnings and errors
   * `"error"` - prints only errors
-* `log.toStdout` - `0` or `1`, disables or enables printing log messages to the standard output. Default is `1`
+* `log.toStdout` - `0` or `1`, disables or enables printing log messages to the standard output (console). Default is `1`
 * `log.timestampTags` - `0` or `1`, disables or enables timestamps in log messages. Default is `0`
 * `log.levelTags` - `0` or `1`, disables or enables level tags in log messages. Default is `1`
 * `log.file` - enables logging to file, specifying the filename. File output for the logger is disabled by default
@@ -137,3 +137,106 @@ Event manager settings:
 ### render.conf
 
 TODO
+
+### input.conf
+
+`input.conf` contains input bindings recognozed by the `InputManager` class.
+
+Binding definition format consists of device type and name (or number) coresponding to button or axis of this device.
+
+- `kb` - keyboard (`kb_up`, `kb_w`, etc.)
+- `ma` - mouse axis (`ma_x`, `ma_y`)
+- `mb` - mouse button (`mb_left`, `mb_right`, etc.)
+- `ga` - gamepad axis (`ga_leftx`, `ga_lefttrigger`, etc.)
+- `gb` - gamepad button (`gb_a`, `gb_x`, etc.)
+- `va` - virtual axis, has special syntax, for example: `va(kb_up, kb_down)`
+
+`ga` and `gb` bindings accept optional gamepad index, for example: `gb[0]_x` or `ga[1]_lefty`. Up to 4 gamepads are supported. Default gamepad index is 0.
+
+Example:
+
+```
+forward: "kb_w, kb_up, gb[0]_b";
+back: "kb_s, kb_down, gb[0]_a";
+left: "kb_a, kb_left";
+right: "kb_d, kb_right";
+jump: "kb_space";
+interact: "kb_e";
+
+Supported key names:
+- `kb_a` .. `kb_z`, `kb_0` .. `kb_9`
+- `kb_-`, `kb_=`, `kb_[`, `kb_]`, `kb_\`, `kb_#`, `kb_;`, `kb_'`, `kb_,`, `kb_.`, `kb_/`
+- `kb_return`, `kb_escape`, `kb_backspace`, `kb_delete`, `kb_tab`, `kb_space`, `kb_capsLock`
+- `kb_f1` .. `kb_f24`
+- `kb_printscreen`, `kb_scrolllock`, `kb_numlock`, `kb_pause`, `kb_insert`, `kb_home`, `kb_pageup`, `kb_pagedown`, `kb_end`
+- `kb_left`, `kb_right`, `kb_up`, `kb_down`
+- `kb_left_ctrl`, `kb_left_shift`, `kb_left_alt`, `kb_left_gui`
+- `kb_right_ctrl`, `kb_right_shift`, `kb_right_alt`, `kb_right_gui`
+- `kb_keypad_0` .. `kb_keypad_9`
+- `kb_keypad_/`, `kb_keypad_*`, `kb_keypad_-`, `kb_keypad_+`, `kb_keypad_=`, `kb_keypad_enter`, `kb_keypad_.`, `kb_keypad_,`, `kb_keypad_00`, `kb_keypad_000`
+- `kb_keypad_(`, `kb_keypad_)`, `kb_keypad_{`, `kb_keypad_}`, `kb_keypad_tab`, `kb_keypad_backspace`
+- `kb_keypad_a`, `kb_keypad_b`, `kb_keypad_c`, `kb_keypad_d`, `kb_keypad_e`, `kb_keypad_f`
+- `kb_keypad_xor`, `kb_keypad_^`, `kb_keypad_%`, `kb_keypad_<`, `kb_keypad_>`, `kb_keypad_&`, `kb_keypad_&&`, `kb_keypad_|`, `kb_keypad_||`, `kb_keypad_:`, `kb_keypad_#`, `kb_keypad_space`, `kb_keypad_@`, `kb_keypad_!`
+- `kb_keypad_memstore`, `kb_keypad_memrecall`, `kb_keypad_memclear`, `kb_keypad_memadd`, `kb_keypad_memsubtract`, `kb_keypad_memmultiply`, `kb_keypad_memdivide`
+- `kb_keypad_+/-`, `kb_keypad_clear`, `kb_keypad_clearentry`, `kb_keypad_binary`, `kb_keypad_octal`, `kb_keypad_decimal`, `kb_keypad_hexadecimal`
+- `kb_mediaplay`, `kb_mediapause`, `kb_mediarecord`, `kb_mediafastforward`, `kb_mediarewind`, `kb_mediatracknext`, `kb_mediatrackprevious`, `kb_mediastop`, `kb_mediaplaypause`, `kb_mediaselect`
+- `kb_nonusbackslash`, `kb_application`, `kb_power`
+- `kb_execute`, `kb_help`, `kb_menu`, `kb_select`, `kb_stop`, `kb_again`, `kb_undo`, `kb_cut`, `kb_copy`, `kb_paste`, `kb_find`, `kb_mute`, `kb_volumeup`, `kb_volumedown`
+- `kb_international_1` .. `kb_international_9`
+- `kb_language_1` ..`kb_language_9`
+- `kb_alterase`, `kb_sysreq`, `kb_cancel`, `kb_clear`, `kb_prior`, `kb_separator`, `kb_out`, `kb_oper`, `kb_clear_/_again`, `kb_crsel`, `kb_exsel`
+- `kb_thousandsseparator`, `kb_decimalseparator`, `kb_currencyunit`, `kb_currencysubunit`
+- `kb_modeswitch`, `kb_sleep`, `kb_wake`, `kb_channelup`, `kb_channeldown`
+- `kb_eject`, 
+- `kb_ac_new`, `kb_ac_open`, `kb_ac_close`, `kb_ac_exit`, `kb_ac_save`, `kb_ac_print`, `kb_ac_properties`, `kb_ac_search`, `kb_ac_home`, `kb_ac_back`, `kb_ac_forward`, `kb_ac_stop`, `kb_ac_refresh`, `kb_ac_bookmarks`
+- `kb_softleft`, `kb_softright`
+- `kb_call`, `kb_endcall`
+
+Supported mouse button and axis names:
+- `mb_left`, `mb_middle`, `mb_right`, `mb_x1`, `mb_x2`
+- `ma_x`, `ma_y`
+
+Supported gamepad button and axis names:
+- `gb_dpup`, `gb_dpdown`, `gb_dpleft`, `gb_dpright`
+- `gb_a`, `gb_b`, `gb_x`, `gb_y`
+- `gb_back`, `gb_guide`, `gb_start`
+- `gb_leftstick`, `gb_rightstick`
+- `gb_leftshoulder`, `gb_rightshoulder`
+- `gb_misc` (Xbox Series X share button, PS5 microphone button, Nintendo Switch Pro capture button, Amazon Luna microphone button)
+- `gb_paddle1`, `gb_paddle2`, `gb_paddle3`, `gb_paddle4` (Xbox Elite paddles in order, facing the back: upper left, upper right, lower left, lower right)
+- `gb_touchpad` (PS4/PS5 touchpad button)
+- `ga_leftx`, `ga_lefty`
+- `ga_rightx`, `ga_righty`
+- `ga_triggerleft`, `ga_triggerright`
+
+### audio.conf
+
+Recognized by the `AudioManager` class of the dagon:audio extension.
+
+* `enabled` - `0` or `1`
+* `backend` - string, backend API for audio output. This option is platform-specific: not all backends work on all platforms. It is recommended to change backend only if automatically selected one is not working. Supported options are:
+  * `"auto"` - default value, backend is automatically selected
+  * `"SDL1"` - cross-platform
+  * `"SDL2"` - cross-platform
+  * `"SDL3"` - cross-platform (normally automatically selected option because SDL3 is Dagon's core dependency)
+  * `"PortAudio"` - cross-platform
+  * `"WinMM"` - Windows-only
+  * `"XAudio2"` - Windows-only
+  * `"WASAPI"` - Windows-only
+  * `"DirectSound"` - Windows-only
+  * `"ALSA"` - Linux-only
+  * `"JACK"` - Linux-only
+  * `"OSS"` - Linux-only
+  * `"OpenAL"` - cross-platform
+  * `"MiniAudio"` - cross-platform
+  * `"NoSound"` - disables sound output
+* `channels` - number of audio output channels. To use 5.1, specify `6`. To use 7.1, specify `8`. When using multichannel output, dagon:audio will map 3D sound to the specified number of channels for surround effect. Default is `2` (stereo)
+* `sampleRate` - output sample rate in Hz. Automatically chosen by default (`"auto"`)
+* `bufferSize` - output buffer size in bytes. Automatically chosen by default (`"auto"`)
+* `master.volume` - a number in 0.0..1.0 range. Global audio output volume. Default is `1.0`
+* `master.fadeInDuration` - master volume fade-in in seconds. This is used to smoothly increase volume after the initialization, so that there will be no unpleasant "click" noise. Default is `0.25`
+* `music.enabled` - `0` or `1`. Disables or enables playing of sounds created as `SoundClass.Music`. Default is `1`
+* `music.volume` - a number in 0.0..1.0 range. Background music volume (for sounds created as `SoundClass.Music`). Default is `0.5`
+* `sfx.enabled` - `0` or `1`. Disables or enables playing of sounds created as `SoundClass.SFX`. Default is `1`
+* `sfx.volume` - a number in 0.0..1.0 range. Sound effects volume (for sounds created as `SoundClass.SFX`). Default is `0.5`
+* `multimediaKeysEnabled` - `0` or `1`. Use multimedia keys found on some keyboards to control the active playlist. Note that audio players often hijack multimedia keypresses, in which cases they are not detected by Dagon. Default is `1`
