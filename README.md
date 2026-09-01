@@ -23,12 +23,8 @@ New features and major changes from Dagon 0.x/1.x:
 - Moved to SDL3
 - The renderer now leverages SDL GPU, targeting Vulkan
 - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
-- Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. All stochastic techniques now use permuted congruential generator as a hash function
+- Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. Normals are now stored in world space to achieve frame coherence and mitigate R10G10B10A2 rounding errors. All stochastic techniques now use permuted congruential generator as a hash function
 - Shader workflow is now based on GLSL 4.60 and includes a built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
-- Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`. KTX support is now a core feature
-- Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
-- Many new DDS/DXGI formats support
-- [Assimp](https://github.com/assimp/assimp) integration is now a core feature. glTF and other model formats support now rely on Assimp
 - Screen-space reflections
 - Temporal SSAO
 - Fog effect is now applied in a separate pass. Ground fog support
@@ -42,6 +38,10 @@ New features and major changes from Dagon 0.x/1.x:
 - Shadeless materials in deferred pipeline
 - The renderer now uses separate irradiance cubemap
 - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
+- Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`. KTX support is now a core feature
+- Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
+- Many new DDS/DXGI formats support
+- [Assimp](https://github.com/assimp/assimp) integration is now a core feature. glTF and other model formats support now rely on Assimp
 - GPU texture resampling now uses separable Lanczos filter
 - `Environment` class is gone, all environment properties are now part of the `Scene` class
 - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh
