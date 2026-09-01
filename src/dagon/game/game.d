@@ -65,8 +65,8 @@ import dagon.render.postprocessing;
  *
  * Description:
  * Manages rendering. The `Game` class is a subclass
- * of `Application` and provides a framework for creating games
- * that use Dagon's deferred renderer.
+ * of `Application` and provides a configurable framework for creating games
+ * that use Dagon's built-in deferred renderer.
  * If you want to implement a custom renderer, use BaseGame instead.
  */
 class Game: BaseGame
@@ -170,23 +170,23 @@ class Game: BaseGame
             renderer.invalidateBuffers();
         }
         if ("sslr.samples" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.samples = rendererConfig.props["sslr.samples"].toUInt;
+            renderer.sslrPass.sslrShader.samples = max2(1, rendererConfig.props["sslr.samples"].toUInt);
         if ("sslr.refineSamples" in rendererConfig.props)
             renderer.sslrPass.sslrShader.refineSamples = rendererConfig.props["sslr.refineSamples"].toUInt;
         if ("sslr.maxRayDistance" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.maxRayDistance = rendererConfig.props["sslr.maxRayDistance"].toFloat;
+            renderer.sslrPass.sslrShader.maxRayDistance = max2(0.0f, rendererConfig.props["sslr.maxRayDistance"].toFloat);
         if ("sslr.hitThickness" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.hitThickness = rendererConfig.props["sslr.hitThickness"].toFloat;
+            renderer.sslrPass.sslrShader.hitThickness = max2(0.0f, rendererConfig.props["sslr.hitThickness"].toFloat);
         if ("sslr.velocitySensitivity" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.velocitySensitivity = rendererConfig.props["sslr.velocitySensitivity"].toFloat;
+            renderer.sslrPass.sslrShader.velocitySensitivity = max2(0.0f, rendererConfig.props["sslr.velocitySensitivity"].toFloat);
         if ("sslr.historyWeight" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.historyWeight = rendererConfig.props["sslr.historyWeight"].toFloat;
+            renderer.sslrPass.sslrShader.historyWeight = clamp(rendererConfig.props["sslr.historyWeight"].toFloat, 0.0f, 1.0f);
         if ("sslr.motionWeight" in rendererConfig.props)
-            renderer.sslrPass.sslrShader.motionWeight = rendererConfig.props["sslr.motionWeight"].toFloat;
+            renderer.sslrPass.sslrShader.motionWeight = clamp(rendererConfig.props["sslr.motionWeight"].toFloat, 0.0f, 1.0f);
         if ("sslr.blur" in rendererConfig.props)
             renderer.reflectionPass.reflectionShader.blurEnabled = cast(bool)(rendererConfig.props["sslr.blur"].toUInt);
         if ("sslr.blurRadius" in rendererConfig.props)
-            renderer.reflectionPass.reflectionShader.blurRadius = rendererConfig.props["sslr.blurRadius"].toUInt;
+            renderer.reflectionPass.reflectionShader.blurRadius = max2(1, rendererConfig.props["sslr.blurRadius"].toUInt);
         
         if ("motionBlur.enabled" in rendererConfig.props)
             renderer.motionBlurPass.active = cast(bool)(rendererConfig.props["motionBlur.enabled"].toUInt);
