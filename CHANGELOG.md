@@ -55,8 +55,10 @@ Dagon 2.0.1 - TBD
     - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
   - `dagon:openvr` is not available anymore because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
 
-Dagon 1.6.1 - TBD
------------------
+Dagon 1.6.1 - 19 Aug, 2026
+--------------------------
+- **Core**
+  - Fix Wintab initialization
 - **Extensions**
   - Fix `AudioManager.loadMusic`.
 
