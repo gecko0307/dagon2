@@ -1,5 +1,6 @@
 Dagon 2.0.1 - TBD
 -----------------
+2.0 is a total overhaul of the engine. Some parts remain backwards compatible, but the most significant changes break compatibility (renderer, asset workflow, shader workflow).
 - **Core**
   - Dagon now uses SDL3
   - Window minimize/restore events
