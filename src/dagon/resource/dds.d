@@ -675,7 +675,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     header.surface = 0;
     
     header.format.size = 32;
-    header.format.flags = 0;
+    header.format.flags = DDPF.FOURCC;
     header.format.fourCC = 0;
     header.format.bpp = 0;
     header.format.rMask = 0;
@@ -690,8 +690,7 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     
     if (isCompressed)
     {
-        header.format.flags = DDPF.FOURCC;
-        
+        // Write BC1-5 as legacy DDS for better compatibility
         switch (buffer.format.format)
         {
             case SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM:
@@ -731,7 +730,6 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     }
     else
     {
-        header.format.flags = DDPF.FOURCC;
         header.format.fourCC = FOURCC_DX10;
         writeDXT10Header = true;
         
