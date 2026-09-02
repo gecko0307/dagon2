@@ -10,6 +10,7 @@
 * Wintab binding - [Vadim Lopatin aka buggins](https://github.com/buggins)
 * DXT1/DXT5 compressor - [Fabian Giesen](https://github.com/rygorous), [Yann Collet](https://github.com/Cyan4973)
 * BC7 compressor - [Rich Geldreich](https://github.com/richgel999)
+* Tangent space to eye space conversion function (cotangent frame) - [Christian Schüler](http://www.thetenthplanet.de/archives/1180)
 * SSAO implementation is based on the code by [Reinder Nijhoff](https://www.shadertoy.com/view/Ms33WB)
 * FXAA 3.11 implementation is based on the code by Timothy Lottes (NVIDIA)
 * SMAA implementation is based on the code by [Jorge Jimenez](https://github.com/iryoku), Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez

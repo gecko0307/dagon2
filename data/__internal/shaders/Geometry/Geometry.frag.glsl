@@ -1,14 +1,15 @@
 #version 460
 
+/*
+ * Based on the method by Christian Schüler:
+ * http://www.thetenthplanet.de/archives/1180
+ */
 mat3 cotangentFrame(in vec3 N, in vec3 p, in vec2 uv)
 {
     vec3 dp1 = dFdx(p);
-    vec3 dp2 = dFdy(p);
+    vec3 dp2 = -dFdy(p);
     vec2 duv1 = dFdx(uv);
-    vec2 duv2 = dFdy(uv);
-    
-    dp2 = -dp2;
-    duv2 = -duv2;
+    vec2 duv2 = -dFdy(uv);
 
     vec3 dp2perp = cross(dp2, N);
     vec3 dp1perp = cross(N, dp1);

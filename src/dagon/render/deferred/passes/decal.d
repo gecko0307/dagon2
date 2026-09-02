@@ -26,6 +26,8 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.render.deferred.passes.decal;
 
+import std.math;
+
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
@@ -161,7 +163,7 @@ class DecalShader: Shader
         fsUBO.alphaOptions.z = entity.motionBlurMask;
         fsUBO.alphaOptions.w = entity.opacity * material.opacity;
         
-        fsUBO.fparams[0] = material.ior / 12.5f * material.iorLevel;
+        fsUBO.fparams[0] = pow((material.ior - 1.0f) / (material.ior + 1.0f), 2.0f) * (material.iorLevel * 2.0f);
         
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;

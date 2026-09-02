@@ -23,11 +23,11 @@ Microfacets are considered perfect mirrors at microscopic scale, but only for me
 
 `emissionEnergy` - self-illumination brightness. Default value is `0.0`.
 
-`normalTexture` - normal map of a surface in tangent space.
+`normalTexture` - normal map of a surface in tangent space. Each pixel encodes a normal with the following formula: `N * 0.5 + 0.5`. Dagon uses OpenGL convention for normal maps: the X-axis (red channel) points to the right, the Y-axis (green channel) points up, and the Z-axis (blue channel) is perpendicular to the image plane.
 
-`heightTexture` - height map of a surface. When using parallax mapping, it is used to displace texture coordinates and give a surface more bumpy look.
+`heightTexture` - height map of a surface, a monochrome image where dark areas mean lower height, and light areas mean higher height. When using parallax mapping, it is used to displace texture coordinates and give a surface more bumpy look.
 
-`ior` - index of refraction. Used to derive base reflectivity (f₀), the percentage of light reflected when looking straight at a surface. For most materials, IOR is between `1.0` (air) and `4.0` (germanium). Default value is `1.5`, which yields standard dielectric f₀ = 0.04 (given `iorLevel` is `0.5`). The formula for f₀ is the following: `f₀ = ior / 12.5 * iorLevel`.
+`ior` - index of refraction. Used to derive base reflectivity (f₀), the percentage of light reflected when looking straight at a surface. For most materials, IOR is between `1.0` (air) and `4.0` (germanium). Default value is `1.5`, which yields standard dielectric f₀ = 0.04 (given `iorLevel` is `0.5`).
 
 `iorLevel` - intensity of specular reflection. Default value is `0.5`.
 
