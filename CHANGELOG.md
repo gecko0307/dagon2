@@ -2,11 +2,11 @@ Dagon 2.0.1 - TBD
 -----------------
 2.0 is a total overhaul of the engine. Some parts remain backwards compatible, but the most significant changes break compatibility (renderer, asset workflow, shader workflow).
 - **Core**
-  - Dagon now uses SDL3
+  - Dagon now uses [SDL3](https://wiki.libsdl.org/SDL3/FrontPage)
   - Window minimize/restore events
   - Nanosecond-precision timer
   - CPU-friendly frame scheduler
-  - Mailbox Vsync support, significantly reducing input lag
+  - Mailbox Vsync support, significantly reducing input lag (`vsync: 2` in settings.conf)
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
 - **Assets**
