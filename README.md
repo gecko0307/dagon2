@@ -59,7 +59,7 @@ New features and major changes from Dagon 0.x/1.x:
   - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
   - New camera animation system: `CameraController` that interpolates a camera transformation between two independent states defined by `CameraDriver` objects. This allows to implement complex in-game transitions and cutscene animations
   - Inertial rotation support in `FirstPersonViewController`
-  - GPU texture resampling now uses separable Lanczos filter
+  - GPU texture resampling now supports separable Lanczos filter and uses it by default
 - **Post-processing**
   - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
   - Subpixel Morphological Anti-Aliasing (SMAA) support
