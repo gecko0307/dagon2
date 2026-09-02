@@ -43,6 +43,7 @@ import dagon.core.crashhandler;
 import dagon.core.gpu;
 import dagon.core.dxt;
 import dagon.core.bc4;
+import dagon.core.bc5;
 import dagon.core.bc7;
 import dagon.core.logger;
 import dagon.graphics.texturebuffer;
@@ -333,6 +334,7 @@ class TextureAsset: Asset
         uint width = buffer.size.width;
         uint height = buffer.size.height;
         uint numChannels = buffer.format.numChannels;
+        uint numChannelsCompressed;
         uint pSize = buffer.format.pixelSize;
         uint mipLevels;
         
@@ -342,21 +344,31 @@ class TextureAsset: Asset
         {
             blockSize = 8;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC1_RGBA_UNORM;
+            numChannelsCompressed = 4;
         }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC3)
         {
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
+            numChannelsCompressed = 4;
         }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC4)
         {
             blockSize = 8;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC4_R_UNORM;
+            numChannelsCompressed = 1;
+        }
+        else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC5)
+        {
+            blockSize = 16;
+            newFormat = SDL_GPU_TEXTUREFORMAT_BC5_RG_UNORM;
+            numChannelsCompressed = 2;
         }
         else if (conversionOptions.compressionFormat == TextureCompressionFormat.BC7)
         {
             blockSize = 16;
             newFormat = SDL_GPU_TEXTUREFORMAT_BC7_RGBA_UNORM;
+            numChannelsCompressed = 4;
         }
         
         ubyte[] compressedTextureBuffer;
@@ -426,6 +438,9 @@ class TextureAsset: Asset
                     case TextureCompressionFormat.BC4:
                         bc4Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, numChannels);
                         break;
+                    case TextureCompressionFormat.BC5:
+                        bc5Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, numChannels);
+                        break;
                     case TextureCompressionFormat.BC7:
                         bc7Compress(levelCompDst.ptr, levelBufferSlice.ptr, levelWidth, levelHeight, &bc7Params);
                         break;
@@ -469,6 +484,9 @@ class TextureAsset: Asset
                 case TextureCompressionFormat.BC4:
                     bc4Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, numChannels);
                     break;
+                case TextureCompressionFormat.BC5:
+                    bc5Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, numChannels);
+                    break;
                 case TextureCompressionFormat.BC7:
                     bc7Compress(compressedTextureBuffer.ptr, buffer.data.ptr, width, height, &bc7Params);
                     break;
@@ -483,6 +501,7 @@ class TextureAsset: Asset
         buffer.data = compressedTextureBuffer;
         buffer.format.format = newFormat;
         buffer.format.blockSize = blockSize;
+        buffer.format.numChannels = numChannelsCompressed;
         buffer.mipLevels = mipLevels;
     }
 }

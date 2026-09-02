@@ -111,6 +111,8 @@ enum TextureCompressionFormat
     BC1 = 1,
     BC3 = 3,
     BC4 = 4,
+    BC5 = 5,
+    // TODO: BC6
     BC7 = 7,
     
     DXT1 = 1,

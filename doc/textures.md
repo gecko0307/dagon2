@@ -51,12 +51,14 @@ The most GPU-efficient format for color textures is RGBA8. Dagon's image loader 
 
 ## sRGB vs Linear Color
 
-Dagon primarily works with two color spaces:
+Dagon works with two color spaces:
 
 * **Linear Rec.709**: color space which values are proportional to actual physical light intensity.
-* **sRGB**: gamma-encoded color space for display output. Dagon performs color space conversions automatically where required.
+* **sRGB**: gamma-encoded color space for display output.
 
-Base color (diffuse) textures are always treated as sRGB images. Non-color raster data (such as normal maps and roughness/metallic maps) is always treated as linear.
+Color textures are always treated as sRGB images. Non-color raster data (such as normal maps and roughness/metallic maps) is always treated as linear.
+
+Dagon performs color space conversions automatically where required.
 
 ## HDR Textures
 

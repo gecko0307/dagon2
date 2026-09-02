@@ -279,7 +279,7 @@ void main()
     vec3 R = normalize(reflect(E, mix(N, H, roughness)));
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
-    vec3 F = fresnelRoughness(max(dot(H, E), 0.0), f0, roughness);
+    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
     
     /*
     vec2 brdf = (bool(ubo.iparams[0]))?

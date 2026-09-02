@@ -50,6 +50,9 @@ public
     /// BC4 encoder.
     import dagon.core.bc4;
 
+    /// BC5 encoder.
+    import dagon.core.bc5;
+
     /// BC7 encoder.
     import dagon.core.bc7;
 
@@ -124,10 +127,13 @@ public
 
     /// Virtual file system abstraction.
     import dagon.core.vfs;
-    
+
     /// Vulkan image format enumerations.
     import dagon.core.vkformat;
 
-    /// Vulkan image format enumerations.
+    /// Wintab binding.
     import dagon.core.wintab;
+
+    /// System information.
+    import dagon.core.sysinfo;
 }
