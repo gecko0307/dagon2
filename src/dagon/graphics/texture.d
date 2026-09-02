@@ -51,6 +51,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.logger;
 public import dagon.graphics.texturebuffer;
+import dagon.graphics.resampler;
 
 ///
 struct TextureCreationOptions
@@ -610,8 +611,13 @@ class Texture: Owner
     }
     
     /// Makes a resized copy of the texture.
-    Texture resize(uint newWidth, uint newHeight, bool generateMipmaps, Owner resizedTextureOwner)
+    Texture resize(
+        uint newWidth,
+        uint newHeight,
+        bool generateMipmaps,
+        Owner resizedTextureOwner,
+        ResampleMode mode = ResampleMode.Lanczos3)
     {
-        return gpu.resampleTexture(this, newWidth, newHeight, generateMipmaps, resizedTextureOwner);
+        return gpu.resampleTexture(this, newWidth, newHeight, generateMipmaps, resizedTextureOwner, mode);
     }
 }

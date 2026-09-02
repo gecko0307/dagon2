@@ -378,15 +378,25 @@ class GPU: Owner
     }
     
     ///
-    void resampleTexture(Texture inputTexture, Texture outputTexture)
+    void resampleTexture(
+        Texture inputTexture,
+        Texture outputTexture,
+        ResampleMode mode = ResampleMode.Lanczos3)
     {
         resampler.inputTexture = inputTexture;
         resampler.outputTexture = outputTexture;
+        resampler.mode = mode;
         resampler.submit();
     }
     
     ///
-    Texture resampleTexture(Texture inputTexture, uint newWidth, uint newHeight, bool generateMipmaps, Owner outputTextureOwner)
+    Texture resampleTexture(
+        Texture inputTexture,
+        uint newWidth,
+        uint newHeight,
+        bool generateMipmaps,
+        Owner outputTextureOwner,
+        ResampleMode mode = ResampleMode.Lanczos3)
     {
         Texture outputTexture = New!Texture(this, outputTextureOwner);
         
@@ -412,7 +422,7 @@ class GPU: Owner
         
         outputTexture.options.generateMipmaps = generateMipmaps;
         
-        resampleTexture(inputTexture, outputTexture);
+        resampleTexture(inputTexture, outputTexture, mode);
         
         return outputTexture;
     }

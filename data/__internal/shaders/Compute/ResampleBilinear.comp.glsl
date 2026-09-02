@@ -7,8 +7,9 @@ layout(set = 1, binding = 0) uniform writeonly image2D destTex;
 
 layout(set = 2, binding = 0) uniform UniformBuffer
 {
-    vec4 srcSize;
-    vec4 destSize;
+    vec4 srcSize;  // x, y - input texture size
+    vec4 destSize; // x, y - output texture size
+    ivec4 config;  // Not used here
 } ubo;
 
 void main()

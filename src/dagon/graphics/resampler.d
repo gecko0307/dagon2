@@ -69,12 +69,12 @@ class LanczosResampleShader: ComputeShader
         super(gpu, owner);
         
         computeModule = New!ShaderModule(gpu, this);
-        computeModule.create("Resample.comp.glsl", "data/__internal/shaders/Compute/ResampleLanczos.comp.glsl",
+        computeModule.create("ResampleLanczos.comp.glsl", "data/__internal/shaders/Compute/ResampleLanczos.comp.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Compute);
         
         if (!computeModule.valid)
         {
-            exitWithError("Failed to create ResampleShader");
+            exitWithError("Failed to create LanczosResampleShader");
         }
         
         ubo.srcSize[0] = 0.0f;
@@ -112,13 +112,72 @@ class LanczosResampleShader: ComputeShader
 }
 
 ///
+class BilinearResampleShader: ComputeShader
+{
+    ResampleShaderUniformBuffer ubo;
+    Texture inputTexture;
+    Texture outputTexture;
+    
+    ///
+    this(GPU gpu, Owner owner)
+    {
+        super(gpu, owner);
+        
+        computeModule = New!ShaderModule(gpu, this);
+        computeModule.create("ResampleBilinear.comp.glsl", "data/__internal/shaders/Compute/ResampleBilinear.comp.glsl",
+            ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Compute);
+        
+        if (!computeModule.valid)
+        {
+            exitWithError("Failed to create BilinearResampleShader");
+        }
+        
+        ubo.srcSize[0] = 0.0f;
+        ubo.srcSize[1] = 0.0f;
+        ubo.srcSize[2] = 0.0f;
+        ubo.srcSize[3] = 0.0f;
+        
+        ubo.dstSize[0] = 0.0f;
+        ubo.dstSize[1] = 0.0f;
+        ubo.dstSize[2] = 0.0f;
+        ubo.dstSize[3] = 0.0f;
+    }
+    
+    ///
+    override void bindParameters(GraphicsState* state)
+    {
+        if (inputTexture)
+        {
+            ubo.srcSize[0] = inputTexture.buffer.size.width;
+            ubo.srcSize[1] = inputTexture.buffer.size.height;
+        }
+        
+        if (outputTexture)
+        {
+            ubo.dstSize[0] = outputTexture.buffer.size.width;
+            ubo.dstSize[1] = outputTexture.buffer.size.height;
+        }
+    }
+}
+
+///
+enum ResampleMode
+{
+    Bilinear = 0,
+    Lanczos3 = 1
+}
+
+///
 class Resampler: Owner
 {
     GPU gpu;
-    SDL_GPUComputePipeline* computePipeline;
-    LanczosResampleShader resampleShader;
+    SDL_GPUComputePipeline* computePipelineBilinear;
+    SDL_GPUComputePipeline* computePipelineLanczos;
+    BilinearResampleShader resampleShaderBilinear;
+    LanczosResampleShader resampleShaderLanczos;
     Texture inputTexture;
     Texture outputTexture;
+    ResampleMode mode = ResampleMode.Lanczos3;
     
     ///
     this(GPU gpu, Owner owner)
@@ -127,12 +186,37 @@ class Resampler: Owner
         
         this.gpu = gpu;
         
-        resampleShader = New!LanczosResampleShader(gpu, this);
-        ShaderModule shaderModule = resampleShader.computeModule;
+        resampleShaderBilinear = New!BilinearResampleShader(gpu, this);
+        resampleShaderLanczos = New!LanczosResampleShader(gpu, this);
         
+        ShaderModule shaderModuleBilinear = resampleShaderBilinear.computeModule;
+        ShaderModule shaderModuleLanczos = resampleShaderLanczos.computeModule;
+        
+        computePipelineBilinear = createPipeline(shaderModuleBilinear);
+        computePipelineLanczos = createPipeline(shaderModuleLanczos);
+    }
+    
+    ///
+    ~this()
+    {
+        if (computePipelineBilinear)
+        {
+            SDL_ReleaseGPUComputePipeline(gpu.device, computePipelineBilinear);
+            computePipelineBilinear = null;
+        }
+        
+        if (computePipelineLanczos)
+        {
+            SDL_ReleaseGPUComputePipeline(gpu.device, computePipelineLanczos);
+            computePipelineLanczos = null;
+        }
+    }
+    
+    SDL_GPUComputePipeline* createPipeline(ShaderModule shaderModule)
+    {
         ubyte[] spirvBytes = shaderModule.spirvAsBytes;
         
-        SDL_GPUComputePipelineCreateInfo computePipelineCreateInfo = {
+        SDL_GPUComputePipelineCreateInfo pipelineCreateInfo = {
             code_size: spirvBytes.length,
             code: spirvBytes.ptr,
             entrypoint: "main",
@@ -149,17 +233,7 @@ class Resampler: Owner
             props: 0
         };
         
-        computePipeline = SDL_CreateGPUComputePipeline(gpu.device, &computePipelineCreateInfo);
-    }
-    
-    ///
-    ~this()
-    {
-        if (computePipeline)
-        {
-            SDL_ReleaseGPUComputePipeline(gpu.device, computePipeline);
-            computePipeline = null;
-        }
+        return SDL_CreateGPUComputePipeline(gpu.device, &pipelineCreateInfo);
     }
     
     ///
@@ -168,76 +242,115 @@ class Resampler: Owner
         if (outputTexture is null || inputTexture is null)
             return;
         
-        uint interWidth = outputTexture.buffer.size.width;
-        uint interHeight = inputTexture.buffer.size.height;
-        Texture intermediateTexture = outputTexture.createSameFormat(interWidth, interHeight, 1, null);
+        Texture intermediateTexture;
         
         SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(gpu.device);
         
-        // Horizontal pass
+        if (mode == ResampleMode.Bilinear)
         {
-            uint workGroupsX = (intermediateTexture.buffer.size.width  + resampleShader.computeModule.localSizeX - 1) / resampleShader.computeModule.localSizeX;
-            uint workGroupsY = (intermediateTexture.buffer.size.height + resampleShader.computeModule.localSizeY - 1) / resampleShader.computeModule.localSizeY;
+            uint workGroupsX =
+                (outputTexture.buffer.size.width  + resampleShaderBilinear.computeModule.localSizeX - 1) / resampleShaderBilinear.computeModule.localSizeX;
+            uint workGroupsY =
+                (outputTexture.buffer.size.height + resampleShaderBilinear.computeModule.localSizeY - 1) / resampleShaderBilinear.computeModule.localSizeY;
             
-            auto storageTextureBinding = SDL_GPUStorageTextureReadWriteBinding(intermediateTexture.texture, 0, 0, false);
-            
+            auto storageTextureBinding = SDL_GPUStorageTextureReadWriteBinding(outputTexture.texture, 0, 0, false);
             SDL_GPUComputePass* pass = SDL_BeginGPUComputePass(
                 commandBuffer,
                 &storageTextureBinding, 1,
                 null, 0);
             
-            SDL_BindGPUComputePipeline(pass, computePipeline);
+            SDL_BindGPUComputePipeline(pass, computePipelineBilinear);
             
             // Bind input texture
             auto samplerBinding = SDL_GPUTextureSamplerBinding(inputTexture.texture, inputTexture.sampler);
             SDL_BindGPUComputeSamplers(pass, 0, &samplerBinding, 1);
             
             // Bind output texture
-            SDL_BindGPUComputeStorageTextures(pass, 0, &intermediateTexture.texture, 1);
+            SDL_BindGPUComputeStorageTextures(pass, 0, &outputTexture.texture, 1);
             
             // Bind UBO
-            resampleShader.inputTexture = inputTexture;
-            resampleShader.outputTexture = intermediateTexture;
-            resampleShader.lanczosPass = LanczosPass.Horizontal;
-            resampleShader.bindParameters(null);
-            SDL_PushGPUComputeUniformData(commandBuffer, 0, &resampleShader.ubo, cast(uint)ResampleShaderUniformBuffer.sizeof);
+            resampleShaderBilinear.inputTexture = inputTexture;
+            resampleShaderBilinear.outputTexture = outputTexture;
+            resampleShaderBilinear.bindParameters(null);
+            SDL_PushGPUComputeUniformData(commandBuffer, 0, &resampleShaderBilinear.ubo, cast(uint)ResampleShaderUniformBuffer.sizeof);
             
             SDL_DispatchGPUCompute(pass, workGroupsX, workGroupsY, 1);
             
             SDL_EndGPUComputePass(pass);
         }
-        
-        // Vertical pass
+        else if (mode == ResampleMode.Lanczos3)
         {
-            uint workGroupsX = (outputTexture.buffer.size.width  + resampleShader.computeModule.localSizeX - 1) / resampleShader.computeModule.localSizeX;
-            uint workGroupsY = (outputTexture.buffer.size.height + resampleShader.computeModule.localSizeY - 1) / resampleShader.computeModule.localSizeY;
+            uint interWidth = outputTexture.buffer.size.width;
+            uint interHeight = inputTexture.buffer.size.height;
+            intermediateTexture = outputTexture.createSameFormat(interWidth, interHeight, 1, null);
             
-            auto storageTextureBinding = SDL_GPUStorageTextureReadWriteBinding(outputTexture.texture, 0, 0, false);
+            // Horizontal pass
+            {
+                uint workGroupsX =
+                    (intermediateTexture.buffer.size.width  + resampleShaderLanczos.computeModule.localSizeX - 1) / resampleShaderLanczos.computeModule.localSizeX;
+                uint workGroupsY =
+                    (intermediateTexture.buffer.size.height + resampleShaderLanczos.computeModule.localSizeY - 1) / resampleShaderLanczos.computeModule.localSizeY;
+                
+                auto storageTextureBinding = SDL_GPUStorageTextureReadWriteBinding(intermediateTexture.texture, 0, 0, false);
+                SDL_GPUComputePass* pass = SDL_BeginGPUComputePass(
+                    commandBuffer,
+                    &storageTextureBinding, 1,
+                    null, 0);
+                
+                SDL_BindGPUComputePipeline(pass, computePipelineLanczos);
+                
+                // Bind input texture
+                auto samplerBinding = SDL_GPUTextureSamplerBinding(inputTexture.texture, inputTexture.sampler);
+                SDL_BindGPUComputeSamplers(pass, 0, &samplerBinding, 1);
+                
+                // Bind output texture
+                SDL_BindGPUComputeStorageTextures(pass, 0, &intermediateTexture.texture, 1);
+                
+                // Bind UBO
+                resampleShaderLanczos.inputTexture = inputTexture;
+                resampleShaderLanczos.outputTexture = intermediateTexture;
+                resampleShaderLanczos.lanczosPass = LanczosPass.Horizontal;
+                resampleShaderLanczos.bindParameters(null);
+                SDL_PushGPUComputeUniformData(commandBuffer, 0, &resampleShaderLanczos.ubo, cast(uint)ResampleShaderUniformBuffer.sizeof);
+                
+                SDL_DispatchGPUCompute(pass, workGroupsX, workGroupsY, 1);
+                
+                SDL_EndGPUComputePass(pass);
+            }
             
-            SDL_GPUComputePass* pass = SDL_BeginGPUComputePass(
-                commandBuffer,
-                &storageTextureBinding, 1,
-                null, 0);
-            
-            SDL_BindGPUComputePipeline(pass, computePipeline);
-            
-            // Bind input texture
-            auto samplerBinding = SDL_GPUTextureSamplerBinding(intermediateTexture.texture, intermediateTexture.sampler);
-            SDL_BindGPUComputeSamplers(pass, 0, &samplerBinding, 1);
-            
-            // Bind output texture
-            SDL_BindGPUComputeStorageTextures(pass, 0, &outputTexture.texture, 1);
-            
-            // Bind UBO
-            resampleShader.inputTexture = intermediateTexture;
-            resampleShader.outputTexture = outputTexture;
-            resampleShader.lanczosPass = LanczosPass.Vertical;
-            resampleShader.bindParameters(null);
-            SDL_PushGPUComputeUniformData(commandBuffer, 0, &resampleShader.ubo, cast(uint)ResampleShaderUniformBuffer.sizeof);
-            
-            SDL_DispatchGPUCompute(pass, workGroupsX, workGroupsY, 1);
-            
-            SDL_EndGPUComputePass(pass);
+            // Vertical pass
+            {
+                uint workGroupsX =
+                    (outputTexture.buffer.size.width  + resampleShaderLanczos.computeModule.localSizeX - 1) / resampleShaderLanczos.computeModule.localSizeX;
+                uint workGroupsY =
+                    (outputTexture.buffer.size.height + resampleShaderLanczos.computeModule.localSizeY - 1) / resampleShaderLanczos.computeModule.localSizeY;
+                
+                auto storageTextureBinding = SDL_GPUStorageTextureReadWriteBinding(outputTexture.texture, 0, 0, false);
+                SDL_GPUComputePass* pass = SDL_BeginGPUComputePass(
+                    commandBuffer,
+                    &storageTextureBinding, 1,
+                    null, 0);
+                
+                SDL_BindGPUComputePipeline(pass, computePipelineLanczos);
+                
+                // Bind input texture
+                auto samplerBinding = SDL_GPUTextureSamplerBinding(intermediateTexture.texture, intermediateTexture.sampler);
+                SDL_BindGPUComputeSamplers(pass, 0, &samplerBinding, 1);
+                
+                // Bind output texture
+                SDL_BindGPUComputeStorageTextures(pass, 0, &outputTexture.texture, 1);
+                
+                // Bind UBO
+                resampleShaderLanczos.inputTexture = intermediateTexture;
+                resampleShaderLanczos.outputTexture = outputTexture;
+                resampleShaderLanczos.lanczosPass = LanczosPass.Vertical;
+                resampleShaderLanczos.bindParameters(null);
+                SDL_PushGPUComputeUniformData(commandBuffer, 0, &resampleShaderLanczos.ubo, cast(uint)ResampleShaderUniformBuffer.sizeof);
+                
+                SDL_DispatchGPUCompute(pass, workGroupsX, workGroupsY, 1);
+                
+                SDL_EndGPUComputePass(pass);
+            }
         }
         
         if (outputTexture.options.generateMipmaps)
@@ -254,6 +367,7 @@ class Resampler: Owner
             SDL_ReleaseGPUFence(gpu.device, fence);
         }
         
-        Delete(intermediateTexture);
+        if (intermediateTexture)
+            Delete(intermediateTexture);
     }
 }
