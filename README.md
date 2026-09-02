@@ -39,9 +39,9 @@ New features and major changes from Dagon 0.x/1.x:
 - The renderer now uses separate irradiance cubemap
 - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
 - Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`. KTX support is now a core feature
+- Improved DDS loader. Many new DXGI formats support
 - BC5 compressor
 - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
-- Many new DDS/DXGI formats support
 - [Assimp](https://github.com/assimp/assimp) integration is now a core feature. glTF and other model formats support now rely on Assimp
 - GPU texture resampling now uses separable Lanczos filter
 - `Environment` class is gone, all environment properties are now part of the `Scene` class
