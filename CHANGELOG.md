@@ -1,4 +1,4 @@
-Dagon 2.0.0 - TBD
+Dagon 2.0.1 - TBD
 -----------------
 - **Core**
   - Dagon now uses SDL3
@@ -6,18 +6,22 @@ Dagon 2.0.0 - TBD
   - Nanosecond-precision timer
   - CPU-friendly frame scheduler
   - Mailbox Vsync support, significantly reducing input lag
+  - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
 - **Assets**
-  - Assimp integration is now a core feature
-  - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
-  - Texture loader is fully based on SDL3_Image and doesn't use `dlib.image.io`
+  - Own 3D model format - DAF (Dagon Asset Format), optimized for very fast loading
+  - [Assimp](https://github.com/assimp/assimp) integration is now a core feature
+  - glTF and other model formats support now rely on Assimp
+  - Texture loader is fully based on [SDL3_Image](https://github.com/libsdl-org/SDL_image) and doesn't use `dlib.image.io`
   - KTX support is now a core feature
-  - Many new DDS/DXGI formats support
-  - Built-in texture caching. Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
+  - Improved DDS loader. Many new DXGI formats support
+  - BC5 texture compressor
+  - Built-in texture caching
+  - Abstract resource cache (`dagon.resource.cache`) that can be used for any file types
 - **Render**
   - Reimplemented `dagon.render`. Deferred renderer, post-processing renderer and presentation renderer are now combined into one
   - Renderer now leverages SDL GPU, targeting Vulkan
-  - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable f0. All stochastic techniques now use permuted congruential generator as a hash function
+  - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. Normals are now stored in world space to achieve frame coherence and mitigate R10G10B10A2 rounding errors. All stochastic techniques now use permuted congruential generator as a hash function
   - Renderer quality profiles support: `LowQuality`, `HighQuality`, `UltraQuality`
   - Stochastic screen-space reflections (SSSR) support
   - HDR (scRGB) output support
@@ -27,12 +31,18 @@ Dagon 2.0.0 - TBD
   - Fog effect is now applied in a separate pass. Ground fog support
   - Shadeless materials in deferred pipeline
 - **Graphics components**
+  - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
   - `Environment` class is gone, all environment properties are now part of the `Scene` class
+  - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh
   - All Entities are static by default, and their model matrices are not recalculated each frame to reduce CPU overhead. For dynamic updates enable `Entity.dynamic` or use custom `EntityController`
+  - New camera animation system: `CameraController` that interpolates a camera transformation between two independent states defined by `CameraDriver` objects. This allows to implement complex in-game transitions and cutscene animations
+  - Inertial rotation support in `FirstPersonViewController`
   - GPU texture resampling now uses separable Lanczos filter
 - **Post-processing**
   - Tonemapping is entirely based on AgX. Legacy tonemappers were removed
+  - Subpixel Morphological Anti-Aliasing (SMAA) support
+  - Radial optical distortion support
   - Direct GPUImage LUT support was removed, it now requires conversion to 3D LUT
 - **Physics**
   - Jolt Physics is now built-in as `dagon.jolt` package
@@ -43,6 +53,7 @@ Dagon 2.0.0 - TBD
     - ImGui integration now provides a built-in UI boilerplate class
   - `dagon2:audio`
     - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
+  - `dagon:openvr` is not available anymore because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
 
 Dagon 1.6.1 - TBD
 -----------------
