@@ -479,7 +479,15 @@ bool dxgiFormatToSDLFormat(DXGIFormat fmt, out TextureFormat tf)
     return true;
 }
 
-///
+/**
+ * Converts SDL GPU texture format to DXGI format.
+ *
+ * Params:
+ *   fmt = SDL_GPUTextureFormat.
+ *   dxgiFmt = Output DXGIFormat.
+ * Returns:
+ *   true if format is supported, false otherwise.
+ */
 bool sdlFormatToDXGIFormat(SDL_GPUTextureFormat fmt, out DXGIFormat dxgiFmt)
 {
     switch (fmt)
