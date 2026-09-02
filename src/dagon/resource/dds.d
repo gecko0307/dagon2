@@ -52,7 +52,7 @@ import dagon.core.dxgiformat;
 import dagon.core.logger;
 import dagon.graphics.texture;
 
-version = DDSDebug;
+//version = DDSDebug;
 
 immutable(ubyte)[] DDSSignature = [0x44, 0x44, 0x53, 0x20]; //"DDS "
 
