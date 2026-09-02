@@ -42,7 +42,7 @@ import dagon.graphics.mesh;
 import dagon.graphics.shapes;
 import dagon.graphics.shader;
 import dagon.graphics.texture;
-import dagon.resource.png;
+import dagon.resource.dds;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
@@ -600,18 +600,21 @@ class SMAAPass: RenderPass
             anisotropicFiltering: false
         };
         
-        areaLUT = loadLUT("data/__internal/textures/smaa_area_lut.png", &lutOptions);
+        string areaLUTPath = "data/__internal/textures/smaa_area_lut.dds";
+        string searchLUTPath = "data/__internal/textures/smaa_search_lut.dds";
+        
+        areaLUT = loadLUT(areaLUTPath, &lutOptions);
         if (areaLUT is null)
         {
             valid = false;
-            logError("Failed to load data/__internal/textures/smaa_area_lut.png");
+            logError("Failed to load ", areaLUTPath);
         }
         
-        searchLUT = loadLUT("data/__internal/textures/smaa_search_lut.png", &lutOptions);
+        searchLUT = loadLUT(searchLUTPath, &lutOptions);
         if (searchLUT is null)
         {
             valid = false;
-            logError("Failed to load data/__internal/textures/smaa_search_lut.png");
+            logError("Failed to load ", searchLUTPath);
         }
         
         edgeDetection = New!SMAAEdgeDetectionSubPass(renderer, ppContext, this);
@@ -637,7 +640,7 @@ class SMAAPass: RenderPass
             return null;
         TextureBuffer buffer;
         Texture texture;
-        if (loadPNG(istrm, &buffer))
+        if (loadDDS(istrm, &buffer))
         {
             texture = New!Texture(gpu, this);
             if (!texture.create(&buffer, options))

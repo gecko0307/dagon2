@@ -52,7 +52,7 @@ import dagon.core.dxgiformat;
 import dagon.core.logger;
 import dagon.graphics.texture;
 
-//version = DDSDebug;
+version = DDSDebug;
 
 immutable(ubyte)[] DDSSignature = [0x44, 0x44, 0x53, 0x20]; //"DDS "
 
@@ -65,10 +65,10 @@ struct DDSPixelFormat
     uint flags;
     uint fourCC;
     uint bpp;
-    uint redMask;
-    uint greenMask;
-    uint blueMask;
-    uint alphaMask;
+    uint rMask;
+    uint gMask;
+    uint bMask;
+    uint aMask;
 }
 
 /**
@@ -424,10 +424,10 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
         logDebug("hdr.format.flags: ", hdr.format.flags);
         logDebug("hdr.format.fourCC: ", hdr.format.fourCC);
         logDebug("hdr.format.bpp: ", hdr.format.bpp);
-        logDebug("hdr.format.redMask: ", hdr.format.redMask);
-        logDebug("hdr.format.greenMask: ", hdr.format.greenMask);
-        logDebug("hdr.format.blueMask: ", hdr.format.blueMask);
-        logDebug("hdr.format.alphaMask: ", hdr.format.alphaMask);
+        logDebug("hdr.format.rMask: ", hdr.format.rMask);
+        logDebug("hdr.format.gMask: ", hdr.format.gMask);
+        logDebug("hdr.format.bMask: ", hdr.format.bMask);
+        logDebug("hdr.format.aMask: ", hdr.format.aMask);
         
         logDebug("hdr.caps: ", hdr.caps);
         logDebug("hdr.caps2: ", hdr.caps2);
@@ -438,9 +438,10 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
     }
     
     TextureFormat format;
-    bool formatDetected = false;
     
     DXGIFormat fmt;
+    bool isRGB8 = false;
+    bool isMaskConversionRequired = false;
     if (hdr.format.flags & DDPF.FOURCC)
     {
         if (hdr.format.fourCC == FOURCC_DX10)
@@ -455,20 +456,93 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
     }
     else if (hdr.format.flags & DDPF.RGB)
     {
+        // Legacy uncompressed DDS
         if (hdr.format.bpp == 32)
-            fmt = DXGIFormat.R8G8B8A8_UNORM;
+        {
+            if (hdr.format.rMask == 0x00FF0000 && 
+                hdr.format.gMask == 0x0000FF00 &&
+                hdr.format.bMask == 0x000000FF &&
+                hdr.format.aMask == 0xFF000000)
+            {
+                fmt = DXGIFormat.B8G8R8A8_UNORM;
+            }
+            else
+            if (hdr.format.rMask == 0x000000FF &&
+                hdr.format.gMask == 0x0000FF00 &&
+                hdr.format.bMask == 0x00FF0000 &&
+                hdr.format.aMask == 0xFF000000)
+            {
+                fmt = DXGIFormat.R8G8B8A8_UNORM;
+            }
+            else
+            if (hdr.format.rMask == 0x000003FF &&
+                hdr.format.bMask == 0x000FFC00)
+            {
+                fmt = DXGIFormat.R10G10B10A2_UNORM;
+            }
+            else
+            {
+                fmt = DXGIFormat.R8G8B8A8_UNORM;
+                isMaskConversionRequired = true;
+            }
+        }
+        else if (hdr.format.bpp == 24)
+        {
+            // Special case
+            isRGB8 = true;
+            if (hdr.format.rMask == 0x00FF0000 && 
+                hdr.format.gMask == 0x0000FF00 &&
+                hdr.format.bMask == 0x000000FF)
+            {
+                fmt = DXGIFormat.B8G8R8A8_UNORM;
+            }
+            else
+            if (hdr.format.rMask == 0x000000FF &&
+                hdr.format.gMask == 0x0000FF00 &&
+                hdr.format.bMask == 0x00FF0000)
+            {
+                fmt = DXGIFormat.R8G8B8A8_UNORM;
+            }
+            else
+                return error("loadDDS error: unsupported 24bpp mask bits");
+        }
         else if (hdr.format.bpp == 16)
-            fmt = DXGIFormat.R8G8_UNORM;
+        {
+            if (hdr.format.rMask == 0xF800 &&
+                hdr.format.gMask == 0x07E0 &&
+                hdr.format.bMask == 0x001F)
+            {
+                fmt = DXGIFormat.B5G6R5_UNORM;
+            }
+            else
+            if (hdr.format.rMask == 0x00FF &&
+                hdr.format.gMask == 0xFF00)
+            {
+                fmt = DXGIFormat.R8G8_UNORM;
+            }
+            else
+                return error("loadDDS error: unsupported 16bpp mask bits");
+        }
         else if (hdr.format.bpp == 8)
+        {
             fmt = DXGIFormat.R8_UNORM;
+        }
+        else
+            return error("loadDDS error: unsupported bit depth for RGB texture");
+    }
+    else if (hdr.format.flags & DDPF.LUMINANCE)
+    {
+        if (hdr.format.bpp == 8)
+        {
+            fmt = DXGIFormat.R8_UNORM;
+        }
+        else
+            return error("loadDDS error: unsupported bit depth for luminance texture");
     }
     
-    if (!formatDetected)
-    {
-        version(DDSDebug) logDebug("format: ", fmt);
-        if (!dxgiFormatToSDLFormat(fmt, format))
-            return error("loadDDS error: unsupported resource format");
-    }
+    version(DDSDebug) logDebug("format: ", fmt);
+    if (!dxgiFormatToSDLFormat(fmt, format))
+        return error("loadDDS error: unsupported resource format");
     
     bool hasMipmaps = cast(bool)(hdr.flags & DDSHeaderFlags.MIPMAPCOUNT);
     bool isComplex = cast(bool)(hdr.caps & DDSCaps.COMPLEX);
@@ -487,12 +561,6 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
     version(DDSDebug) logDebug("isComplex: ", isComplex);
     version(DDSDebug) logDebug("isVolume: ", isVolume);
     version(DDSDebug) logDebug("isCubemap: ", isCubemap);
-    
-    size_t bufferSize = cast(size_t)(istrm.size - istrm.getPosition);
-    version(DDSDebug) logDebug("bufferSize: ", bufferSize);
-    
-    buffer.data = New!(ubyte[])(bufferSize);
-    istrm.readBytes(buffer.data.ptr, bufferSize);
     
     TextureSize size;
     size.width = hdr.width;
@@ -524,6 +592,31 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
         buffer.mipLevels = hdr.mipMapLevels;
     else
         buffer.mipLevels = 1;
+    
+    size_t textureSize = cast(size_t)(istrm.size - istrm.getPosition);
+    version(DDSDebug) logDebug("textureSize: ", textureSize);
+    ubyte[] textureData = New!(ubyte[])(textureSize);
+    istrm.readBytes(textureData.ptr, textureSize);
+    
+    if (isRGB8)
+    {
+        // Convert from RGB8 to RGBA8
+        buffer.data = New!(ubyte[])(size.width * size.height * format.pixelSize);
+        ddsRGB8toRGBA8(textureData, buffer.data, size.width, size.height);
+        Delete(textureData);
+    }
+    else
+    {
+        // Read as is
+        buffer.data = textureData;
+        
+        if (isMaskConversionRequired)
+        {
+            ddsUnmaskRGBA8(
+                buffer.data, buffer.data, size.width, size.height,
+                hdr.format.rMask, hdr.format.gMask, hdr.format.bMask, hdr.format.aMask);
+        }
+    }
 
     return true;
 }
@@ -582,6 +675,13 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
     header.surface = 0;
     
     header.format.size = 32;
+    header.format.flags = 0;
+    header.format.fourCC = 0;
+    header.format.bpp = 0;
+    header.format.rMask = 0;
+    header.format.gMask = 0;
+    header.format.bMask = 0;
+    header.format.aMask = 0;
     
     bool writeDXT10Header = false;
     DDSHeaderDXT10 dx10;
@@ -628,47 +728,38 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
                 logError("saveDDS: unsupported texture format ", buffer.format.format);
                 return false;
         }
-        
-        header.format.bpp = 0;
-        header.format.redMask = 0;
-        header.format.greenMask = 0;
-        header.format.blueMask = 0;
-        header.format.alphaMask = 0;
-    }
-    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM)
-    {
-        header.format.flags = DDPF.RGB | DDPF.ALPHAPIXELS;
-        header.format.bpp = 32;
-        header.format.redMask   = 0x000000FF;
-        header.format.greenMask = 0x0000FF00;
-        header.format.blueMask  = 0x00FF0000;
-        header.format.alphaMask = 0xFF000000;
-    }
-    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT)
-    {
-        header.format.flags = DDPF.FOURCC;
-        header.format.fourCC = FOURCC_DX10;
-        dx10.dxgiFormat = DXGIFormat.R16G16B16A16_FLOAT;
-        writeDXT10Header = true;
-    }
-    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT)
-    {
-        header.format.flags = DDPF.FOURCC;
-        header.format.fourCC = FOURCC_DX10;
-        dx10.dxgiFormat = DXGIFormat.R16G16_FLOAT;
-        writeDXT10Header = true;
-    }
-    else if (buffer.format.format == SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT)
-    {
-        header.format.flags = DDPF.FOURCC;
-        header.format.fourCC = FOURCC_DX10;
-        dx10.dxgiFormat = DXGIFormat.R32G32B32A32_FLOAT;
-        writeDXT10Header = true;
     }
     else
     {
-        logError("saveDDS: unsupported texture format ", buffer.format.format);
-        return false;
+        header.format.flags = DDPF.FOURCC;
+        header.format.fourCC = FOURCC_DX10;
+        writeDXT10Header = true;
+        
+        // TODO: use a converter function
+        switch (buffer.format.format)
+        {
+            case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
+                dx10.dxgiFormat = DXGIFormat.R8G8B8A8_UNORM;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
+                dx10.dxgiFormat = DXGIFormat.B8G8R8A8_UNORM;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_R8_UNORM:
+                dx10.dxgiFormat = DXGIFormat.R8_UNORM;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT:
+                dx10.dxgiFormat = DXGIFormat.R16G16B16A16_FLOAT;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT:
+                dx10.dxgiFormat = DXGIFormat.R16G16_FLOAT;
+                break;
+            case SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT:
+                dx10.dxgiFormat = DXGIFormat.R32G32B32A32_FLOAT;
+                break;
+            default:
+                logError("saveDDS: unsupported texture format ", buffer.format.format);
+                return false;
+        }
     }
     
     header.caps = DDSCaps.TEXTURE;
@@ -744,4 +835,102 @@ bool saveDDS(OutputStream output, Texture texture)
     if (textureBuffer.data.length)
         Delete(textureBuffer.data);
     return res;
+}
+
+/// Helper function to calculate trailing zeros (shift amount) and bit width of a mask.
+void ddsGetMaskInfo(uint mask, uint* outShift, uint* outBits)
+{
+    if (mask == 0)
+    {
+        *outShift = 0;
+        *outBits = 0;
+        return;
+    }
+    
+    uint shift = 0;
+    while ((mask & 1) == 0)
+    {
+        mask >>= 1;
+        shift++;
+    }
+    
+    uint bits = 0;
+    while ((mask & 1) == 1)
+    {
+        mask >>= 1;
+        bits++;
+    }
+    
+    *outShift = shift;
+    *outBits = bits;
+}
+
+void ddsRGB8toRGBA8(
+    const(ubyte)[] srcImage,
+    ubyte[] dstImage,
+    uint width,
+    uint height)
+{
+    for (size_t y = 0; y < height; y++)
+    for (size_t x = 0; x < width; x++)
+    {
+        size_t scrOffset = (y * width + x) * 3;
+        ubyte r = srcImage[scrOffset + 0];
+        ubyte g = srcImage[scrOffset + 1];
+        ubyte b = srcImage[scrOffset + 2];
+        
+        size_t dstOffset = (y * width + x) * 4;
+        dstImage[dstOffset + 0] = r;
+        dstImage[dstOffset + 1] = g;
+        dstImage[dstOffset + 2] = b;
+        dstImage[dstOffset + 3] = 255;
+    }
+}
+
+void ddsUnmaskRGBA8(
+    const(ubyte)[] srcImage,
+    ubyte[] dstImage,
+    uint width,
+    uint height,
+    uint rMask,
+    uint gMask,
+    uint bMask,
+    uint aMask)
+{
+    uint rShift, rBits;
+    uint gShift, gBits;
+    uint bShift, bBits;
+    uint aShift, aBits;
+    ddsGetMaskInfo(rMask, &rShift, &rBits);
+    ddsGetMaskInfo(gMask, &gShift, &gBits);
+    ddsGetMaskInfo(bMask, &bShift, &bBits);
+    ddsGetMaskInfo(aMask, &aShift, &aBits);
+    
+    for (size_t y = 0; y < height; y++)
+    for (size_t x = 0; x < width; x++)
+    {
+        size_t offset = (y * width + x) * 4;
+        
+        uint srcPixel = srcImage[offset + 0] |
+                       (srcImage[offset + 1] << 8) |
+                       (srcImage[offset + 2] << 16) |
+                       (srcImage[offset + 3] << 24);
+        
+        // Isolate channels using masks and shift them to the right
+        uint rRaw = (srcPixel & rMask) >> rShift;
+        uint gRaw = (srcPixel & gMask) >> gShift;
+        uint bRaw = (srcPixel & bMask) >> bShift;
+        uint aRaw = (srcPixel & aMask) >> aShift;
+        
+        // Scale channels to 8-bit
+        ubyte r = rBits ? cast(ubyte)((rRaw * 255) / ((1 << rBits) - 1)) : 0;
+        ubyte g = gBits ? cast(ubyte)((gRaw * 255) / ((1 << gBits) - 1)) : 0;
+        ubyte b = bBits ? cast(ubyte)((bRaw * 255) / ((1 << bBits) - 1)) : 0;
+        ubyte a = aBits ? cast(ubyte)((aRaw * 255) / ((1 << aBits) - 1)) : 0;
+        
+        dstImage[offset + 0] = r;
+        dstImage[offset + 1] = g;
+        dstImage[offset + 2] = b;
+        dstImage[offset + 3] = a;
+    }
 }
