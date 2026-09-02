@@ -204,7 +204,10 @@ struct PNGImage
     }
 }
 
-///
+/**
+ * Decodes PNG image from the stream and fills a `TextureBuffer`.
+ * The output is guaranteed to be RGBA8.
+ */
 bool loadPNG(InputStream istrm, TextureBuffer* buffer)
 {
     PNGImage png;

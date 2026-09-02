@@ -735,31 +735,14 @@ bool saveDDS(OutputStream output, TextureBuffer* buffer)
         header.format.fourCC = FOURCC_DX10;
         writeDXT10Header = true;
         
-        // TODO: use a converter function
-        switch (buffer.format.format)
+        DXGIFormat dxgiFormat;
+        if (!sdlFormatToDXGIFormat(buffer.format.format, dxgiFormat))
         {
-            case SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM:
-                dx10.dxgiFormat = DXGIFormat.R8G8B8A8_UNORM;
-                break;
-            case SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM:
-                dx10.dxgiFormat = DXGIFormat.B8G8R8A8_UNORM;
-                break;
-            case SDL_GPU_TEXTUREFORMAT_R8_UNORM:
-                dx10.dxgiFormat = DXGIFormat.R8_UNORM;
-                break;
-            case SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT:
-                dx10.dxgiFormat = DXGIFormat.R16G16B16A16_FLOAT;
-                break;
-            case SDL_GPU_TEXTUREFORMAT_R16G16_FLOAT:
-                dx10.dxgiFormat = DXGIFormat.R16G16_FLOAT;
-                break;
-            case SDL_GPU_TEXTUREFORMAT_R32G32B32A32_FLOAT:
-                dx10.dxgiFormat = DXGIFormat.R32G32B32A32_FLOAT;
-                break;
-            default:
-                logError("saveDDS: unsupported texture format ", buffer.format.format);
-                return false;
+            logError("saveDDS: unsupported texture format ", buffer.format.format);
+            return false;
         }
+        
+        dx10.dxgiFormat = dxgiFormat;
     }
     
     header.caps = DDSCaps.TEXTURE;
@@ -865,6 +848,7 @@ void ddsGetMaskInfo(uint mask, uint* outShift, uint* outBits)
     *outBits = bits;
 }
 
+///
 void ddsRGB8toRGBA8(
     const(ubyte)[] srcImage,
     ubyte[] dstImage,

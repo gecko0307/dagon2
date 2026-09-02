@@ -632,7 +632,7 @@ class SMAAPass: RenderPass
     
     protected Texture loadLUT(string path, TextureCreationOptions* options)
     {
-        logInfo("Loading ", path, "...");
+        logDebug("Loading ", path, "...");
         
         // Ugly, but works
         InputStream istrm = gpu.application.openFile(path);

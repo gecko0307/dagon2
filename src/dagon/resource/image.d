@@ -203,6 +203,7 @@ SDL_Surface* convertRGB48BEtoRGBA32(SDL_Surface* src)
 /**
  * Loads an image from an input stream using SDL3_Image and fills a `TextureBuffer`.
  * Handles resizing (for SVG) and pixel format conversion, if needed.
+ * The output is guaranteed to be RGBA8.
  *
  * Params:
  *   istrm     = Input stream containing the image data.
