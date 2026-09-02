@@ -457,6 +457,7 @@ bool loadDDS(InputStream istrm, TextureBuffer* buffer)
     else if (hdr.format.flags & DDPF.RGB)
     {
         // Legacy uncompressed DDS
+        // TODO: can this be done in a less ugly way?
         if (hdr.format.bpp == 32)
         {
             if (hdr.format.rMask == 0x00FF0000 && 
