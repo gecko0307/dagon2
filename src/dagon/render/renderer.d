@@ -106,6 +106,7 @@ abstract class Renderer: EventListener, Updateable
    protected:
     bool minimized = false;
     bool buffersInvalidated = false;
+    bool firstFrame = true;
     
    public:
     /**
@@ -177,6 +178,12 @@ abstract class Renderer: EventListener, Updateable
         }
         
         view.update(t);
+        
+        if (firstFrame)
+        {
+            firstFrame = false;
+            view.prevViewMatrix = view.viewMatrix;
+        }
         
         state.time = t;
         
