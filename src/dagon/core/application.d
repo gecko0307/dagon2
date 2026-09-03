@@ -1915,4 +1915,10 @@ class Application: EventListener, Updateable
             _numTimers--;
         }
     }
+    
+    /// Translates a string using the loaded locale.
+    string translate(string str)
+    {
+        return translation.get(str);
+    }
 }
