@@ -208,7 +208,13 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 5);
         
-        // TODO: material.subsurfaceScatteringTexture
+        if (material.subsurfaceScatteringTexture)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 6, material.subsurfaceScatteringTexture);
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasSubsurfaceScatteringTexture;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 6);
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

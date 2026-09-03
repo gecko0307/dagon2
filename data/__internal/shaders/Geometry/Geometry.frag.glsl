@@ -59,6 +59,7 @@ layout(location = 5) in vec4 prevPosition;
 #define TEXFLAG_HAS_EMISSION_TEXTURE 1 << 4
 #define TEXFLAG_HAS_SKYBOX_TEXTURE 1 << 5
 #define TEXFLAG_HAS_AMBIENT_TEXTURE 1 << 6
+#define TEXFLAG_HAS_SSS_TEXTURE 1 << 7
 
 // Bit masks for FLAGS_OUTPUT flag
 #define OUTFLAG_DEPTH 1 << 0
@@ -73,6 +74,7 @@ layout(set = 2, binding = 2) uniform sampler2D heightTexture;
 layout(set = 2, binding = 3) uniform sampler2D roughnessMetallicTexture;
 layout(set = 2, binding = 4) uniform sampler2D emissionTexture;
 layout(set = 2, binding = 5) uniform samplerCube skyboxTexture;
+layout(set = 2, binding = 6) uniform sampler2D subsurfaceScatteringTexture;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -84,6 +86,25 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     uvec4 flags;
     vec4 resolution;
 } ubo;
+
+// Parameter access macros
+#define hasBaseColorTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BASECOLOR_TEXTURE) != 0)
+#define hasRoughnessMetallicTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE) != 0)
+#define hasNormalTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_NORMAL_TEXTURE) != 0)
+#define hasHeightTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_HEIGHT_TEXTURE) != 0)
+#define hasEmissionTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
+#define hasSkyboxTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
+#define hasSSSTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SSS_TEXTURE) != 0)
+#define isShaded ((ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED) != 0)
+#define isStatic ((ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC) != 0)
+#define matAlpha ubo.materialOptions[OPT_ALPHA]
+#define matAlphaClipThreshold ubo.materialOptions[OPT_ALPHA_CLIP_THRESHOLD]
+#define matSkyboxMipLevel ubo.materialOptions[OPT_SKYBOX_MIP_LEVEL]
+#define matMotionBlurMask ubo.materialOptions[OPT_MOTION_BLUR_MASK]
+#define brdfRoughnessMetallic ubo.brdf.xy
+#define brdfF0 ubo.brdf[BRDF_F0]
+#define brdfSSS ubo.brdf[BRDF_SSS]
+#define outputDepth ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outNormal;
@@ -104,11 +125,11 @@ void main()
     vec3 E = normalize(-eyePosition);
     vec3 N = normalize(eyeNormal);
     
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_NORMAL_TEXTURE) != 0)
+    if (hasNormalTexture)
     {
         mat3 tangentToEye = cotangentFrame(N, eyePosition, uv);
         
-        if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_HEIGHT_TEXTURE) != 0)
+        if (hasHeightTexture)
         {
             // Parallax mapping
             vec3 tanE = normalize(E * tangentToEye);
@@ -123,33 +144,33 @@ void main()
     
     vec3 wN = N * mat3(ubo.viewMatrix);
     
-    float shadedMask = float((ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED) != 0);
-    float motionBlurMask = ubo.materialOptions[OPT_MOTION_BLUR_MASK];
+    float shadedMask = float(isShaded);
+    float motionBlurMask = matMotionBlurMask;
     
     vec4 baseColor = ubo.baseColor;
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BASECOLOR_TEXTURE) != 0)
+    if (hasBaseColorTexture)
         baseColor *= texture(baseColorTexture, uv);
     
-    float f0 = ubo.brdf[BRDF_F0];
+    float f0 = brdfF0;
     
-    vec4 roughnessMetallic = vec4(0.0, ubo.brdf.xy, 0.0);
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_ROUGHNESSMETALLIC_TEXTURE) != 0)
+    vec4 roughnessMetallic = vec4(0.0, brdfRoughnessMetallic, 0.0);
+    if (hasRoughnessMetallicTexture)
         roughnessMetallic = texture(roughnessMetallicTexture, uv);
     float roughness = max(roughnessMetallic.g, 0.001);
     float metallic = roughnessMetallic.b;
     
     vec3 emission = ubo.emission.rgb;
-    if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
-        emission *= textureLod(skyboxTexture, -normalize(modelPosition), ubo.materialOptions[OPT_SKYBOX_MIP_LEVEL]).rgb;
+    if (hasSkyboxTexture)
+        emission *= textureLod(skyboxTexture, -normalize(modelPosition), matSkyboxMipLevel).rgb;
     else
     {
-        if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
+        if (hasEmissionTexture)
             emission *= toLinear(texture(emissionTexture, uv).rgb);
         emission += toLinear(baseColor.rgb) * (1.0 - shadedMask);
     }
     
-    float alpha = baseColor.a * ubo.materialOptions[OPT_ALPHA];
-    if (alpha < ubo.materialOptions[OPT_ALPHA_CLIP_THRESHOLD]) // Alpha clipping
+    float alpha = baseColor.a * matAlpha;
+    if (alpha < matAlphaClipThreshold)
         discard;
     
     // Screen-space velocity
@@ -159,9 +180,11 @@ void main()
     prevPosScreen.y = 1.0 - prevPosScreen.y; // Adapt to Vulkan
     vec2 velocity = posScreen - prevPosScreen;
     
-    float staticMask = float(ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC);
+    float staticMask = float(isStatic);
     
-    float sss = ubo.brdf[BRDF_SSS];
+    float sss = brdfSSS;
+    if (hasSSSTexture)
+        sss = texture(subsurfaceScatteringTexture, uv).r;
     
     outColor = vec4(baseColor.rgb, sss);
     outNormal = vec4(wN * 0.5 + 0.5, 1.0); // fit the normal to 0..1
@@ -169,7 +192,7 @@ void main()
     outEmission = vec4(emission, 1.0);
     outVelocity = vec4(velocity, motionBlurMask, staticMask);
     
-    if ((ubo.flags[FLAGS_OUTPUT] & OUTFLAG_DEPTH) != 0)
+    if (outputDepth)
         gl_FragDepth = gl_FragCoord.z;
     else
         gl_FragDepth = 1.0;

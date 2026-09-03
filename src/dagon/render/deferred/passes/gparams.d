@@ -85,7 +85,8 @@ enum GeomTextureFlags: uint
     HasRoughnessMetallicTexture = 1 << 3,
     HasEmissionTexture = 1 << 4,
     HasSkyboxTexture = 1 << 5,
-    HasAmbientTexture = 1 << 6
+    HasAmbientTexture = 1 << 6,
+    HasSubsurfaceScatteringTexture = 1 << 7
 }
 
 /// Bit masks for GeomFlags.Output flag.
