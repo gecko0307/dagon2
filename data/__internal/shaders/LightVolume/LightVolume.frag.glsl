@@ -130,7 +130,7 @@ vec3 lightRadianceAreaSphere(
     float fss = mix(1.0, fss90, FL) * mix(1.0, fss90, FV);
     float ss = 1.25 * (fss * (1.0 / max(NL + NE, 0.1) - 0.5) + 0.5);
     
-    vec3 diffuse = INVPI * baseColor * mix(kD * NL * occlusion, vec3(ss), subsurface) * (1.0 - metallic);
+    vec3 diffuse = INVPI * baseColor * occlusion * mix(kD * NL, vec3(ss), subsurface) * (1.0 - metallic);
 
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(N, E), 0.0) * NL;
@@ -159,8 +159,8 @@ void main()
     
     vec3 N = mat3(ubo.viewMatrix) * wN;
     vec3 E = normalize(-eyePos);
-    vec3 R = reflect(E, N);
-    float NE = clamp(dot(N, E), 0.0, 1.0);
+    //vec3 R = reflect(E, N);
+    //float NE = clamp(dot(N, E), 0.0, 1.0);
     
     //vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
     //vec3 wE = normalize(worldPos - worldCamPos);

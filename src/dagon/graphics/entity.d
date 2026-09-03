@@ -275,6 +275,8 @@ class Entity: Owner, Updateable, GsObject
     /// Updates entity state with a given time.
     void update(Time t)
     {
+        prevModelMatrix = modelMatrix;
+        
         if (controller)
         {
             controller.update(t);
@@ -301,8 +303,6 @@ class Entity: Owner, Updateable, GsObject
     /// Recalculates `modelMatrix` and `invModelMatrix` for the entity and its children. Should be called after `update`.
     void postUpdate(Time t)
     {
-        prevModelMatrix = modelMatrix;
-        
         bool childrenModelMatricesValid = modelMatricesValid;
         
         if (!modelMatricesValid)

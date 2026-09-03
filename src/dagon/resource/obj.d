@@ -441,7 +441,8 @@ class OBJAsset: Asset
     /// Releases all resources associated with the asset.
     override void release()
     {
-        releaseMesh(mesh);
+        if (mesh)
+            releaseMesh(mesh);
         
         foreach(name, m; groupMesh)
         {
@@ -457,13 +458,28 @@ class OBJAsset: Asset
     
     void releaseMesh(Mesh m)
     {
-        if (m.vertices)
+        if (m.vertices.length)
+        {
             Delete(m.vertices);
-        if (m.normals)
+            m.vertices = [];
+        }
+        
+        if (m.normals.length)
+        {
             Delete(m.normals);
-        if (m.texcoords)
+            m.normals = [];
+        }
+        
+        if (m.texcoords.length)
+        {
             Delete(m.texcoords);
-        if (m.indices)
+            m.texcoords = [];
+        }
+        
+        if (m.indices.length)
+        {
             Delete(m.indices);
+            m.indices = [];
+        }
     }
 }

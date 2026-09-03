@@ -40,3 +40,11 @@ In dlib (and Dagon), there is only one multiplication - `matrix * columnVector`,
 For example, with normal syntax, expression `m2 * m1 * v` will be evaluated as one full matrix multiplication (64 float multiplications) and then one matrix-vector multiplication (9 float multiplications in affine case). With left-associative syntax, the equivalent `v * m1 * m2` will cause only two matrix-vector multiplications (total 18 float multiplications in affine case). Without parentheses there is no way to force compiler choose optimal execution path, so left-associative syntax was preferred as more concise and requiring less caution from the programmer.
 
 Also left-associative syntax is arguably easier to read.
+
+## 10. Why my entity doesn't move?
+
+Entities are static by default. To automatically recalculate model matrix on transformation updates, entity must be dynamic:
+
+```d
+eSuzanne.dynamic = true;
+```
