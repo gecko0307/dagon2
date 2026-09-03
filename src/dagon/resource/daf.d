@@ -35,7 +35,9 @@ import dlib.core.stream;
 import dlib.image.color;
 import dlib.image.io.utils;
 import dlib.math.vector;
+import dlib.math.matrix;
 import dlib.math.quaternion;
+import dlib.geometry.triangle;
 import dlib.container.array;
 import dlib.filesystem.filesystem;
 import dlib.text.str;
@@ -51,6 +53,8 @@ import dagon.graphics.material;
 import dagon.resource.asset;
 import dagon.resource.texture;
 import dagon.resource.image;
+
+//version = DAFDebug;
 
 enum DAF_MESH_FLAG_ANIMATED = 0x01;
 
@@ -199,7 +203,7 @@ struct DAFTexture
 //version = DAFDebug;
 
 ///
-class DagonAsset: Asset
+class DagonAsset: Asset, TriangleSet
 {
     ///
     ubyte[] data;
@@ -485,6 +489,8 @@ class DagonAsset: Asset
             entity.scaling = e.scaling;
             entity.transformMode = TransformMode.TRS;
             entity.dynamic = false;
+            entity.transformationValid = false;
+            entity.modelMatricesValid = false;
             if (e.mesh >= 0)
                 entity.drawable = this.meshes[e.mesh];
             this.entities.append(entity);
@@ -499,6 +505,12 @@ class DagonAsset: Asset
             else
                 rootEntity.addChild(entity);
         }
+        
+        // Calculate model matrices
+        foreach(entity; this.entities)
+            entity.update();
+        foreach(entity; this.entities)
+            entity.postUpdate();
         
         return true;
     }
@@ -524,5 +536,117 @@ class DagonAsset: Asset
         imgPath1.free();
         
         return res;
+    }
+    
+    /**
+     * Iterates over all triangles in the nodes.
+     *
+     * Params:
+     *   dg = Delegate to call for each triangle.
+     * Returns:
+     *   0 if completed, nonzero if interrupted.
+     */
+    int opApply(scope int delegate(Triangle* t) dg)
+    {
+        int result = 0;
+        
+        foreach(entity; this.entities)
+        {
+            if (entity.drawable)
+            {
+                Mesh mesh = cast(Mesh)entity.drawable;
+                if (mesh)
+                {
+                    /*
+                    if (mesh.facegroups.length)
+                    {
+                        foreach(ref fg; mesh.facegroups)
+                        {
+                            auto fgTriangles = mesh.indices[fg.firstTriangle..fg.firstTriangle+fg.numTriangles];
+                            foreach(i, ref triIndices; fgTriangles)
+                            {
+                                Triangle tri = mesh.getTriangle(i);
+                                
+                                Matrix4x4f mat = entity.modelMatrix;
+                                
+                                tri.v[0] = tri.v[0] * mat;
+                                tri.v[1] = tri.v[1] * mat;
+                                tri.v[2] = tri.v[2] * mat;
+                                
+                                tri.n[0] = mat.rotate(tri.n[0]);
+                                tri.n[1] = mat.rotate(tri.n[1]);
+                                tri.n[2] = mat.rotate(tri.n[2]);
+                                
+                                tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                                
+                                logInfo(tri.v);
+                                
+                                result = dg(&tri);
+                                if (result)
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach(Triangle* tri; mesh)
+                        {
+                            Matrix4x4f mat = entity.modelMatrix;
+                            
+                            tri.v[0] = tri.v[0] * mat;
+                            tri.v[1] = tri.v[1] * mat;
+                            tri.v[2] = tri.v[2] * mat;
+                            
+                            tri.n[0] = mat.rotate(tri.n[0]);
+                            tri.n[1] = mat.rotate(tri.n[1]);
+                            tri.n[2] = mat.rotate(tri.n[2]);
+                            
+                            tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                            
+                            result = dg(tri);
+                            if (result)
+                                break;
+                        }
+                    }
+                    */
+                    
+                    Matrix4x4f mat = entity.modelMatrix;
+                    foreach(i, ref f; mesh.indices)
+                    {
+                        Triangle tri = mesh.getTriangle(i);
+                        
+                        tri.v[0] = tri.v[0] * mat;
+                        tri.v[1] = tri.v[1] * mat;
+                        tri.v[2] = tri.v[2] * mat;
+                        tri.n[0] = mat.rotate(tri.n[0]);
+                        tri.n[1] = mat.rotate(tri.n[1]);
+                        tri.n[2] = mat.rotate(tri.n[2]);
+                        tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+                        
+                        result = dg(&tri);
+                        if (result)
+                            break;
+                    }
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    size_t numTriangles()
+    {
+        size_t tris = 0;
+        
+        foreach(entity; this.entities)
+        {
+            Mesh mesh = cast(Mesh)entity.drawable;
+            if (mesh)
+            {
+                tris += mesh.indices.length;
+            }
+        }
+        
+        return tris;
     }
 }

@@ -245,12 +245,12 @@ class ModelAsset: Asset, TriangleSet
         
         foreach(e; entities)
         {
-            e.update(Time(0.0, 0.0));
+            e.update();
         }
         
         foreach(e; entities)
         {
-            e.postUpdate(Time(0.0, 0.0));
+            e.postUpdate();
         }
         
         return result;
@@ -547,7 +547,7 @@ class ModelAsset: Asset, TriangleSet
      * Returns:
      *   0 if completed, nonzero if interrupted.
      */
-    int opApply(scope int delegate(Triangle t) dg)
+    int opApply(scope int delegate(Triangle* t) dg)
     {
         int result = 0;
         
@@ -571,7 +571,7 @@ class ModelAsset: Asset, TriangleSet
                     tri.n[2] = mat.rotate(tri.n[2]);
                     tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
                     
-                    result = dg(tri);
+                    result = dg(&tri);
                     if (result)
                         break;
                 }
@@ -599,7 +599,7 @@ class ModelAsset: Asset, TriangleSet
                             tri.n[2] = mat.rotate(tri.n[2]);
                             tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
                             
-                            result = dg(tri);
+                            result = dg(&tri);
                             if (result)
                                 break;
                         }
@@ -609,5 +609,33 @@ class ModelAsset: Asset, TriangleSet
         }
         
         return result;
+    }
+    
+    size_t numTriangles()
+    {
+        size_t tris = 0;
+        
+        foreach(entity; entities)
+        {
+            AssimpMesh mesh = cast(AssimpMesh)entity.drawable;
+            if (mesh)
+            {
+                tris += mesh.indices.length;
+            }
+            else
+            {
+                DrawableGroup meshGroup = cast(DrawableGroup)entity.drawable;
+                if (meshGroup)
+                {
+                    foreach(drawable; meshGroup.drawables)
+                    {
+                        AssimpMesh m = cast(AssimpMesh)drawable;
+                        tris += m.indices.length;
+                    }
+                }
+            }
+        }
+        
+        return tris;
     }
 }

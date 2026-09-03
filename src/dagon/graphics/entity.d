@@ -340,6 +340,12 @@ class Entity: Owner, Updateable, GsObject
         transformationValid = !dynamic;
     }
     
+    /// 
+    void postUpdate()
+    {
+        postUpdate(Time(0.0, 0.0));
+    }
+    
     /// Returns the world-space position of the entity.
     Vector3f positionWorld()
     {
