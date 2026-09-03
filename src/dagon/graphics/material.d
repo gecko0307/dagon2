@@ -109,6 +109,9 @@ class Material: Owner
      */
     Texture emissionTexture;
     
+    /// Texture that defines subsurface scattering ratio per pixel.
+    Texture subsurfaceScatteringTexture;
+    
     /**
      * Cubemap texture for skybox rendering.
      * If assigned, `emissionTexture` is ignored, instead the skybox texture data is written to the emission buffer.

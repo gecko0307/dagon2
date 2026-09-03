@@ -1,6 +1,6 @@
 # Configuration
 
-This guide covers Dagon's built-in configuration system for runtime settings and rendering parameters. The engine uses *.conf files to store user-controllable settings.
+This guide covers Dagon's built-in runtime configuration system. The engine uses *.conf files to store user-controllable settings.
 
 ## Syntax
 
@@ -136,7 +136,67 @@ Event manager settings:
 
 ### render.conf
 
-TODO
+Recognized by the `Game` class, applied to the `Game.renderer`.
+
+* `profile` - renderer quality profile. Supported values are `0` (low quality), `1` (high quality), `2` (ultra quality). Default is `2`. All explicitly defined options below override the profile
+
+* `decals.enabled` - `0` or `1`, disable or enable decals. Default is `1`
+
+* `selfIllumination.enabled` - `0` or `1`, disable or enable self-illumination (material emission). Default is `1`
+
+* `sunLight.enabled` - `0` or `1`, disable or enable sun light. Default is `1`
+
+* `lightVolumes.enabled` - `0` or `1`, disable or enable light volumes (positional lights). Default is `1`
+
+* `fog.enabled` - `0` or `1`, disable or enable fog. Default is `1`
+
+* `ssao.enabled` - `0` or `1`, disable or enable screen-space ambient occlusion. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `ssao.samplesMin` - minimum number of SSAO integration samples per pixel. Default is `20` in high/ultra quality profile, and `10` in low quality profile
+* `ssao.samplesMax` - maximum number of SSAO integration samples per pixel. Default is `40` in high/ultra quality profile, and `10` in low quality profile
+* `ssao.radius` - maximum radius of occlusion detection for SSAO
+* `ssao.power` - SSAO power. The greater is power, the more pronounced is the occlusion effect
+* `ssao.temporalAccumulation` -
+* `ssao.denoise` -
+* `ssao.halfResolution` - 
+
+* `sslr.enabled` - `0` or `1`, disable or enable screen-space reflections. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `sslr.samples` -
+* `sslr.refineSamples` -
+* `sslr.maxRayDistance` -
+* `sslr.hitThickness` -
+* `sslr.velocitySensitivity` -
+* `sslr.historyWeight` -
+* `sslr.motionWeight` -
+* `sslr.blur` -
+* `sslr.blurRadius` -
+* `sslr.halfResolution` -
+
+* `motionBlur.enabled` - `0` or `1`, disable or enable motion blur filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `motionBlur.samples` - 
+* `motionBlur.framerate` - 
+* `motionBlur.randomness` - 
+* `motionBlur.minDistance` - 
+* `motionBlur.maxDistance` - 
+* `motionBlur.radialBlurAmount` - 
+
+* `tonemapping.enabled` - `0` or `1`, disable or enable AgX tone mapping filter. Default is `1`
+* `tonemapping.look` -
+* `tonemapping.look.offset` -
+* `tonemapping.look.slope` -
+* `tonemapping.look.power` -
+* `tonemapping.look.saturation` -
+
+* `lensDistortion.enabled` - `0` or `1`, disable or enable lens distortion filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `lensDistortion.scale` - 
+* `lensDistortion.dispersion` - 
+* `lensDistortion.useRadialDistortion` - 
+* `lensDistortion.k1` - 
+* `lensDistortion.k2` - 
+
+* `antialiasing` - anti-aliasing algorithm. Supported values are `"None"`, `"FXAA"`, `"SMAA"`. Default is `"SMAA"` in high/ultra quality profile, and `"FXAA"` in low quality profile
+
+* `sharpening.enabled` - `0` or `1`, disable or enable sharpening filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `sharpening.strength` -
 
 ### input.conf
 
