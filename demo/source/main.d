@@ -31,7 +31,7 @@ import dagon;
 class TestWorld: World
 {
     MyGame game;
-    OBJAsset aOBJSuzanne;
+    OBJAsset aSuzanne;
 
     this(MyGame game)
     {
@@ -41,8 +41,7 @@ class TestWorld: World
     
     override void beforeLoad()
     {
-        aOBJSuzanne = New!OBJAsset(gpu, "data/suzanne.obj", assetManager);
-        assetManager.addAsset(aOBJSuzanne, "data/suzanne.obj");
+        aSuzanne = assetManager.create!OBJAsset("assets/suzanne.obj");
     }
     
     override void onLoad(Time t, LoadingStatus status)
@@ -68,7 +67,7 @@ class TestWorld: World
         matSuzanne.baseColor = Color4f(1.0f, 0.2f, 0.2f, 1.0f);
 
         auto eSuzanne = scene.addEntity();
-        eSuzanne.drawable = aOBJSuzanne.mesh;
+        eSuzanne.drawable = aSuzanne.mesh;
         eSuzanne.material = matSuzanne;
         eSuzanne.position = Vector3f(0.0f, 1.0f, 0.0f);
         
