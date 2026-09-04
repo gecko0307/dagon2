@@ -6,6 +6,8 @@ Resources, also known as assets, are the data loaded by the game in run time fro
 
 Loading assets from disk and decoding them are huge performance bottlenecks, and the overhead of decoding different asset formats vary widely. Some formats are very GPU-friendly and can be used directly, with little to no pre-processing, but some are rather quirky to load. Dagon hides almost all complexity of the asset pipeline under the hood, providing great support for many kinds of asset formats. It also allows for efficient transcoding and caching to reduce subsequent loading times.
 
+Assets can be loaded directly, one by one, or in batch using the asset manager that allows to load them asynchronously (see below).
+
 ## Shader Modules
 
 In Dagon 2, a shader module is an independent unit of compilation for a certain stage of the programmable pipeline. It can be a vertex module, fragment module, or a compute module. Shader modules are usually loaded from GLSL source files:
@@ -54,5 +56,11 @@ TextureAsset aTexture = loadTexture("assets/my_texture.png", &conversionOptions,
 For full control over the sampler, you can pass a pointer to custom `SDL_GPUSamplerCreateInfo` as `creationOptions.samplerCreateInfo`. If it is not null, it will override `repeatUV`, `bilinearFiltering` and `anisotropicFiltering`.
 
 ## 3D Models
+
+TODO
+
+## Asset Manager
+
+Asset manager allows the game to prepare all assets in advance and load them in batch. This is useful if loading takes some time, and you want to render something on the screen during the process. Asynchronous loading implemented by the `AssetManager` class makes that possible, by doing all the work in a background thread. Main thread keeps running, allowing your game to do anything while assets are loaded.
 
 TODO
