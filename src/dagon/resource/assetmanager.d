@@ -50,13 +50,15 @@ import gscript;
 struct LoadingStatus
 {
     ulong assetID;
-    uint index;
+    uint assetIndex;
     uint numAssets;
     float progress;
     bool ready;
 }
 
-///
+/**
+ * Manages asset loading.
+ */
 class AssetManager: Owner, GsObject
 {
     ///
@@ -71,13 +73,10 @@ class AssetManager: Owner, GsObject
     /// Hash map of registered assets.
     FlatHashMap!Asset assets;
     
-    ///
+    /// Total number of registered assets.
     uint numAssets = 0;
     
-    ///
-    Thread loadingThread;
-    
-    ///
+    protected Thread loadingThread;
     protected LoadingStatus[2] _loadingStatus;
     protected shared uint loadingStatusActiveIndex = 0;
     
@@ -111,13 +110,13 @@ class AssetManager: Owner, GsObject
         loadingThread = New!Thread(&loadSync);
         
         _loadingStatus[0].assetID = 0;
-        _loadingStatus[0].index = 0;
+        _loadingStatus[0].assetIndex = 0;
         _loadingStatus[0].numAssets = 0;
         _loadingStatus[0].progress = 0.0f;
         _loadingStatus[0].ready = false;
         
         _loadingStatus[1].assetID = 0;
-        _loadingStatus[1].index = 0;
+        _loadingStatus[1].assetIndex = 0;
         _loadingStatus[1].numAssets = 0;
         _loadingStatus[1].progress = 0.0f;
         _loadingStatus[1].ready = false;
@@ -162,13 +161,43 @@ class AssetManager: Owner, GsObject
         return id;
     }
     
+    /**
+     * Creates an asset of type `T` and registers it by the given filename.
+     * Optionally preloads the asset.
+     * If an asset is already registered by this name, returns it.
+     *
+     * Params:
+     *   filename = The asset filename.
+     *   preload  = If true, preload the asset immediately.
+     * Returns:
+     *   The loaded or newly created asset of type `T`.
+     */
+    T create(T)(string filename, bool preload = false)
+    {
+        T newAsset;
+        if (assetExists(filename))
+        {
+            newAsset = cast(T)getAsset(filename);
+            if (preload && !newAsset.loaded)
+                loadAsset(newAsset);
+        }
+        else
+        {
+            newAsset = New!T(application.gpu, filename, this);
+            addAsset(newAsset, filename);
+            if (preload)
+                loadAsset(newAsset);
+        }
+        return newAsset;
+    }
+    
     /// Loads all registered assets in the current thread.
     void loadSync()
     {
         if (numAssets == 0)
             return;
         
-        uint index = 0;
+        uint assetIndex = 0;
         float progress = 0.0f;
         float progressStep = 1.0f / cast(float)numAssets;
         
@@ -176,16 +205,16 @@ class AssetManager: Owner, GsObject
 
         foreach(ulong id, Asset asset; assets)
         {
-            //logDebug("Loading asset ", asset.filename, "...");
             if (isFirst)
             {
                 isFirst = false;
-                updateLoadingStatus(id, index, progress, false);
+                updateLoadingStatus(id, assetIndex, progress, false);
             }
-            loadAsset(asset);
-            index++;
+            if (!asset.loaded)
+                loadAsset(asset);
+            assetIndex++;
             progress += progressStep;
-            updateLoadingStatus(id, index, progress, index >= numAssets);
+            updateLoadingStatus(id, assetIndex, progress, assetIndex >= numAssets);
         }
     }
     
@@ -195,13 +224,13 @@ class AssetManager: Owner, GsObject
         loadingThread.start();
     }
     
-    protected void updateLoadingStatus(ulong id, uint index, float progress, bool ready)
+    protected void updateLoadingStatus(ulong id, uint assetIndex, float progress, bool ready)
     {
         uint writeIdx = (atomicLoad(loadingStatusActiveIndex) == 0) ? 1 : 0;
         
         auto buf = cast(LoadingStatus*)&_loadingStatus[writeIdx];
         buf.assetID = id;
-        buf.index = index;
+        buf.assetIndex = assetIndex;
         buf.numAssets = numAssets;
         buf.progress = progress;
         buf.ready = ready;

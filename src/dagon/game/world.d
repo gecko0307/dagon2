@@ -64,11 +64,8 @@ class World: EventListener, GsObject
     /// Asset manager associated with this world.
     AssetManager assetManager;
     
-    ///
-    bool assetsloadingStarted = false;
-    
-    ///
-    bool assetsLoaded = false;
+    protected bool assetsloadingStarted = false;
+    protected bool assetsLoaded = false;
     
     /// GScript dynamic properties attached to this world instance.
     Dict!(GsDynamic, string) gsProperties;
@@ -148,17 +145,24 @@ class World: EventListener, GsObject
         }
     }
     
-    ///
+    /// Override to perform actions before loading assets.
     void beforeLoad()
     {
     }
     
-    ///
+    /**
+     * Override to handle loading progress.
+     * This is analogous to onUpdate, called every frame while assets are loading.
+     *
+     * Params:
+     *   t      = Frame timing information.
+     *   status = Loading status information.
+     */
     void onLoad(Time t, LoadingStatus status)
     {
     }
     
-    ///
+    /// Override to perform actions after loading is complete.
     void afterLoad()
     {
     }
