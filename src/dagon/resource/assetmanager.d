@@ -26,21 +26,204 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.assetmanager;
 
+import dlib.core.memory;
 import dlib.core.ownership;
+import dlib.container.dict;
+import dlib.filesystem.filesystem;
 
 import dagon.core.application;
+import dagon.core.logger;
+import dagon.core.gpu;
+import dagon.graphics.texture;
+import dagon.graphics.lut;
+import dagon.resource.asset;
+import dagon.resource.image;
+import dagon.resource.texture;
+
+import gscript;
 
 ///
-class AssetManager: Owner
+class AssetManager: Owner, GsObject
 {
     ///
     Application application;
+    
+    /// Default options for converting loaded image data.
+    ImageConversionOptions defaultImageConversionOptions;
+    
+    /// Default options for creating new textures.
+    TextureCreationOptions defaultTextureCreationOptions;
+    
+    /// Dictionary of assets by filename.
+    Dict!(Asset, string) assetsByUUID;
+    
+    /// GScript dynamic properties attached to this world instance.
+    Dict!(GsDynamic, string) gsProperties;
     
     ///
     this(Application application, Owner owner)
     {
         super(owner);
+        
+        this.application = application;
+        
+        // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from application settings
+        
+        defaultImageConversionOptions.width = 0;
+        defaultImageConversionOptions.height = 0;
+        defaultImageConversionOptions.depth = 1;
+        defaultImageConversionOptions.compressionFormat = TextureCompressionFormat.None;
+        defaultImageConversionOptions.lutFormat = LUTFormat.Undefined;
+        defaultImageConversionOptions.hint = 0;
+        
+        defaultTextureCreationOptions.generateMipmaps = true;
+        defaultTextureCreationOptions.repeatUV = true;
+        defaultTextureCreationOptions.bilinearFiltering = true;
+        defaultTextureCreationOptions.anisotropicFiltering = true;
+        defaultTextureCreationOptions.writeable = false;
+        
+        gsProperties = dict!(GsDynamic, string);
     }
     
-    // TODO
+    /// Releases world resources and script properties.
+    ~this()
+    {
+        Delete(gsProperties);
+    }
+    
+    /**
+     * Immediately loads a texture asset from a file using provided conversion and creation settings.
+     *
+     * Params:
+     *   filename = Virtual path of the texture file to load.
+     *   conversionOptions = Image conversion settings to apply.
+     *   creationOptions = Texture creation settings to use.
+     *   cache = Whether the asset should be cached.
+     *
+     * Returns: The loaded texture asset instance.
+     */
+    TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
+    {
+        TextureAsset asset = New!TextureAsset(application.gpu, this);
+        asset.conversionOptions = *conversionOptions;
+        asset.creationOptions = *creationOptions;
+        asset.cache = cache;
+        if (application.fileExists(filename))
+            loadAsset(asset, filename);
+        else
+            logError("Can\'t find file ", filename);
+        return asset;
+    }
+    
+    /**
+     * Immediately loads a texture asset from a file using default conversion and creation settings.
+     *
+     * Params:
+     *   filename = Virtual path of the texture file to load.
+     *   cache = Whether the texture asset should be cached.
+     *
+     * Returns: The loaded texture asset instance.
+     */
+    TextureAsset loadTexture(string filename, bool cache = true)
+    {
+        return loadTexture(filename, &defaultImageConversionOptions, &defaultTextureCreationOptions, cache);
+    }
+    
+    /**
+     * Immediately loads the given asset from a file.
+     *
+     * Params:
+     *   asset = The asset object to load.
+     *   filename = Virtual path of the source file.
+     *
+     * Returns: true if loading succeeded; otherwise false.
+     */
+    bool loadAsset(Asset asset, string filename)
+    {
+        bool res = false;
+        FileStat s;
+        if (application.vfs.stat(filename, s))
+        {
+            auto istrm = application.vfs.openForInput(filename);
+            res = asset.load(filename, istrm, application.vfs);
+            Delete(istrm);
+        }
+        else
+            logError("Can\'t find file ", filename);
+        return res;
+    }
+    
+    /**
+     * Creates and immediately loads a new asset of type `T` from the specified file.
+     *
+     * Params:
+     *   filename = Virtual path of the asset file.
+     *
+     * Returns: A loaded asset instance of type `T`.
+     */
+    T loadAsset(T)(string filename)
+    {
+        T asset = New!T(application.gpu, this);
+        loadAsset(asset, filename);
+        return asset;
+    }
+    
+    /**
+     * Returns a GScript dynamic property for the specified key.
+     *
+     * Params:
+     *   key = The property name to retrieve.
+     *
+     * Returns: The property value, or an empty `GsDynamic` if not found.
+     */
+    GsDynamic get(string key)
+    {
+        switch(key)
+        {
+            default:
+                auto v = key in gsProperties;
+                if (v)
+                    return *v;
+                else
+                    return GsDynamic();
+        }
+    }
+    
+    /**
+     * Sets a GScript dynamic property value for the specified key.
+     *
+     * Params:
+     *   key = The property name to store.
+     *   value = The dynamic value to assign.
+     */
+    void set(string key, GsDynamic value)
+    {
+        gsProperties[key] = value;
+    }
+    
+    /**
+     * Checks whether a GScript dynamic property exists for the specified key.
+     *
+     * Params:
+     *   key = The property name to check.
+     *
+     * Returns: True if the property exists.
+     */
+    bool contains(string key)
+    {
+        switch(key)
+        {
+            default:
+                if ((key in gsProperties) !is null)
+                    return true;
+                else
+                    return false;
+        }
+    }
+    
+    /// Prototype assignment for GScript object compatibility (no-op).
+    void setPrototype(GsObject obj)
+    {
+        // No-op
+    }
 }

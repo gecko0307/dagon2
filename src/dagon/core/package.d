@@ -136,4 +136,10 @@ public
 
     /// System information.
     import dagon.core.sysinfo;
+
+    /// Built-in flat hash map.
+    import dagon.core.hashmap;
+
+    /// xxHash64 implementation.
+    import dagon.core.xxhash64;
 }

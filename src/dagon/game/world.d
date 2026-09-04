@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * World runtime container for scene management, asset loading, and event processing.
+ * World runtime container for isolating game logic.
  */
 module dagon.game.world;
 
@@ -39,20 +39,16 @@ import dagon.core.logger;
 import dagon.core.event;
 import dagon.core.time;
 import dagon.core.gpu;
-import dagon.graphics.texture;
 import dagon.graphics.scene;
-import dagon.graphics.lut;
 import dagon.game.basegame;
-import dagon.resource.asset;
-import dagon.resource.image;
-import dagon.resource.texture;
+import dagon.resource.assetmanager;
 
 import gscript;
 
 /**
  * The world object.
- * Manages scene, asset loading, event processing, and
- * exposes GScript-compatible properties.
+ * World is an independently operating portion of a game,
+ * such as a game level, an intro, or a menu.
  */
 class World: EventListener, GsObject
 {
@@ -65,11 +61,8 @@ class World: EventListener, GsObject
     /// Active scene managed by this world.
     Scene scene;
     
-    /// Default options for converting loaded image data.
-    ImageConversionOptions defaultImageConversionOptions;
-    
-    /// Default options for creating new textures.
-    TextureCreationOptions defaultTextureCreationOptions;
+    /// Asset manager associated with this world.
+    AssetManager assetManager;
     
     /// GScript dynamic properties attached to this world instance.
     Dict!(GsDynamic, string) gsProperties;
@@ -85,21 +78,7 @@ class World: EventListener, GsObject
         super(baseGame.eventManager, baseGame);
         this.baseGame = baseGame;
         this.gpu = baseGame.gpu;
-        
-        // TODO: init defaultImageConversionOptions and defaultTextureCreationOptions from baseGame settings
-        
-        defaultImageConversionOptions.width = 0;
-        defaultImageConversionOptions.height = 0;
-        defaultImageConversionOptions.depth = 1;
-        defaultImageConversionOptions.compressionFormat = TextureCompressionFormat.None;
-        defaultImageConversionOptions.lutFormat = LUTFormat.Undefined;
-        defaultImageConversionOptions.hint = 0;
-        
-        defaultTextureCreationOptions.generateMipmaps = true;
-        defaultTextureCreationOptions.repeatUV = true;
-        defaultTextureCreationOptions.bilinearFiltering = true;
-        defaultTextureCreationOptions.anisotropicFiltering = true;
-        defaultTextureCreationOptions.writeable = false;
+        this.assetManager = New!AssetManager(baseGame, this);
         
         gsProperties = dict!(GsDynamic, string);
     }
@@ -114,83 +93,6 @@ class World: EventListener, GsObject
     void activate()
     {
         baseGame.activeWorld = this;
-    }
-    
-    /**
-     * Loads a texture asset from a file using provided conversion and creation settings.
-     *
-     * Params:
-     *   filename = Virtual path of the texture file to load.
-     *   conversionOptions = Image conversion settings to apply.
-     *   creationOptions = Texture creation settings to use.
-     *   cache = Whether the asset should be cached.
-     *
-     * Returns: The loaded texture asset instance.
-     */
-    TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
-    {
-        TextureAsset asset = New!TextureAsset(gpu, this);
-        asset.conversionOptions = *conversionOptions;
-        asset.creationOptions = *creationOptions;
-        asset.cache = cache;
-        if (baseGame.fileExists(filename))
-            loadAsset(asset, filename);
-        else
-            logError("Can\'t find file ", filename);
-        return asset;
-    }
-    
-    /**
-     * Loads a texture asset from a file using default conversion and creation settings.
-     *
-     * Params:
-     *   filename = Virtual path of the texture file to load.
-     *   cache = Whether the texture asset should be cached.
-     *
-     * Returns: The loaded texture asset instance.
-     */
-    TextureAsset loadTexture(string filename, bool cache = true)
-    {
-        return loadTexture(filename, &defaultImageConversionOptions, &defaultTextureCreationOptions, cache);
-    }
-    
-    /**
-     * Loads the given asset from a file into the provided asset object.
-     *
-     * Params:
-     *   asset = The asset object to populate.
-     *   filename = Virtual path of the source file.
-     *
-     * Returns: True if loading succeeded; otherwise false.
-     */
-    bool loadAsset(Asset asset, string filename)
-    {
-        bool res = false;
-        FileStat s;
-        if (baseGame.vfs.stat(filename, s))
-        {
-            auto istrm = baseGame.vfs.openForInput(filename);
-            res = asset.load(filename, istrm, baseGame.vfs);
-            Delete(istrm);
-        }
-        else
-            logError("Can\'t find file ", filename);
-        return res;
-    }
-    
-    /**
-     * Creates and loads a new asset of type `T` from the specified file.
-     *
-     * Params:
-     *   filename = Virtual path of the asset file.
-     *
-     * Returns: A loaded asset instance of type `T`.
-     */
-    T loadAsset(T)(string filename)
-    {
-        T asset = New!T(gpu, this);
-        loadAsset(asset, filename);
-        return asset;
     }
     
     /**

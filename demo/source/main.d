@@ -32,22 +32,13 @@ class TestWorld: World
 {
     MyGame game;
     OBJAsset aOBJSuzanne;
-    
-    T loadAsset(T)(string filename)
-    {
-        T asset = New!T(gpu, this);
-        auto istrm = game.vfs.openForInput(filename);
-        asset.load(filename, istrm, game.vfs);
-        Delete(istrm);
-        return asset;
-    }
 
     this(MyGame game)
     {
         super(game);
         this.game = game;
         
-        aOBJSuzanne = loadAsset!OBJAsset("data/suzanne.obj");
+        aOBJSuzanne = assetManager.loadAsset!OBJAsset("data/suzanne.obj");
         
         scene = New!Scene(gpu, this);
         scene.sun.pitch(-45.0f);
