@@ -110,9 +110,9 @@ class OBJAsset: Asset
     Dict!(Mesh, string) groupMesh;
 
     /// Constructs an OBJ asset.
-    this(GPU gpu, Owner owner)
+    this(GPU gpu, string filename, Owner owner)
     {
-        super(gpu, owner);
+        super(gpu, filename, owner);
         groupMesh = dict!(Mesh, string);
     }
 
@@ -126,14 +126,13 @@ class OBJAsset: Asset
      * Loads the thread-safe part of the OBJ asset (parsing file data).
      *
      * Params:
-     *   filename = The OBJ filename.
      *   istrm    = Input stream for the OBJ file.
      *   fs       = File system.
      *   mngr     = Asset manager.
      * Returns:
      *   True if loading succeeded.
      */
-    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    override bool load(InputStream istrm, ReadOnlyFileSystem fs)
     {
         uint numVerts = 0;
         uint numNormals = 0;

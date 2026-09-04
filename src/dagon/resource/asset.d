@@ -30,6 +30,7 @@ import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
 import dlib.filesystem.filesystem;
+import dlib.text.str;
 
 import dagon.core.gpu;
 
@@ -38,6 +39,9 @@ abstract class Asset: Owner
 {
     ///
     GPU gpu;
+    
+    ///
+    string filename;
     
     ///
     bool cache = false;
@@ -49,10 +53,11 @@ abstract class Asset: Owner
     bool loaded = false;
     
     ///
-    this(GPU gpu, Owner owner)
+    this(GPU gpu, string filename, Owner owner)
     {
         super(owner);
         this.gpu = gpu;
+        this.filename = filename;
     }
     
     /// Releases all resources associated with the asset.
@@ -61,7 +66,7 @@ abstract class Asset: Owner
     }
     
     /// Loads an asset from a given stream.
-    bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    bool load(InputStream istrm, ReadOnlyFileSystem fs)
     {
         return false;
     }

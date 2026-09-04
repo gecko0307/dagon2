@@ -26,14 +26,18 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.assetmanager;
 
+import core.atomic;
+
 import dlib.core.memory;
 import dlib.core.ownership;
+import dlib.core.thread;
 import dlib.container.dict;
 import dlib.filesystem.filesystem;
 
 import dagon.core.application;
 import dagon.core.logger;
 import dagon.core.gpu;
+import dagon.core.hashmap;
 import dagon.graphics.texture;
 import dagon.graphics.lut;
 import dagon.resource.asset;
@@ -41,6 +45,15 @@ import dagon.resource.image;
 import dagon.resource.texture;
 
 import gscript;
+
+///
+struct LoadingStatus
+{
+    uint currentAssetIndex;
+    uint numAssets;
+    float progress;
+    bool ready;
+}
 
 ///
 class AssetManager: Owner, GsObject
@@ -54,8 +67,18 @@ class AssetManager: Owner, GsObject
     /// Default options for creating new textures.
     TextureCreationOptions defaultTextureCreationOptions;
     
-    /// Dictionary of assets by filename.
-    Dict!(Asset, string) assetsByUUID;
+    /// Hash map of registered assets.
+    FlatHashMap!Asset assets;
+    
+    ///
+    uint numAssets = 0;
+    
+    ///
+    Thread loadingThread;
+    
+    ///
+    protected LoadingStatus[2] _loadingStatus;
+    protected shared uint loadingStatusActiveIndex = 0;
     
     /// GScript dynamic properties attached to this world instance.
     Dict!(GsDynamic, string) gsProperties;
@@ -82,13 +105,96 @@ class AssetManager: Owner, GsObject
         defaultTextureCreationOptions.anisotropicFiltering = true;
         defaultTextureCreationOptions.writeable = false;
         
+        assets = New!(FlatHashMap!Asset)(this);
+        
+        loadingThread = New!Thread(&loadSync);
+        
+        _loadingStatus[0].currentAssetIndex = 0;
+        _loadingStatus[0].numAssets = 0;
+        _loadingStatus[0].progress = 0.0f;
+        _loadingStatus[0].ready = false;
+        
+        _loadingStatus[1].currentAssetIndex = 0;
+        _loadingStatus[1].numAssets = 0;
+        _loadingStatus[1].progress = 0.0f;
+        _loadingStatus[1].ready = false;
+        
         gsProperties = dict!(GsDynamic, string);
     }
     
     /// Releases world resources and script properties.
     ~this()
     {
+        Delete(loadingThread);
         Delete(gsProperties);
+    }
+    
+    /// Returns a registered asset under the given name, or null if it doesn't exist.
+    Asset getAsset(string name)
+    {
+        return assets[name];
+    }
+    
+    /// Checks if an asset is registered under a given name.
+    bool assetExists(string name)
+    {
+        Asset existingAsset = assets[name];
+        return (existingAsset !is null);
+    }
+    
+    /// Register an asset under a given name.
+    void addAsset(Asset asset, string name)
+    {
+        assets[name] = asset;
+        numAssets++;
+    }
+    
+    /// Loads all registered assets in the current thread.
+    void loadSync()
+    {
+        if (numAssets == 0)
+            return;
+        
+        uint assetIndex = 0;
+        float progress = 0.0f;
+        float progressStep = 1.0f / cast(float)numAssets;
+        
+        updateLoadingStatus(assetIndex, progress, false);
+
+        foreach(Asset asset; assets)
+        {
+            logDebug("Loading asset ", asset.filename, "...");
+            loadAsset(asset);
+            assetIndex++;
+            progress += progressStep;
+            updateLoadingStatus(assetIndex, progress, assetIndex >= numAssets);
+        }
+    }
+    
+    /// Loads all registered assets in the parallel thread, returns immediately.
+    void loadAsync()
+    {
+        loadingThread.start();
+    }
+    
+    protected void updateLoadingStatus(uint assetIndex, float progress, bool ready)
+    {
+        uint writeIdx = (atomicLoad(loadingStatusActiveIndex) == 0) ? 1 : 0;
+        
+        auto buf = cast(LoadingStatus*)&_loadingStatus[writeIdx];
+        buf.currentAssetIndex = assetIndex;
+        buf.numAssets = numAssets;
+        buf.progress = progress;
+        buf.ready = ready;
+        
+        atomicStore(loadingStatusActiveIndex, writeIdx);
+    }
+    
+    /// Returns current loading status.
+    LoadingStatus loadingStatus() @property
+    {
+        uint readIdx = atomicLoad(loadingStatusActiveIndex);
+        return *(cast(LoadingStatus*)&_loadingStatus[readIdx]);
     }
     
     /**
@@ -104,12 +210,12 @@ class AssetManager: Owner, GsObject
      */
     TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
     {
-        TextureAsset asset = New!TextureAsset(application.gpu, this);
+        TextureAsset asset = New!TextureAsset(application.gpu, filename, this);
         asset.conversionOptions = *conversionOptions;
         asset.creationOptions = *creationOptions;
         asset.cache = cache;
         if (application.fileExists(filename))
-            loadAsset(asset, filename);
+            loadAsset(asset);
         else
             logError("Can\'t find file ", filename);
         return asset;
@@ -130,7 +236,7 @@ class AssetManager: Owner, GsObject
     }
     
     /**
-     * Immediately loads the given asset from a file.
+     * Immediately loads the given asset.
      *
      * Params:
      *   asset = The asset object to load.
@@ -138,18 +244,18 @@ class AssetManager: Owner, GsObject
      *
      * Returns: true if loading succeeded; otherwise false.
      */
-    bool loadAsset(Asset asset, string filename)
+    bool loadAsset(Asset asset)
     {
         bool res = false;
         FileStat s;
-        if (application.vfs.stat(filename, s))
+        if (application.vfs.stat(asset.filename, s))
         {
-            auto istrm = application.vfs.openForInput(filename);
-            res = asset.load(filename, istrm, application.vfs);
+            auto istrm = application.vfs.openForInput(asset.filename);
+            res = asset.load(istrm, application.vfs);
             Delete(istrm);
         }
         else
-            logError("Can\'t find file ", filename);
+            logError("Can\'t find file ", asset.filename);
         return res;
     }
     
@@ -163,8 +269,8 @@ class AssetManager: Owner, GsObject
      */
     T loadAsset(T)(string filename)
     {
-        T asset = New!T(application.gpu, this);
-        loadAsset(asset, filename);
+        T asset = New!T(application.gpu, filename, this);
+        loadAsset(asset);
         return asset;
     }
     

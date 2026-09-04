@@ -64,6 +64,12 @@ class World: EventListener, GsObject
     /// Asset manager associated with this world.
     AssetManager assetManager;
     
+    ///
+    bool assetsloadingStarted = false;
+    
+    ///
+    bool assetsLoaded = false;
+    
     /// GScript dynamic properties attached to this world instance.
     Dict!(GsDynamic, string) gsProperties;
     
@@ -104,6 +110,23 @@ class World: EventListener, GsObject
     {
         processEvents();
         
+        if (!assetsloadingStarted)
+        {
+            beforeLoad();
+            assetsloadingStarted = true;
+            assetManager.loadAsync();
+        }
+        
+        if (!assetsLoaded)
+        {
+            LoadingStatus status = assetManager.loadingStatus;
+            assetsLoaded = status.ready;
+            onLoad(t, status);
+            if (assetsLoaded)
+                afterLoad();
+            return;
+        }
+        
         onUpdate(t);
         
         if (scene)
@@ -123,6 +146,21 @@ class World: EventListener, GsObject
                 entity.postUpdate(t);
             }
         }
+    }
+    
+    ///
+    void beforeLoad()
+    {
+    }
+    
+    ///
+    void onLoad(Time t, LoadingStatus status)
+    {
+    }
+    
+    ///
+    void afterLoad()
+    {
     }
     
     /**

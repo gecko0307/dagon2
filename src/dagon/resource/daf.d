@@ -227,9 +227,9 @@ class DagonAsset: Asset, TriangleSet
     bool compressTextures = false;
     
     ///
-    this(GPU gpu, Owner owner)
+    this(GPU gpu, string filename, Owner owner)
     {
-        super(gpu, owner);
+        super(gpu, filename, owner);
     }
     
     ///
@@ -258,7 +258,7 @@ class DagonAsset: Asset, TriangleSet
     }
     
     /// Loads an asset from a given stream.
-    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    override bool load(InputStream istrm, ReadOnlyFileSystem fs)
     {
         release();
         
@@ -342,7 +342,7 @@ class DagonAsset: Asset, TriangleSet
                 logDebug("  anisotropicFiltering: ", cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING));
             }
             
-            auto aTexture = New!TextureAsset(gpu, this);
+            auto aTexture = New!TextureAsset(gpu, texFilename, this);
             aTexture.creationOptions.generateMipmaps = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_GENERATE_MIPMAPS);
             aTexture.creationOptions.repeatUV = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_UV_REPEAT);
             aTexture.creationOptions.anisotropicFiltering = cast(bool)(tex.flags & DAF_TEXTURE_FLAG_ANISOTROPIC_FILTERING);
@@ -360,7 +360,9 @@ class DagonAsset: Asset, TriangleSet
             {
                 aTexture.conversionOptions.compressionFormat = TextureCompressionFormat.None;
             }
-            loadTextureAsset(aTexture, fs, rootDir, texFilename);
+            
+            loadTextureAsset(aTexture, fs, rootDir);
+            
             textureAssets.append(aTexture);
         }
         
@@ -515,25 +517,32 @@ class DagonAsset: Asset, TriangleSet
         return true;
     }
     
-    protected bool loadTextureAsset(TextureAsset asset, ReadOnlyFileSystem fs, string rootDir, string relPath)
+    protected bool loadTextureAsset(TextureAsset asset, ReadOnlyFileSystem fs, string rootDir)
     {
-        String imgPath1 = String(rootDir);
-        imgPath1 ~= "/";
-        imgPath1 ~= relPath;
-        string assetPath1 = imgPath1.toString;
+        string relPath = asset.filename;
+        
+        String imgPath = String(rootDir);
+        imgPath ~= "/";
+        imgPath ~= relPath;
+        string texturePath = imgPath.toString;
+        
+        asset.filename = texturePath;
         
         bool res = false;
         FileStat fstat;
-        if (fs.stat(assetPath1, fstat))
+        if (fs.stat(texturePath, fstat))
         {
-            InputStream istrm = fs.openForInput(assetPath1);
-            res = asset.load(assetPath1, istrm, fs);
+            InputStream istrm = fs.openForInput(texturePath);
+            res = asset.load(istrm, fs);
             if (!res)
-                logError("Failed to load \"", assetPath1, "\"");
+                logError("Failed to load \"", texturePath, "\"");
             Delete(istrm);
         }
         
-        imgPath1.free();
+        imgPath.free();
+        
+        // TODO: keep full filename?
+        asset.filename = relPath;
         
         return res;
     }

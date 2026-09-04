@@ -41,14 +41,15 @@ enum XXHASH64_SEED = 42;
  * Works in near-constant time.
  * Insertion is 36x faster than dlib.container.dict and 1.7x faster than native AA.
  * Searching is 15x faster than dlib.container.dict and 1.6x faster than native AA.
+ * For string-based access, xxHash64 is used.
  */
-class FlatHashMap: Owner
+class FlatHashMap(T): Owner
 {
    protected:
     struct Bucket
     {
-        ulong key;   // xxHash64 (0 = empty)
-        void* value; // Arbitrary raw pointer
+        ulong key; // xxHash64 (0 = empty, ulong.max = tombstone)
+        T value;   // Arbitrary raw pointer
     }
 
     Bucket[] buckets;
@@ -57,6 +58,7 @@ class FlatHashMap: Owner
 
     enum size_t DEFAULT_CAPACITY = 512;
     enum float LOAD_FACTOR = 0.7f;
+    enum ulong TOMBSTONE = ulong.max;
 
    public:
     this(Owner owner)
@@ -73,9 +75,9 @@ class FlatHashMap: Owner
     }
 
     /// Insert. Returns true if new entry is inserted, false if it already exists.
-    bool set(ulong key, void* value, out void* existingValue)
+    bool set(ulong key, T value, out T existingValue)
     {
-        if (key == 0) key = 1;
+        if (key == 0 || key == TOMBSTONE) key = 1;
 
         if (cast(float)size / cast(float)capacity >= LOAD_FACTOR)
         {
@@ -83,6 +85,7 @@ class FlatHashMap: Owner
         }
 
         size_t index = cast(size_t)(key & (capacity - 1));
+        size_t firstTombstoneIndex = size_t.max;
 
         while(true)
         {
@@ -90,14 +93,21 @@ class FlatHashMap: Owner
 
             if (currentKey == 0) 
             {
-                buckets[index].value = value;
-                buckets[index].key = key;
+                size_t targetIndex = (firstTombstoneIndex != size_t.max) ? firstTombstoneIndex : index;
+                
+                buckets[targetIndex].value = value;
+                buckets[targetIndex].key = key;
                 size++;
                 existingValue = value;
                 return true;
             }
 
-            if (currentKey == key) 
+            if (currentKey == TOMBSTONE)
+            {
+                if (firstTombstoneIndex == size_t.max)
+                    firstTombstoneIndex = index;
+            }
+            else if (currentKey == key) 
             {
                 existingValue = buckets[index].value;
                 return false;
@@ -107,31 +117,17 @@ class FlatHashMap: Owner
         }
     }
 
-    /// Insert object by string key (using xxHash64).
-    bool set(string key, Object value)
+    /// Insert by string hash.
+    bool set(string key, T value)
     {
-        void* existingValue;
-        return set(xxHash64(key, XXHASH64_SEED), cast(void*)value, existingValue);
-    }
-
-    /// Insert typeless pointer by string key (using xxHash64).
-    bool set(string key, void* value)
-    {
-        void* existingValue;
+        T existingValue;
         return set(xxHash64(key, XXHASH64_SEED), value, existingValue);
     }
 
-    /// Insert typed pointer by string key (using xxHash64).
-    bool set(T)(string key, T* value)
+    /// Pure and simple lookup
+    T get(ulong key)
     {
-        void* existingValue;
-        return set(xxHash64(key, XXHASH64_SEED), cast(void*)value, existingValue);
-    }
-
-    /// Search. Returns a pointer if key exists in the map, and null otherwise.
-    void* get(ulong key)
-    {
-        if (key == 0) key = 1;
+        if (key == 0 || key == TOMBSTONE) key = 1;
 
         size_t index = cast(size_t)(key & (capacity - 1));
         size_t start = index;
@@ -142,40 +138,120 @@ class FlatHashMap: Owner
 
             if (currentKey == key)
                 return buckets[index].value;
+            
             if (currentKey == 0)
-                return null;
-
+            {
+                static if (is(T == class) || isPointer!T)
+                    return null;
+                else
+                    return T.init;
+            }
+            
             index = (index + 1) & (capacity - 1);
             if (index == start)
                 break;
         }
         
-        return null;
+        static if (is(T == class) || isPointer!T)
+            return null;
+        else
+            return T.init;
     }
     
-    /// Search a typeless pointer by string key (using xxHash64).
-    void* get(string key)
+    /// Lookup by string hash.
+    T get(string key)
     {
         return get(xxHash64(key, XXHASH64_SEED));
     }
-    
-    /// Search an object by string key (using xxHash64).
-    T get(T)(string key) if (is(T == class))
+
+    /// Bracket syntax to get value by string hash.
+    T opIndex(string key)
     {
-        return cast(T)get(xxHash64(key, XXHASH64_SEED));
+        return get(xxHash64(key, XXHASH64_SEED));
+    }
+
+    /// Bracket syntax to set or replace value by string hash.
+    T opIndexAssign(T value, string key)
+    {
+        T existingValue;
+        set(xxHash64(key, XXHASH64_SEED), value, existingValue);
+        return value;
+    }
+
+    /// Removes an entry.
+    void remove(ulong key)
+    {
+        if (key == 0 || key == TOMBSTONE) key = 1;
+
+        size_t index = cast(size_t)(key & (capacity - 1));
+        size_t start = index;
+
+        while(true)
+        {
+            ulong currentKey = buckets[index].key;
+
+            if (currentKey == key)
+            {
+                buckets[index].key = TOMBSTONE;
+                static if (is(T == class) || isPointer!T)
+                    buckets[index].value = null;
+                else
+                    buckets[index].value = T.init;
+                size--;
+                return;
+            }
+            if (currentKey == 0)
+                return;
+
+            index = (index + 1) & (capacity - 1);
+            if (index == start)
+                break;
+        }
+    }
+
+    /// Removes an entry by string hash.
+    void remove(string key)
+    {
+        remove(xxHash64(key, XXHASH64_SEED));
+    }
+
+    /// Removes all entries.
+    void clear()
+    {
+        if (buckets.ptr)
+            Delete(buckets);
+        
+        size = 0;
+        capacity = DEFAULT_CAPACITY;
+        buckets = New!(Bucket[])(capacity);
+    }
+    
+    /// Iterator for foreach
+    int opApply(scope int delegate(T) dg)
+    {
+        int result = 0;
+        foreach(ref b; buckets)
+        {
+            if (b.key != 0 && b.key != TOMBSTONE)
+            {
+                result = dg(b.value);
+                if (result)
+                    break;
+            }
+        }
+        return result;
     }
 
    protected:
     void resize(size_t newCapacity)
     {
         auto oldBuckets = buckets;
-        
         auto newBuckets = New!(Bucket[])(newCapacity);
         size_t newSize = 0;
 
         foreach(ref b; oldBuckets)
         {
-            if (b.key != 0)
+            if (b.key != 0 && b.key != TOMBSTONE)
             {
                 size_t index = cast(size_t)(b.key & (newCapacity - 1));
                 while (newBuckets[index].key != 0)

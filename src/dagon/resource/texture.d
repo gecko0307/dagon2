@@ -159,9 +159,9 @@ class TextureAsset: Asset
     TextureCreationOptions creationOptions;
     
     ///
-    this(GPU gpu, Owner owner)
+    this(GPU gpu, string filename, Owner owner)
     {
-        super(gpu, owner);
+        super(gpu, filename, owner);
         
         // Default conversion options
         conversionOptions.width = 0;
@@ -203,7 +203,7 @@ class TextureAsset: Asset
     }
     
     ///
-    override bool load(string filename, InputStream istrm, ReadOnlyFileSystem fs)
+    override bool load(InputStream istrm, ReadOnlyFileSystem fs)
     {
         string name = filename.baseName;
         

@@ -37,9 +37,20 @@ class TestWorld: World
     {
         super(game);
         this.game = game;
-        
-        aOBJSuzanne = assetManager.loadAsset!OBJAsset("data/suzanne.obj");
-        
+    }
+    
+    override void beforeLoad()
+    {
+        aOBJSuzanne = New!OBJAsset(gpu, "data/suzanne.obj", assetManager);
+        assetManager.addAsset(aOBJSuzanne, "data/suzanne.obj");
+    }
+    
+    override void onLoad(Time t, LoadingStatus status)
+    {
+    }
+    
+    override void afterLoad()
+    {
         scene = New!Scene(gpu, this);
         scene.sun.pitch(-45.0f);
         scene.sun.energy = 10.0f;
@@ -101,5 +112,5 @@ void main(string[] args)
     MyGame game = New!MyGame(1280, 720, false, "Dagon Demo", args);
     game.run();
     Delete(game);
-    debug logDebug("Leaked memory: ", allocatedMemory, " byte(s)");
+    logDebug("Leaked memory: ", allocatedMemory, " byte(s)");
 }

@@ -54,6 +54,7 @@ alias ResourceSaveCallback = bool function(string path, OutputStream output, voi
 ///
 alias ResourceLoadCallback = bool function(string path, InputStream output, void* data);
 
+///
 class ResourceCacheStorage: Owner
 {
     ///
