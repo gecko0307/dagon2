@@ -49,7 +49,8 @@ import gscript;
 ///
 struct LoadingStatus
 {
-    uint currentAssetIndex;
+    ulong assetID;
+    uint index;
     uint numAssets;
     float progress;
     bool ready;
@@ -109,12 +110,14 @@ class AssetManager: Owner, GsObject
         
         loadingThread = New!Thread(&loadSync);
         
-        _loadingStatus[0].currentAssetIndex = 0;
+        _loadingStatus[0].assetID = 0;
+        _loadingStatus[0].index = 0;
         _loadingStatus[0].numAssets = 0;
         _loadingStatus[0].progress = 0.0f;
         _loadingStatus[0].ready = false;
         
-        _loadingStatus[1].currentAssetIndex = 0;
+        _loadingStatus[1].assetID = 0;
+        _loadingStatus[1].index = 0;
         _loadingStatus[1].numAssets = 0;
         _loadingStatus[1].progress = 0.0f;
         _loadingStatus[1].ready = false;
@@ -127,6 +130,12 @@ class AssetManager: Owner, GsObject
     {
         Delete(loadingThread);
         Delete(gsProperties);
+    }
+    
+    /// Returns a registered asset by ID, or null if it doesn't exist.
+    Asset getAsset(ulong id)
+    {
+        return assets.get(id);
     }
     
     /// Returns a registered asset under the given name, or null if it doesn't exist.
@@ -142,11 +151,15 @@ class AssetManager: Owner, GsObject
         return (existingAsset !is null);
     }
     
-    /// Register an asset under a given name.
-    void addAsset(Asset asset, string name)
+    /// Registers an asset under a given name and returns its ID.
+    ulong addAsset(Asset asset, string name)
     {
-        assets[name] = asset;
+        //assets[name] = asset;
+        ulong id = xxHash64(name, XXHASH64_SEED);
+        Asset existingAsset;
+        assets.set(id, asset, existingAsset);
         numAssets++;
+        return id;
     }
     
     /// Loads all registered assets in the current thread.
@@ -155,19 +168,24 @@ class AssetManager: Owner, GsObject
         if (numAssets == 0)
             return;
         
-        uint assetIndex = 0;
+        uint index = 0;
         float progress = 0.0f;
         float progressStep = 1.0f / cast(float)numAssets;
         
-        updateLoadingStatus(assetIndex, progress, false);
+        bool isFirst = true;
 
-        foreach(Asset asset; assets)
+        foreach(ulong id, Asset asset; assets)
         {
-            logDebug("Loading asset ", asset.filename, "...");
+            //logDebug("Loading asset ", asset.filename, "...");
+            if (isFirst)
+            {
+                isFirst = false;
+                updateLoadingStatus(id, index, progress, false);
+            }
             loadAsset(asset);
-            assetIndex++;
+            index++;
             progress += progressStep;
-            updateLoadingStatus(assetIndex, progress, assetIndex >= numAssets);
+            updateLoadingStatus(id, index, progress, index >= numAssets);
         }
     }
     
@@ -177,12 +195,13 @@ class AssetManager: Owner, GsObject
         loadingThread.start();
     }
     
-    protected void updateLoadingStatus(uint assetIndex, float progress, bool ready)
+    protected void updateLoadingStatus(ulong id, uint index, float progress, bool ready)
     {
         uint writeIdx = (atomicLoad(loadingStatusActiveIndex) == 0) ? 1 : 0;
         
         auto buf = cast(LoadingStatus*)&_loadingStatus[writeIdx];
-        buf.currentAssetIndex = assetIndex;
+        buf.assetID = id;
+        buf.index = index;
         buf.numAssets = numAssets;
         buf.progress = progress;
         buf.ready = ready;

@@ -32,7 +32,7 @@ import std.traits;
 import dlib.core.memory;
 import dlib.core.ownership;
 
-import dagon.core.xxhash64;
+public import dagon.core.xxhash64;
 
 enum XXHASH64_SEED = 42;
 
@@ -227,14 +227,14 @@ class FlatHashMap(T): Owner
     }
     
     /// Iterator for foreach
-    int opApply(scope int delegate(T) dg)
+    int opApply(scope int delegate(ulong, T) dg)
     {
         int result = 0;
         foreach(ref b; buckets)
         {
             if (b.key != 0 && b.key != TOMBSTONE)
             {
-                result = dg(b.value);
+                result = dg(b.key, b.value);
                 if (result)
                     break;
             }
