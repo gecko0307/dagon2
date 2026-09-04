@@ -41,7 +41,7 @@ class TestWorld: World
     
     override void beforeLoad()
     {
-        aSuzanne = assetManager.create!OBJAsset("assets/suzanne.obj");
+        aSuzanne = assetManager.create!OBJAsset("data/suzanne.obj");
     }
     
     override void onLoad(Time t, LoadingStatus status)

@@ -110,6 +110,7 @@ class World: EventListener, GsObject
         if (!assetsloadingStarted)
         {
             beforeLoad();
+            logInfo("Loading assets...");
             assetsloadingStarted = true;
             assetManager.loadAsync();
         }
@@ -120,7 +121,10 @@ class World: EventListener, GsObject
             assetsLoaded = status.ready;
             onLoad(t, status);
             if (assetsLoaded)
+            {
+                logInfo("Loading done");
                 afterLoad();
+            }
             return;
         }
         
