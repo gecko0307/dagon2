@@ -30,6 +30,7 @@ New features and major changes from Dagon 0.x/1.x:
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
 - **Assets**
+  - Asset loading is simplified, there are no separate `loadThreadSafePart` and `loadThreadUnsafePart` methods, just one `load`
   - Own 3D model format - DAF (Dagon Asset Format), optimized for very fast loading
   - [Assimp](https://github.com/assimp/assimp) integration is now a core feature
   - glTF and other model formats support now rely on Assimp
