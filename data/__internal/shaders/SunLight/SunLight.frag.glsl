@@ -12,7 +12,7 @@ vec3 unproject(mat4 invProjMatrix, vec3 ndc)
     return res.xyz / res.w;
 }
 
-// Trowbridge-Reitz GGX normal distribution
+// GGX/Trowbridge-Reitz microfacet distribution
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;
@@ -171,12 +171,12 @@ void main()
     vec3 H = normalize(E + L);
     float LH = max(dot(L, H), 0.0);
     
-    float NDF = distributionGGX(N, H, roughness);
+    float D = distributionGGX(N, H, roughness);
     float G = geometrySmith(N, E, L, roughness);
     vec3 F = fresnelRoughness(max(dot(H, E), 0.0), f0, roughness);
     
-    vec3 kD = (1.0 - F);
-    vec3 specular = (NDF * G * F) / max(4.0 * max(dot(N, E), 0.0) * NL, 0.00001);
+    // Cook-Torrance specular model
+    vec3 specular = (D * G * F) / max(4.0 * max(dot(N, E), 0.0) * NL, 0.00001);
     
     vec3 incomingLight = toLinear(ubo.lightColor.rgb) * ubo.lightColor.a;
     
@@ -191,6 +191,7 @@ void main()
     
     float shadow = shadowMapCascaded(eyePos, N);
     
+    vec3 kD = (1.0 - F);
     vec3 diffuse = INVPI * baseColor * mix(kD * NL * shadow, vec3(ss), sss) * (1.0 - metallic);
     
     vec3 radiance = (diffuse + (specular * shadow * NL)) * incomingLight;

@@ -19,28 +19,22 @@ There are some disadvantages as well:
 * Less material variety. In a classic deferred renderer BRDF is defined by light volume shaders, so you can have different BRDFs per light, but not per material. This limitation is less critical if a renderer uses PBR principles (albedo, roughness and metallic maps, microfacet BRDF, image-based lighting, etc.). PBR, which is de-facto standard way of defining materials nowadays, allows greater variety of common materials, such as colored metals, shiny and rough dielectrics, and any combinations of them on the same surface. PBR extension of a deferred renderer comes at additional VRAM cost, but the outcome is very good. Again, objects with custom BRDFs (which you actually don't have too much in typical situations) can be rendered in forward mode
 * Deferred shading is incompatible with MSAA. Common workaround is to use post-process antialiasing (FXAA, SMAA).
 
-## PBR
+## Physically-Based Shading
 
-Dagon implements idiomatic PBR (metallic/roughness workflow) heavily based on the theory described in *Real Shading in Unreal Engine 4* (Karis 2013). It utilizes physically-based GGX/Trowbridge-Reitz model, analogous to Disney Principled BRDF.
-
-GGX, in turn, is based on the Cook-Torrance microfacet specular model and combines normal distribution term (D), Smith geometric shadowing-masking term (G), and Fresnel term (F).
-
-Specular radiance equation:
+Dagon implements the theory described in *Real Shading in Unreal Engine 4* (Karis 2013). It utilizes physically-based GGX/Trowbridge-Reitz model, analogous to Disney "principled" BRDF. GGX, in turn, is based on the Cook-Torrance specular model and combines microfacet distribution term, shadowing-masking term, and Fresnel term:
 
 ```
 Ls = (D * G * F) / (4 * NV * NL)
 ```
 
-Diffuse radiance equation:
+- **D (microfacet distribution)** - describes the statistical distribution of microfacets in the given point on a macrosurface. It measures how many microfacets are aligned facing the half-vector between the light direction and the view vector. Dagon uses the optimized GGX distribution function given in *Microfacet Models for Refraction Through Rough Surfaces* (Walter, Marschner, Li, Torrance, 2007).
+- **G (geometric shadowing-masking)** - describes how much light is blocked by microfacets at the given viewing angle. Masking occurs when a microfacet reflecting light toward the viewer is hidden by neighboring microfacets. Shadowing occurs when a microfacet is blocked from the light source and receives no illumination. Following Karis [2013], Dagon uses Schlick's approximation fitted to Smith shadowing-masking function to reduce computational costs while maintaining visual accuracy, rather than evaluating the full Smith GGX formulation given by Walter et al. [2007]. Disney's roughness remapping is used for analytical light sources [Burley 2012].
+- **F (Fresnel)** - describes the fraction of reflected light depending on the viewing angle. Dagon uses the roughness-dependent modification of Schlick's Fresnel approximation proposed by Sébastien Lagarde [2011]. It doesn't use the spherical Gaussian approximation employed by UE4.
+
+For the diffuse part, Dagon uses the simple Lambertian model, with the BRDF normalized by 1/π. To conserve energy, the diffuse contribution is reduced by the fraction of light reflected by the specular component:
 
 ```
-Ld = 1/PI * albedo * (1 - F) * NL * occlusion * (1 - metallic)
-```
-
-To ensure strict energy conservation and correct shading at grazing angles, Dagon utilizes the joint correlated Smith-GGX visibility function [Heitz 2014], which accounts for the height correlation between masking and shadowing of the microfacets:
-
-```
-V(v, l) = G(v, l) / (4 * NV * NL)
+Ld = 1/PI * albedo * NL * (1 - F) * (1 - metallic)
 ```
 
 ## Image-Based Lighting
@@ -100,9 +94,12 @@ Dagon also supports direct output to wide-gamut HDR swapchain without tone mappi
 - Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance, [Microfacet Models for Refraction Through Rough Surfaces](https://dl.acm.org/doi/10.5555/2383847.2383874), EGSR, 2007
 - Holger Dammertz, [Hammersley Points on the Hemisphere](https://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html), 2012
 - Brian Karis (Epic Games), [Real Shading in Unreal Engine 4](https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf). SIGGRAPH, 2013
+- Brent Burley, [Physically Based Shading at Disney](https://disneyanimation.com/publications/physically-based-shading-at-disney/). Walt Disney Animation Studios, SIGGRAPH, 2012
 - Eric Heitz, [Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs](https://jcgt.org/published/0003/02/03/). Journal of Computer Graphics Techniques, 2014
 - Sébastien Lagarde, Charles de Rousiers, [Moving Frostbite to Physically Based Rendering](https://seblagarde.wordpress.com/wp-content/uploads/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf). SIGGRAPH, 2014
+- Sébastien Lagarde, [Adopting a physically based shading model](https://seblagarde.wordpress.com/2011/08/17/hello-world/), 2011
 - Chetan Jags, [Image Based Lighting](https://chetanjags.wordpress.com/2015/08/26/image-based-lighting/), 2015
 - Carmelo J. Fdez-Agüera, [A Multiple-Scattering Microfacet Model for Real-Time Image-Based Lighting](https://jcgt.org/published/0008/01/03/). Journal of Computer Graphics Techniques, 2019
+- Christophe Schlick, [An Inexpensive BRDF Model for Physically-based Rendering](https://web.archive.org/web/20200510114532/http://cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf), 1994
 - Pat Hanrahan, Wolfgang Krueger, [Reflection from Layered Surfaces due to Subsurface Scattering](https://www.irisa.fr/prive/kadi/Lopez/p165-hanrahan.pdf). Princeton University, Department of Computer Science, USA, 1993
 - Melissa E. O'Neill, [PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation](https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf). Harvey Mudd College, Computer Science Department, USA, 2014.
