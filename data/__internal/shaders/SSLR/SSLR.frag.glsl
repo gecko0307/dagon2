@@ -51,9 +51,9 @@ vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
     float a = roughness;
     
     // Sample in spherical coordinates
-    float phi = PI2 * Xi.x;
     float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float phi = PI2 * Xi.x;
     
     // Construct tangent space vector
     vec3 H;
