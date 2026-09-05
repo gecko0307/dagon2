@@ -28,11 +28,11 @@ Dagon supports all popular image formats via SDL_Image, libktx and a number of b
 - **LBM** (InterLeaved BitMap) - bitmap format originating from Amiga systems, very rarely found today.
 
 Not all features supported by each format are available to Dagon applications. Dagon's texture system is not an image editor backend, it was mainly designed as a lightweight and efficient intermediary for decoding and uploading images to VRAM, not manipulating them. For example, Dagon doesn't support:
-- Animated images (frame-by-frame animation is usually implemented by offsetting texture coordinates on a spritesheet which is independent of image format)
-- Multi-layered images (XCF layers are merged into one image)
-- In-memory indexed formats (all images are usually converted to RGBA8, or use some other GPU-native pixel format)
-- Vector images (SVG images are rasterized)
-- Embedded color profiles (all data is treated as either sRGB or linear, depending on usage context)
+- Animated images. Frame-by-frame animation is usually implemented by offsetting texture coordinates on a spritesheet which is independent of image format
+- Multi-layered images. XCF layers are merged into one image
+- In-memory indexed formats and other non-standard color systems. All images are converted to RGBA8, or use some other GPU-native pixel format
+- Vector images. SVG images are rasterized
+- Embedded color profiles. All data is treated as either sRGB or linear, depending on usage context
 - EXIF metadata.
 
 ## Pixel Formats
