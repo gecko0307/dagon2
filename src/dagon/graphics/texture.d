@@ -247,7 +247,9 @@ class Texture: Owner
             if (options.generateMipmaps && !buffer.format.isCompressed)
                 SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
             
-            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
+            SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(texCopyCommandBuffer);
+            SDL_WaitForGPUFences(gpu.device, true, &fence, 1);
+            SDL_ReleaseGPUFence(gpu.device, fence);
         }
         else if (buffer.format.type == SDL_GPU_TEXTURETYPE_2D)
         {
@@ -300,7 +302,9 @@ class Texture: Owner
             if (options.generateMipmaps && !buffer.format.isCompressed)
                 SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
             
-            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
+            SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(texCopyCommandBuffer);
+            SDL_WaitForGPUFences(gpu.device, true, &fence, 1);
+            SDL_ReleaseGPUFence(gpu.device, fence);
         }
         else if (buffer.format.type == SDL_GPU_TEXTURETYPE_3D)
         {
@@ -356,7 +360,9 @@ class Texture: Owner
             if (options.generateMipmaps && !buffer.format.isCompressed)
                 SDL_GenerateMipmapsForGPUTexture(texCopyCommandBuffer, texture);
             
-            SDL_SubmitGPUCommandBuffer(texCopyCommandBuffer);
+            SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(texCopyCommandBuffer);
+            SDL_WaitForGPUFences(gpu.device, true, &fence, 1);
+            SDL_ReleaseGPUFence(gpu.device, fence);
         }
         else
         {

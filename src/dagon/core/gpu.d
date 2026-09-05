@@ -354,7 +354,11 @@ class GPU: Owner
         
         SDL_UploadToGPUBuffer(copy, &src, &dst, true);
         SDL_EndGPUCopyPass(copy);
-        SDL_SubmitGPUCommandBuffer(cmd);
+        
+        SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(cmd);
+        SDL_WaitForGPUFences(device, true, &fence, 1);
+        SDL_ReleaseGPUFence(device, fence);
+        
         SDL_ReleaseGPUTransferBuffer(device, tBuf);
         
         return true;
