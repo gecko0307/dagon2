@@ -45,7 +45,8 @@ import dagon.core.vfs;
 enum ResourceType: uint
 {
     Shader = 0,
-    Texture = 1
+    Texture = 1,
+    Custom = 2
 }
 
 ///
