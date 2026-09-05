@@ -9,7 +9,7 @@ Dagon 2.0.1 - TBD
   - Mailbox Vsync support, significantly reducing input lag (`vsync: 2` in settings.conf)
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
-  - Many classes across the engine now use a flat hash map (with xxHash64 function) instead of `Dict`, achieving 36x better performance on insertion and 15x on searching compared to Dagon 1.x
+  - Many classes across the engine now use a flat hash map (with [xxHash64](https://xxhash.com/) hash function) instead of `Dict`, achieving 36x better performance on insertion and 15x on searching compared to Dagon 1.x
 - **Assets**
   - Asset loading is simplified, there are no separate `loadThreadSafePart` and `loadThreadUnsafePart` methods, just one `load`
   - Own 3D model format - DAF (Dagon Asset Format), optimized for very fast loading
