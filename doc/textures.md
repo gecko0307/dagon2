@@ -13,7 +13,7 @@ Dagon supports all popular image formats via SDL_Image, libktx and a number of b
 - **TIFF** - flexible image container, supports lossless compression and high bit depths, commonly used in professional imaging
 - **JPEG XL** - next-generation image format designed to replace JPEG, supports lossless and high-quality lossy compression with HDR and wide color gamut support
 - **AVIF** - modern, highly efficient image format based on AV1 codec, provides excellent compression efficiency and HDR support
-- **HDR** (Radiance RGBE) - high dynamic range image format, commonly used for storing equirectangular environment maps and other high-precision photometry data
+- **HDR** (Radiance/RGBE) - high dynamic range image format, commonly used for storing equirectangular environment maps and other high-precision photometry data
 - **DDS** (DirectDraw Surface) - texture container, stores GPU-ready compressed textures (BCn). Optimized for fast loading
 - **KTX** (Khronos Texture) - texture container, modern alternative to DDS
 - **KTX2** (Khronos Texture 2.0) - advanced KTX version with support for Basis Universal supercompression, designed for efficient cross-platform compressed texture delivery
@@ -76,8 +76,8 @@ Dagon supports all standard compression formats available on desktop GPUs:
 - DXT1/BC1 – color only, 4 bpp
 - DXT3/BC2 – color + low-precision alpha, 8 bpp
 - DXT5/BC3 – color + high-precision alpha, 8 bpp
-- RGTC/BC4 – single-channel (monochrome), 4 bpp
-- RGTC/BC5 – dual-channel, 8 bpp
+- RGTC/BC4 – single-channel ("red"), 4 bpp
+- RGTC/BC5 – dual-channel ("red-green"), 8 bpp
 - BPTC/BC6 – HDR color only, floating-point, 8 bpp
 - BPTC/BC7 – color + high-precision alpha, 8 bpp
 
