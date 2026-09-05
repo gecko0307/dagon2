@@ -11,6 +11,7 @@
 * DXT1/DXT5 compressor - [Fabian Giesen](https://github.com/rygorous), [Yann Collet](https://github.com/Cyan4973)
 * BC7 compressor - [Rich Geldreich](https://github.com/richgel999)
 * xxHash - [Yann Collet](https://github.com/Cyan4973), [Devin Hussey](https://github.com/easyaspi314)
+* PCG random number generator is based on the code by [Melissa E. O'Neill](https://github.com/imneme) and [PCG Project](https://www.pcg-random.org/) contributors
 * Tangent space to eye space conversion function (cotangent frame) - [Christian Schüler](http://www.thetenthplanet.de/archives/1180)
 * SSAO implementation is based on the code by [Reinder Nijhoff](https://www.shadertoy.com/view/Ms33WB)
 * FXAA 3.11 implementation is based on the code by Timothy Lottes (NVIDIA)

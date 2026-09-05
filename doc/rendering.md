@@ -102,5 +102,6 @@ Dagon also supports direct output to wide-gamut HDR swapchain without tone mappi
 - Eric Heitz, [Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs](https://jcgt.org/published/0003/02/03/). Journal of Computer Graphics Techniques, 2014
 - Sébastien Lagarde, Charles de Rousiers. [Moving Frostbite to Physically Based Rendering](https://seblagarde.wordpress.com/wp-content/uploads/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf). SIGGRAPH, 2014
 - Chetan Jags, [Image Based Lighting](https://chetanjags.wordpress.com/2015/08/26/image-based-lighting/), 2015
-- Carmelo J. Fdez-Agüera, [A Multiple-Scattering Microfacet Model for Real-Time Image-Based Lighting](https://jcgt.org/published/0008/01/03/), Journal of Computer Graphics Techniques, 2019
-- Pat Hanrahan, Wolfgang Krueger, [Reflection from Layered Surfaces due to Subsurface Scattering](https://www.irisa.fr/prive/kadi/Lopez/p165-hanrahan.pdf), 1993.
+- Carmelo J. Fdez-Agüera, [A Multiple-Scattering Microfacet Model for Real-Time Image-Based Lighting](https://jcgt.org/published/0008/01/03/). Journal of Computer Graphics Techniques, 2019
+- Pat Hanrahan, Wolfgang Krueger, [Reflection from Layered Surfaces due to Subsurface Scattering](https://www.irisa.fr/prive/kadi/Lopez/p165-hanrahan.pdf). Princeton University, Department of Computer Science, USA, 1993.
+- Melissa E. O'Neill, [PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation](https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf). Harvey Mudd College, Computer Science Department, USA, 2014.

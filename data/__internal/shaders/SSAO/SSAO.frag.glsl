@@ -12,7 +12,11 @@ vec3 unproject(mat4 invProjMatrix, vec3 ndc)
     return res.xyz / res.w;
 }
 
-// Permuted congruential generator
+/*
+ * Permuted congruential generator
+ * based on pcg_oneseq_32_step_r and pcg_output_rxs_m_xs_32_32
+ * from https://github.com/imneme/pcg-c/
+ */
 uint pcg(uint x)
 {
     uint state = x * 747796405u + 2891336453u;
