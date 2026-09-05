@@ -56,6 +56,7 @@ import dagon.core.sdl3;
 import dagon.core.scancodes;
 import dagon.core.config;
 import dagon.core.logger;
+import dagon.core.hashmap;
 
 /**
  * All supported input binding types.
@@ -186,9 +187,10 @@ class InputManager
     /// The event manager used for input state.
     EventManager eventManager;
     
-    /// Dictionary mapping action names to arrays of bindings.
     alias Bindings = Array!Binding;
-    Dict!(Bindings, string) bindings;
+    
+    /// Hash table that maps action names to arrays of bindings.
+    FlatHashMap!Bindings bindings;
     
     /// The configuration object for input bindings.
     Configuration config;
@@ -202,7 +204,8 @@ class InputManager
     this(EventManager eventManager)
     {
         this.eventManager = eventManager;
-        bindings = dict!(Bindings, string)();
+        //bindings = dict!(Bindings, string)();
+        bindings = New!(FlatHashMap!Bindings)(null);
         
         config = New!Configuration(null);
         if (!config.fromFile(eventManager.application.vfs, "input.conf"))

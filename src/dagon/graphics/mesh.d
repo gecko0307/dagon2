@@ -85,6 +85,7 @@ interface TriangleSet
      */
     int opApply(scope int delegate(Triangle* t) dg);
     
+    /// Returns a total number of triangles in the set.
     size_t numTriangles();
 }
 

@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.core.hashmap;
 
-import core.atomic;
 import std.traits;
 
 import dlib.core.memory;
@@ -37,8 +36,8 @@ public import dagon.core.xxhash64;
 enum XXHASH64_SEED = 42;
 
 /**
- * An open-addressing hash map that stores data in a contiguous array.
- * GC-free. Works in near-constant time.
+ * An open-addressing hash map that stores data in a contiguous buffer. GC-free.
+ * Works in near-constant time.
  * Insertion is 36x faster than dlib.container.dict and 1.7x faster than native AA.
  * Searching is 15x faster than dlib.container.dict and 1.6x faster than native AA.
  * For string-based access, xxHash64 is used.
@@ -61,6 +60,8 @@ class FlatHashMap(T): Owner
     enum ulong TOMBSTONE = ulong.max;
 
    public:
+    
+    /// Constructs a FlatHashMap.
     this(Owner owner)
     {
         super(owner);
@@ -124,7 +125,7 @@ class FlatHashMap(T): Owner
         return set(xxHash64(key, XXHASH64_SEED), value, existingValue);
     }
 
-    /// Pure and simple lookup
+    /// Lookup a value.
     T get(ulong key)
     {
         if (key == 0 || key == TOMBSTONE) key = 1;
@@ -158,24 +159,56 @@ class FlatHashMap(T): Owner
             return T.init;
     }
     
-    /// Lookup by string hash.
+    /// Lookup a pointer.
+    T* getPtr(ulong key)
+    {
+        if (key == 0 || key == TOMBSTONE) key = 1;
+
+        size_t index = cast(size_t)(key & (capacity - 1));
+        size_t start = index;
+
+        while(true)
+        {
+            ulong currentKey = buckets[index].key;
+
+            if (currentKey == key)
+                return &buckets[index].value;
+            
+            if (currentKey == 0)
+                return null;
+            
+            index = (index + 1) & (capacity - 1);
+            if (index == start)
+                break;
+        }
+        
+        return null;
+    }
+    
+    /// Lookup a value by string hash.
     T get(string key)
     {
         return get(xxHash64(key, XXHASH64_SEED));
     }
 
-    /// Bracket syntax to get value by string hash.
+    /// Bracket syntax to get a value by string hash.
     T opIndex(string key)
     {
         return get(xxHash64(key, XXHASH64_SEED));
     }
 
-    /// Bracket syntax to set or replace value by string hash.
+    /// Bracket syntax to set or replace a value by string hash.
     T opIndexAssign(T value, string key)
     {
         T existingValue;
         set(xxHash64(key, XXHASH64_SEED), value, existingValue);
         return value;
+    }
+    
+    /// "in" operator.
+    T* opBinaryRight(string op)(string key) if (op == "in")
+    {
+        return getPtr(xxHash64(key, XXHASH64_SEED));
     }
 
     /// Removes an entry.
@@ -226,7 +259,7 @@ class FlatHashMap(T): Owner
         buckets = New!(Bucket[])(capacity);
     }
     
-    /// Iterator for foreach
+    /// Applies an iterator delegate to all entries.
     int opApply(scope int delegate(ulong, T) dg)
     {
         int result = 0;
