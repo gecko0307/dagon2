@@ -72,10 +72,8 @@ New features and major changes from Dagon 0.x/1.x:
 - **Scripting**
   - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API.
 - **Extensions**
-  - `dagon2:imgui`
-    - ImGui integration now provides a built-in UI boilerplate class
-  - `dagon2:audio`
-    - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
+  - `dagon2:imgui` - now provides a built-in UI boilerplate class
+  - `dagon2:audio` - underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends
   - `dagon:openvr` is not available anymore because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
 
 System Requirements
