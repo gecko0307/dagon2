@@ -126,4 +126,4 @@ API reference in HTML format can be generated from source code using ddox (`dub 
 
 License
 -------
-Distributed under the Boost Software License, Version 1.0 (see accompanying file COPYING or at http://www.boost.org/LICENSE_1_0.txt).
+Distributed under the Boost Software License, Version 1.0 (see accompanying file COPYING or at http://www.boost.org/LICENSE_1_0.txt). Third-party dependencies are distributed under their own [licenses](https://github.com/gecko0307/dagon2/tree/main/license).
