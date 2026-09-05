@@ -17,7 +17,7 @@ There are some disadvantages as well:
 * Higher VRAM and memory bandwidth requirements. This actually matters only for mobile platforms and less of an issue on desktop
 * No simple way of handling transparency. You can't simply blend a fragment to G-buffer over existing data because then the resulting attributes will be meaningless. Transparent objects are usually discarded at the geometry pass and rendered in forward mode as a final step after the light pass. This means that they can't be lit with deferred light volumes and should be handled with some fallback lighting technique
 * Less material variety. In a classic deferred renderer BRDF is defined by light volume shaders, so you can have different BRDFs per light, but not per material. This limitation is less critical if a renderer uses PBR principles (albedo, roughness and metallic maps, microfacet BRDF, image-based lighting, etc.). PBR, which is de-facto standard way of defining materials nowadays, allows greater variety of common materials, such as colored metals, shiny and rough dielectrics, and any combinations of them on the same surface. PBR extension of a deferred renderer comes at additional VRAM cost, but the outcome is very good. Again, objects with custom BRDFs (which you actually don't have too much in typical situations) can be rendered in forward mode
-* Deferred shading is incompatible with MSAA. Common workaround is to use post-process antialiasing (FXAA, TAA, SMAA).
+* Deferred shading is incompatible with MSAA. Common workaround is to use post-process antialiasing (FXAA, SMAA).
 
 ## PBR
 
