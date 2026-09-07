@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.graphics.lightmap;
 
-import std.math;
 import std.algorithm;
 
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.math.vector;
+import dlib.math.base;
 
 import dagon.core.gpu;
 import dagon.graphics.mesh;

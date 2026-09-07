@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.graphics.envmap;
 
-import std.math;
 import std.traits;
 
 import dlib.core.memory;
@@ -35,6 +34,7 @@ import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.quaternion;
 import dlib.math.transformation;
+import dlib.math.base;
 import dlib.math.utils;
 
 import dagon.core.logger;

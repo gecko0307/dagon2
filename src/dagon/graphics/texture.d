@@ -39,12 +39,12 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.graphics.texture;
 
-import std.math;
 import std.algorithm;
 import std.traits;
 
 import dlib.core.memory;
 import dlib.core.ownership;
+import dlib.math.base;
 import dlib.math.utils;
 
 import dagon.core.sdl3;

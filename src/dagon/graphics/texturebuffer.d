@@ -27,8 +27,6 @@ DEALINGS IN THE SOFTWARE.
 module dagon.graphics.texturebuffer;
 
 import dagon.core.sdl3;
-//import dagon.core.vkformat;
-//import dagon.core.dxgiformat;
 import dagon.core.logger;
 public import dagon.graphics.conv;
 
