@@ -18,7 +18,7 @@
     "stringImportPaths": ["data/__internal"],
     
     "dependencies": {
-        "dlib": "~>1.7.0",
+        "dlib": "~>1.7.1",
         "bindbc-glslang": "~>0.1.0",
         "bindbc-sdl": "~>2.3.4",
         "bindbc-spirvcross": "~>0.1.1",
