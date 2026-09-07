@@ -27,12 +27,12 @@ DEALINGS IN THE SOFTWARE.
 module dagon.ext.imgui;
 
 import core.stdc.string;
-import std.math;
 
 public import bindbc.imgui;
 
 import dlib.core.memory;
 import dlib.text.str;
+import dlib.math.base;
 
 import dagon.core.logger;
 import dagon.core.sdl3;
