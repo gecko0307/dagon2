@@ -48,7 +48,6 @@ import std.file;
 import std.path;
 import std.algorithm: canFind;
 import std.process;
-import std.math;
 import core.stdc.stdlib;
 import core.stdc.string;
 
@@ -58,6 +57,7 @@ import dlib.core.stream;
 import dlib.image;
 import dlib.filesystem;
 import dlib.text.str;
+import dlib.math.base;
 import dlib.math.utils;
 
 public import dagon.core.crashhandler;
