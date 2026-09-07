@@ -27,11 +27,11 @@ DEALINGS IN THE SOFTWARE.
 module dagon.render.deferred.gbuffer;
 
 import core.stdc.string;
-import std.math;
 
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.image.color;
+import dlib.math.base;
 
 import dagon.core.sdl3;
 import dagon.core.gpu;

@@ -43,13 +43,12 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.ui.freeview;
 
-import std.math;
-
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.quaternion;
 import dlib.math.transformation;
 import dlib.math.utils;
+import dlib.math.base;
 
 import dagon.core.event;
 import dagon.core.scancodes;
