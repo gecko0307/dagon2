@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.model;
 
-import std.math;
 import std.string;
 import std.path;
 import std.conv;
@@ -40,6 +39,7 @@ import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.quaternion;
 import dlib.math.transformation;
+import dlib.math.base;
 import dlib.math.utils;
 import dlib.geometry.triangle;
 import dlib.image.color;

@@ -41,12 +41,11 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.resource.png;
 
-import std.math;
-
 import dlib.core.memory;
 import dlib.core.stream;
 import dlib.core.compound;
 import dlib.coding.zlib;
+import dlib.math.base;
 import dlib.math.utils;
 
 import dagon.core.logger;
@@ -738,9 +737,9 @@ private Compound!(bool, string) readImage(PNGImage* png, TextureBuffer* buffer)
 ubyte paeth(ubyte a, ubyte b, ubyte c) @nogc nothrow pure
 {
     int p = a + b - c;
-    int pa = std.math.abs(p - a);
-    int pb = std.math.abs(p - b);
-    int pc = std.math.abs(p - c);
+    int pa = abs(p - a);
+    int pb = abs(p - b);
+    int pc = abs(p - c);
     if (pa <= pb && pa <= pc) return a;
     else if (pb <= pc) return b;
     else return c;

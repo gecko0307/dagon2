@@ -37,13 +37,13 @@ module dagon.resource.hdr;
 import std.stdio;
 import std.file;
 import std.algorithm;
-import std.math;
 
 import dlib.core.memory;
 import dlib.core.stream;
 import dlib.container.array;
 import dlib.filesystem.local;
 import dlib.image.color;
+import dlib.math.base;
 import dlib.math.utils;
 
 import dagon.core.sdl3;

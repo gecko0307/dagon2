@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 */
 module dagon.resource.texture;
 
-import std.math;
 import std.string;
 import std.conv;
 import std.path;
@@ -34,6 +33,7 @@ import std.path;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
+import dlib.math.base;
 import dlib.math.utils;
 import dlib.filesystem.filesystem;
 
