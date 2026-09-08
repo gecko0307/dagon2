@@ -14,6 +14,7 @@
 * PCG random number generator is based on the code by [Melissa E. O'Neill](https://github.com/imneme) and [PCG Project](https://www.pcg-random.org/) contributors
 * Tangent space to eye space conversion function (cotangent frame) is based on the code by [Christian Schüler](http://www.thetenthplanet.de/archives/1180)
 * SSAO implementation is based on the code by [Reinder Nijhoff](https://www.shadertoy.com/view/Ms33WB)
+* VNDF sampling is based on the code by Eric Heitz
 * FXAA 3.11 implementation is based on the code by Timothy Lottes (NVIDIA)
 * SMAA implementation is based on the code by [Jorge Jimenez](https://github.com/iryoku), Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez
 * Sharpening shader is based on AMD's [FidelityFX™ CAS](https://gpuopen.com/fidelityfx-cas/)

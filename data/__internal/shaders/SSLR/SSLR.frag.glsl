@@ -52,7 +52,10 @@ float hash(vec2 uv)
     return float(hash2(ip)) / float(0xFFFFFFFFu);
 }
 
-// Visible Normal Distribution Function for GGX
+/*
+ * Visible Normal Distribution Function for GGX.
+ * Based on the paper "Sampling the GGX Distribution of Visible Normals" (E. Heitz, 2018)
+ */
 vec3 importanceSampleGGX_VNDF(vec2 Xi, float roughness, vec3 tanE)
 {
     float alpha = roughness * roughness;
