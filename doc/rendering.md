@@ -31,10 +31,10 @@ Ls = (D * G * F) / (4 * NV * NL)
 - **G (geometric shadowing-masking)** - describes how much light is blocked by microfacets at the given viewing angle. Masking occurs when a microfacet reflecting light toward the viewer is hidden by neighboring microfacets. Shadowing occurs when a microfacet is blocked from the light source and receives no illumination. Following Karis [2013], Dagon uses Schlick's approximation fitted to Smith shadowing-masking function to reduce computational costs while maintaining visual accuracy, rather than evaluating the full Smith GGX formulation given by Walter et al. [2007]. Disney's roughness remapping is used for analytical light sources [Burley 2012].
 - **F (Fresnel)** - describes the fraction of reflected light depending on the viewing angle. Dagon uses the roughness-dependent modification of Schlick's Fresnel approximation proposed by Sébastien Lagarde [2011]. It doesn't use the spherical Gaussian approximation employed by UE4.
 
-For the diffuse part, Dagon uses the simple Lambertian model, with the BRDF normalized by 1/π. To conserve energy, the diffuse contribution is reduced by the fraction of light reflected by the specular component:
+For the diffuse part, Dagon uses the simple Lambertian model, with the BRDF normalized by `1/π`. To conserve energy, the diffuse contribution is reduced by the fraction of light reflected by the specular component:
 
 ```
-Ld = 1/PI * albedo * NL * (1 - F) * (1 - metallic)
+Ld = 1/PI * albedo * NL * (1 – F) * (1 – metallic)
 ```
 
 ## Image-Based Lighting
@@ -71,7 +71,7 @@ pow(NV + AO, gloss) – 1 + AO
 
 Based on the paper *A Multiple-Scattering Microfacet Model for Real-Time Image-Based Lighting" (C. J. Fdez-Agüera, 2019)*.
 
-When light hits a rough surface (roughness close to 1.0), rays reflect off the microfacets and hit adjacent "micro-pits." In reality, they should bounce again and exit. However, standard Cook-Torrance model predicts that these blocked rays disappear. Because of this, rough metallic or dielectric objects appear too dark. The Fdez-Agüera's method returns this lost energy back to the shader with minimal computational overhead, preserving the law of conservation of energy.
+When light hits a rough surface (roughness close to `1.0`), rays reflect off the microfacets and hit adjacent "micro-pits." In reality, they should bounce again and exit. However, standard Cook-Torrance model predicts that these blocked rays disappear. Because of this, rough metallic or dielectric objects appear too dark. The Fdez-Agüera's method returns this lost energy back to the shader with minimal computational overhead, preserving the law of conservation of energy.
 
 ## Stochastic Screen-Space Reflections
 
@@ -85,7 +85,7 @@ Like all screen-space techniques, SSR suffers from inherent information disconti
 
 ## HDR
 
-Dagon's renderer outputs radiance into a floating-point frame buffer without clamping the values to 0..1 range, so the buffer contains greater luminance information compared to traditional integer frame buffer. The final image that is visible on screen is a result of an additional tone mapping pass, which applies a non-linear luminance compression to the incoming values. Very dark and very bright pixels are compressed more, and pixels of a medium brightness are compressed less.
+Dagon's renderer outputs radiance into a floating-point frame buffer without clamping the values to `0..1` range, so the buffer contains greater luminance information compared to traditional integer frame buffer. The final image that is visible on screen is a result of an additional tone mapping pass, which applies a non-linear luminance compression to the incoming values. Very dark and very bright pixels are compressed more, and pixels of a medium brightness are compressed less.
 
 Dagon utilizes AgX tone mapper from Blender 4.0+ and Filament, which provides great color accuracy and balance.
 
