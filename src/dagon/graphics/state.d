@@ -86,6 +86,9 @@ struct GraphicsState
     InputBuffer radianceBuffer;
     
     ///
+    InputBuffer specularBuffer;
+    
+    ///
     RenderPass pass;
     
     ///

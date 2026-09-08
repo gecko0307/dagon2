@@ -170,8 +170,8 @@ class AmbientPass: RenderPass
     GBuffer gbuffer;
     AmbientShader ambientShader;
     
-    SDL_GPUColorTargetDescription colorTargetDescription;
-    SDL_GPUColorTargetInfo colorTargetInfo;
+    SDL_GPUColorTargetDescription[2] colorTargetDescription;
+    SDL_GPUColorTargetInfo[2] colorTargetInfo;
     
     this(Renderer renderer, GBuffer gbuffer)
     {
@@ -229,11 +229,13 @@ class AmbientPass: RenderPass
             enable_blend: true,
             enable_color_write_mask: false
         };
-        colorTargetDescription.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-        colorTargetDescription.blend_state = blendState;
+        colorTargetDescription[0].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetDescription[0].blend_state = blendState;
+        colorTargetDescription[1].format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+        colorTargetDescription[1].blend_state = blendState;
         
-        pipelineCreateInfo.target_info.num_color_targets = 1;
-        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
+        pipelineCreateInfo.target_info.num_color_targets = cast(uint)colorTargetDescription.length; //1;
+        pipelineCreateInfo.target_info.color_target_descriptions = colorTargetDescription.ptr; //&colorTargetDescription;
         pipelineCreateInfo.target_info.has_depth_stencil_target = false;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
@@ -252,13 +254,18 @@ class AmbientPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
-        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo[0].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[0].load_op = SDL_GPU_LOADOP_CLEAR;
+        colorTargetInfo[0].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo[0].texture = gbuffer.radianceBuffer;
         
-        colorTargetsInfo = &colorTargetInfo;
-        numColorTargets = 1;
+        colorTargetInfo[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[1].load_op = SDL_GPU_LOADOP_CLEAR;
+        colorTargetInfo[1].store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo[1].texture = gbuffer.specularBuffer;
+        
+        colorTargetsInfo = colorTargetInfo.ptr; //&colorTargetInfo;
+        numColorTargets = cast(uint)colorTargetInfo.length; //1
         depthStencilTargetInfo = null;
         enableDepthTarget = false;
     }
@@ -272,8 +279,10 @@ class AmbientPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
-        colorTargetInfo.clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[0].texture = gbuffer.radianceBuffer;
+        colorTargetInfo[0].clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[1].texture = gbuffer.specularBuffer;
+        colorTargetInfo[1].clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "AMBIENT");
         beginPass();

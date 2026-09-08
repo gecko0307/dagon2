@@ -48,7 +48,8 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 
 layout(location = 0) in vec2 texCoords;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 outRadiance;
+layout(location = 1) out vec4 outSpecular;
 
 vec3 sampleSpecularReflection(in vec3 wN, in float roughnessSqrt)
 {
@@ -103,22 +104,22 @@ void main()
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     
     vec3 irradiance = sampleIrradiance(wN);
-    vec3 reflection = sampleSpecularReflection(wR, sqrt(roughness));
+    vec3 reflection = sampleSpecularReflection(wR, sqrt(roughness)) * specularOcclusion;
     
     vec2 brdf = ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BRDF_LUT) != 0)?
         texture(brdfLUT, vec2(NE, roughness)).rg :
         vec2(1.0, 0.0);
-    
     vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
+    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0); // Single scattering energy
     
     // Multiple scattering (Fdez-Agüera)
-    vec3 diffuse = baseColor * diffuseOcclusion * (1.0 - metallic) * (1.0 - f0_scalar);
-    vec3 FssEss = clamp(F * brdf.x + brdf.y, 0.0, 1.0); // Single scattering energy
     float Ems = (1.0 - (brdf.x + brdf.y)); // Energy lost on the first bounce
     vec3 Favg = f0 + (1.0 - f0) / 21.0; // Average Fresnel
     vec3 FmsEms = Ems * FssEss * Favg / (1.0 - Favg * Ems); // Multiple scattering energy
-    vec3 kD = diffuse * (1.0 - FssEss - FmsEms);
-    vec3 radiance = (FssEss * reflection * specularOcclusion + (FmsEms + kD) * irradiance);
+    vec3 specular = FssEss * reflection;
+    vec3 diffuse = (FmsEms + baseColor * diffuseOcclusion * (1.0 - metallic) * (1.0 - f0_scalar) * (1.0 - FssEss - FmsEms)) * irradiance;
+    vec3 radiance = diffuse + specular;
     
-    outColor = vec4(radiance * shadingMask, 1.0);
+    outRadiance = vec4(radiance * shadingMask, 1.0);
+    outSpecular = vec4(specular * shadingMask, 1.0);
 }

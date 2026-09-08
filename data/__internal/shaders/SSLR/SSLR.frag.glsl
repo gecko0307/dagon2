@@ -16,9 +16,12 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
-vec3 fresnelRoughness(float cosTheta, vec3 f0, float roughness)
+vec3 fresnel(float cosTheta, vec3 f0)
 {
-    return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    float Fc = 1.0 - cosTheta;
+    float Fc2 = Fc * Fc;
+    float Fc5 = Fc2 * Fc2 * Fc;
+    return mix(f0, vec3(1.0), Fc5);
 }
 
 /*
@@ -49,27 +52,34 @@ float hash(vec2 uv)
     return float(hash2(ip)) / float(0xFFFFFFFFu);
 }
 
-// Brian Karis, "Real Shading in Unreal Engine 4"
-vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
+// Visible Normal Distribution Function for GGX
+vec3 importanceSampleGGX_VNDF(vec2 Xi, float roughness, vec3 tanE)
 {
-    float a = roughness;
+    float alpha = roughness * roughness;
+
+    // Transform the eye vector to the hemisphere configuration
+    vec3 Eh = normalize(vec3(alpha * tanE.x, alpha * tanE.y, tanE.z));
+
+    // Construct an orthonormal basis (with Eh as Z axis)
+    float lensq = Eh.x * Eh.x + Eh.y * Eh.y;
+    vec3 T1 = (lensq > 0.0) ? vec3(-Eh.y, Eh.x, 0.0) * inversesqrt(lensq) : vec3(1.0, 0.0, 0.0);
+    vec3 T2 = cross(Eh, T1);
+
+    // Warp random variables to sample a disk
+    float r = sqrt(Xi.x);
+    float phi = PI2 * Xi.y;
+    float t1 = r * cos(phi);
+    float t2 = r * sin(phi);
+    float s = 0.5 * (1.0 + Eh.z);
+    t2 = (1.0 - s) * sqrt(1.0 - t1 * t1) + s * t2;
+
+    // Reproject onto the hemisphere
+    vec3 Nh = t1 * T1 + t2 * T2 + sqrt(max(0.0, 1.0 - t1 * t1 - t2 * t2)) * Eh;
+
+    // Transform back to the original stretched microfacet space
+    vec3 tanH = normalize(vec3(alpha * Nh.x, alpha * Nh.y, max(0.0, Nh.z)));
     
-    // Sample in spherical coordinates
-    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-    float phi = PI2 * Xi.x;
-    
-    // Construct tangent space vector
-    vec3 H;
-    H.x = sinTheta * cos(phi);
-    H.y = sinTheta * sin(phi);
-    H.z = cosTheta;
-    
-    // Tangent to world space
-    vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangentX = normalize(cross(upVector, N));
-    vec3 tangentY = cross(N, tangentX);
-    return tangentX * H.x + tangentY * H.y + N * H.z;
+    return tanH;
 }
 
 layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
@@ -264,8 +274,18 @@ void main()
     vec3 wN = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
     
     vec3 N = mat3(ubo.viewMatrix) * wN;
-    vec3 E = normalize(eyePos);
-    float NE = clamp(dot(N, E), 0.0, 1.0);
+    vec3 E = normalize(-eyePos);
+    
+    vec3 up = abs(N.z) < 0.999
+        ? vec3(0.0, 0.0, 1.0)
+        : vec3(1.0, 0.0, 0.0);
+    vec3 T = normalize(cross(up, N));
+    vec3 B = cross(N, T);
+    vec3 tanE = vec3(
+        dot(E, T),
+        dot(E, B),
+        dot(E, N)
+    );
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
@@ -275,22 +295,16 @@ void main()
     vec4 color = texture(colorBuffer, texCoords);
     vec3 baseColor = toLinear(color.rgb);
     
-    vec2 xi = vec2(
+    vec2 Xi = vec2(
         hash(texCoords + time),
         hash(texCoords * 1.1 + time)
     );
-    vec3 H = importanceSampleGGX(xi, roughness, N);
-    vec3 R = normalize(reflect(E, mix(N, H, roughness)));
+    vec3 tanH = importanceSampleGGX_VNDF(Xi, roughness, tanE);
+    vec3 H = T * tanH.x + B * tanH.y + N * tanH.z;
+    vec3 R = reflect(-E, H);
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
-    vec3 F = clamp(fresnelRoughness(NE, f0, roughness), 0.0, 1.0);
-    
-    /*
-    vec2 brdf = (bool(ubo.iparams[0]))?
-        texture(brdfLUT, vec2(NE, roughness)).rg :
-        vec2(1.0, 0.0);
-    F = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
-    */
+    vec3 F = fresnel(max(dot(H, E), 0.0), f0);
     
     vec4 reflection = sslr(eyePos, R, roughness);
     reflection.rgb *= F;

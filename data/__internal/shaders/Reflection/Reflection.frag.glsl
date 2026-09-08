@@ -1,7 +1,8 @@
 #version 460
 
-layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
+layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
 layout(set = 2, binding = 1) uniform sampler2D reflectionBuffer;
+layout(set = 2, binding = 2) uniform sampler2D specularBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -15,7 +16,12 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 
 layout(location = 0) in vec2 texCoords;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 outRadiance;
+
+vec3 toLinear(vec3 v)
+{
+    return pow(v, vec3(2.2));
+}
 
 vec4 blurReflection()
 {
@@ -37,10 +43,11 @@ vec4 blurReflection()
 
 void main()
 {
-    vec3 original = texture(colorBuffer, texCoords).rgb;
+    vec3 oldRadiance = texture(radianceBuffer, texCoords).rgb;
+    vec3 specular = texture(specularBuffer, texCoords).rgb * 0.98;
     vec4 reflection = blurEnabled?
         blurReflection() :
         texture(reflectionBuffer, texCoords);
-    vec3 color = mix(original, reflection.rgb, reflection.a);
-    outColor = vec4(color, 1.0);
+    vec3 newRadiance = max(oldRadiance - specular * reflection.a, 0.0) + reflection.rgb * reflection.a;
+    outRadiance = vec4(newRadiance, 1.0);
 }
