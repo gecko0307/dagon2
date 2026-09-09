@@ -168,6 +168,10 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `ssao.halfResolution` - `0` or `1`
 
 * `sslr.enabled` - `0` or `1`, disable or enable screen-space reflections. Default is `1` in high/ultra quality profile, and `0` in low quality profile
+* `sslr.samplingFunction` - numeric constant. Default value is `GGX_VNDF`. Supported values are:
+  * `PerfectMirror` = `0` - reflective surfaces behaves like perfect mirrors (no blurry reflections)
+  * `GGX` = `1` - basic GGX importance sampling, enables blurry reflections. Causes undersampling for low roughness values
+  * `GGX_VNDF` = `2` - results in a lot more precise importance sampling for low roughness values
 * `sslr.samples` -
 * `sslr.refineSamples` -
 * `sslr.maxRayDistance` -
