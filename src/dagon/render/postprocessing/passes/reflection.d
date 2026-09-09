@@ -103,7 +103,7 @@ class ReflectionShader: Shader
         
         pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.radianceBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.reflectionBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.specularBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.diffuseBuffer);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);
@@ -223,7 +223,7 @@ class ReflectionPass: RenderPass
         //state.velocityBuffer = InputBuffer(gbuffer.velocityBuffer, gbuffer.colorSampler);
         state.reflectionBuffer = InputBuffer(gbuffer.currentReflectionBuffer, gbuffer.colorSampler);
         state.radianceBuffer = InputBuffer(ppContext.readBuffer, ppContext.bufferSampler);
-        state.specularBuffer = InputBuffer(gbuffer.specularBuffer, gbuffer.colorSampler);
+        state.diffuseBuffer = InputBuffer(gbuffer.diffuseBuffer, gbuffer.colorSampler);
         state.entity = null;
         reflectionShader.bindParameters(state);
         

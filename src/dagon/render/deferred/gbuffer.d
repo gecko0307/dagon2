@@ -79,7 +79,7 @@ class GBuffer: Owner
     SDL_GPUTexture* reflectionBuffer2;
     SDL_GPUTexture* previousReflectionBuffer;
     SDL_GPUTexture* currentReflectionBuffer;
-    SDL_GPUTexture* specularBuffer;
+    SDL_GPUTexture* diffuseBuffer;
     
     SDL_GPUSampler* depthSampler;
     SDL_GPUSampler* colorSampler;
@@ -243,8 +243,8 @@ class GBuffer: Owner
             SDL_ReleaseGPUTexture(gpu.device, reflectionBuffer1);
         if (reflectionBuffer2)
             SDL_ReleaseGPUTexture(gpu.device, reflectionBuffer2);
-        if (specularBuffer)
-            SDL_ReleaseGPUTexture(gpu.device, specularBuffer);
+        if (diffuseBuffer)
+            SDL_ReleaseGPUTexture(gpu.device, diffuseBuffer);
     }
     
     void createBuffers(uint width, uint height)
@@ -345,10 +345,10 @@ class GBuffer: Owner
         currentReflectionBuffer = reflectionBuffer1;
         previousReflectionBuffer = reflectionBuffer2;
         
-        // Specular IBL
+        // Diffuse IBL
         textureCreateInfo.width = width;
         textureCreateInfo.height = height;
-        specularBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
+        diffuseBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         
         // Clear temporal accumulation
         SDL_GPUCommandBuffer* clearCmd = SDL_AcquireGPUCommandBuffer(gpu.device);

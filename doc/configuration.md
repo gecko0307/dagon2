@@ -155,9 +155,9 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `ssao.samplesMax` - maximum number of SSAO integration samples per pixel. Default is `40` in high/ultra quality profile, and `10` in low quality profile
 * `ssao.radius` - maximum radius of occlusion detection for SSAO
 * `ssao.power` - SSAO power. The greater is power, the more pronounced is the occlusion effect
-* `ssao.temporalAccumulation` -
-* `ssao.denoise` -
-* `ssao.halfResolution` - 
+* `ssao.temporalAccumulation` - `0` or `1`
+* `ssao.denoise` - `0` or `1`
+* `ssao.halfResolution` - `0` or `1`
 
 * `sslr.enabled` - `0` or `1`, disable or enable screen-space reflections. Default is `1` in high/ultra quality profile, and `0` in low quality profile
 * `sslr.samples` -
@@ -167,9 +167,9 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `sslr.velocitySensitivity` -
 * `sslr.historyWeight` -
 * `sslr.motionWeight` -
-* `sslr.blur` -
+* `sslr.blur` - `0` or `1`
 * `sslr.blurRadius` -
-* `sslr.halfResolution` -
+* `sslr.halfResolution` - `0` or `1`
 
 * `motionBlur.enabled` - `0` or `1`, disable or enable motion blur filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
 * `motionBlur.samples` - 
@@ -189,7 +189,7 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `lensDistortion.enabled` - `0` or `1`, disable or enable lens distortion filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
 * `lensDistortion.scale` - 
 * `lensDistortion.dispersion` - 
-* `lensDistortion.useRadialDistortion` - 
+* `lensDistortion.useRadialDistortion` - `0` or `1`
 * `lensDistortion.k1` - 
 * `lensDistortion.k2` - 
 

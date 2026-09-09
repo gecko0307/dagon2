@@ -49,7 +49,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outRadiance;
-layout(location = 1) out vec4 outSpecular;
+layout(location = 1) out vec4 outDiffuse;
 
 vec3 sampleSpecularReflection(in vec3 wN, in float roughnessSqrt)
 {
@@ -121,5 +121,5 @@ void main()
     vec3 radiance = diffuse + specular;
     
     outRadiance = vec4(radiance * shadingMask, 1.0);
-    outSpecular = vec4(specular * shadingMask, 1.0);
+    outDiffuse = vec4(diffuse * shadingMask, 1.0);
 }

@@ -2,7 +2,7 @@
 
 layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
 layout(set = 2, binding = 1) uniform sampler2D reflectionBuffer;
-layout(set = 2, binding = 2) uniform sampler2D specularBuffer;
+layout(set = 2, binding = 2) uniform sampler2D diffuseBuffer;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -44,10 +44,10 @@ vec4 blurReflection()
 void main()
 {
     vec3 oldRadiance = texture(radianceBuffer, texCoords).rgb;
-    vec3 specular = texture(specularBuffer, texCoords).rgb * 0.98;
+    vec3 diffuse = texture(diffuseBuffer, texCoords).rgb * 0.98;
     vec4 reflection = blurEnabled?
         blurReflection() :
         texture(reflectionBuffer, texCoords);
-    vec3 newRadiance = max(oldRadiance - specular * reflection.a, 0.0) + reflection.rgb * reflection.a;
+    vec3 newRadiance = mix(oldRadiance, diffuse + reflection.rgb * reflection.a, reflection.a);
     outRadiance = vec4(newRadiance, 1.0);
 }
