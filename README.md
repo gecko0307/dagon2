@@ -28,6 +28,8 @@ New features and major changes from Dagon 0.x/1.x:
   - CPU-friendly frame scheduler
   - Mailbox Vsync support, significantly reducing input lag
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
+  - Predefined symbolic constants for numeric config properties
+  - `log.level` config property is now a number
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
   - Many classes across the engine now use a flat hash map (with [xxHash64](https://xxhash.com/) hash function) instead of `Dict`, achieving 36x better performance on insertion and 15x on searching compared to Dagon 1.x
 - **Assets**
