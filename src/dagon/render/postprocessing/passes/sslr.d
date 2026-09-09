@@ -48,6 +48,19 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+///
+enum SSLRSamplingFunction: uint
+{
+    /// The surface behaves like a perfect mirror (no blurry reflections).
+    PerfectMirror = 0,
+    
+    /// Basic GGX importance sampling, enables blurry reflections. Causes undersampling for low roughness values.
+    GGX = 1,
+    
+    /// Results in a lot more precise importance sampling for low roughness values (mirror-like surfaces).
+    GGX_VNDF = 2
+}
+
 struct SSLRShaderVertexUniformBuffer
 {
     // TODO
@@ -124,6 +137,11 @@ class SSLRShader: Shader
      */
     float motionWeight = 1.0f;
     
+    /**
+     * Sampling function that affects surface normals distribution.
+     */
+    SSLRSamplingFunction samplingFunction = SSLRSamplingFunction.GGX_VNDF;
+    
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
@@ -160,7 +178,7 @@ class SSLRShader: Shader
         fsUBO.iparams[0] = false;
         fsUBO.iparams[1] = samples;
         fsUBO.iparams[2] = refineSamples;
-        fsUBO.iparams[3] = 0;
+        fsUBO.iparams[3] = samplingFunction;
     }
     
     void update(Time t)
@@ -215,6 +233,7 @@ class SSLRShader: Shader
         }
         fsUBO.iparams[1] = samples;
         fsUBO.iparams[2] = refineSamples;
+        fsUBO.iparams[3] = samplingFunction;
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

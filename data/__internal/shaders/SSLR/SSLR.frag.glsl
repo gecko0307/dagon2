@@ -53,36 +53,70 @@ float hash(vec2 uv)
 }
 
 /*
- * Visible Normal Distribution Function for GGX.
- * Based on the paper "Sampling the GGX Distribution of Visible Normals" (E. Heitz, 2018)
+ * GGX microfacet normal distribution.
+ * Based on the paper "Real Shading in Unreal Engine 4" (B. Karis, 2014)
  */
-vec3 importanceSampleGGX_VNDF(vec2 Xi, float roughness, vec3 tanE)
+vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
+{
+    float a = roughness * roughness;
+    
+    // Sample in spherical coordinates
+    float phi = PI2 * Xi.x;
+    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    
+    // Construct tangent space vector
+    vec3 H;
+    H.x = sinTheta * cos(phi);
+    H.y = sinTheta * sin(phi);
+    H.z = cosTheta;
+    
+    // Back from tangent to eye space
+    vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangentX = normalize(cross(upVector, N));
+    vec3 tangentY = cross(N, tangentX);
+    return tangentX * H.x + tangentY * H.y + N * H.z;
+}
+
+/*
+ * Visible Normal Distribution Function for GGX.
+ * Based on the paper "Sampling Visible GGX Normals with Spherical Caps" (J. Dupuy, A. Benyoub)
+ */
+vec3 importanceSampleGGX_VNDF(vec2 Xi, float roughness, vec3 N, vec3 E)
 {
     float alpha = roughness * roughness;
-
-    // Transform the eye vector to the hemisphere configuration
-    vec3 Eh = normalize(vec3(alpha * tanE.x, alpha * tanE.y, tanE.z));
-
-    // Construct an orthonormal basis (with Eh as Z axis)
-    float lensq = Eh.x * Eh.x + Eh.y * Eh.y;
-    vec3 T1 = (lensq > 0.0) ? vec3(-Eh.y, Eh.x, 0.0) * inversesqrt(lensq) : vec3(1.0, 0.0, 0.0);
-    vec3 T2 = cross(Eh, T1);
-
-    // Warp random variables to sample a disk
-    float r = sqrt(Xi.x);
-    float phi = PI2 * Xi.y;
-    float t1 = r * cos(phi);
-    float t2 = r * sin(phi);
-    float s = 0.5 * (1.0 + Eh.z);
-    t2 = (1.0 - s) * sqrt(1.0 - t1 * t1) + s * t2;
-
-    // Reproject onto the hemisphere
-    vec3 Nh = t1 * T1 + t2 * T2 + sqrt(max(0.0, 1.0 - t1 * t1 - t2 * t2)) * Eh;
-
-    // Transform back to the original stretched microfacet space
-    vec3 tanH = normalize(vec3(alpha * Nh.x, alpha * Nh.y, max(0.0, Nh.z)));
     
-    return tanH;
+    // Decompose the vector in parallel and perpendicular components
+    vec3 E_z = N * dot(E, N);
+    vec3 E_xy = E - E_z;
+    
+    // Warp to the hemisphere configuration
+    vec3 Eh = normalize(E_z - alpha * E_xy);
+    
+    // Sample a spherical cap in (-Eh.z, 1]
+    float Eh_z = dot(Eh, N);
+    float phi = (2.0 * Xi.x - 1.0) * PI;
+    float z = (1.0 - Xi.y) * (1.0 + Eh_z) - Eh_z;
+    float sinTheta = sqrt(clamp(1.0 - z * z, 0.0, 1.0));
+    float x = sinTheta * cos(phi);
+    float y = sinTheta * sin(phi);
+    vec3 cStd = vec3(x, y, z);
+    
+    // Reflect sample to align with normal
+    vec3 up = vec3(0.0, 0.0, 1.0);
+    vec3 wr = N + up;
+    vec3 c = dot(wr, cStd) * wr / wr.z - cStd;
+    
+    // Compute halfway direction as standard normal
+    vec3 HStd = c + Eh;
+    vec3 HStd_z = N * dot(N, HStd);
+    vec3 HStd_xy = HStd_z - HStd;
+    
+    // Warp back to the ellipsoid configuration
+    vec3 H = normalize(HStd_z + alpha * HStd_xy);
+    
+    // Return final normal
+    return H;
 }
 
 layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
@@ -107,7 +141,7 @@ layout(set = 3, binding = 0) uniform UniformBuffer
     vec4 resolution;
     vec4 fparams; // [time, timeDelta, maxDistance, invSamples]
     vec4 fparams2; // [hitThickness, velocitySensitivity, historyWeight, motionWeight]
-    uvec4 iparams; // [hasBRDFLut, samples, refineSamples, 0]
+    uvec4 iparams; // [hasBRDFLut, samples, refineSamples, useVNDF]
 } ubo;
 
 #define time ubo.fparams.x
@@ -123,10 +157,13 @@ layout(set = 3, binding = 0) uniform UniformBuffer
 #define hasBRDFLut bool(ubo.iparams.x)
 #define samples ubo.iparams.y
 #define refineSamples ubo.iparams.z
+#define samplingFunction ubo.iparams.w
 
 layout(location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
+
+const float samplingJitter = 0.8; // 0.9
 
 /*
  * Stochastic screen-space ray tracing function.
@@ -140,7 +177,7 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
         return vec4(0.0);
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float jitter = hash(texCoords * 467.759 + time) * 0.9;
+    float jitter = hash(texCoords * 467.759 + time) * samplingJitter;
     float prevT = 0.0;
 
     float P00 = ubo.projectionMatrix[0][0];
@@ -278,17 +315,7 @@ void main()
     
     vec3 N = mat3(ubo.viewMatrix) * wN;
     vec3 E = normalize(-eyePos);
-    
-    vec3 up = abs(N.z) < 0.999
-        ? vec3(0.0, 0.0, 1.0)
-        : vec3(1.0, 0.0, 0.0);
-    vec3 T = normalize(cross(up, N));
-    vec3 B = cross(N, T);
-    vec3 tanE = vec3(
-        dot(E, T),
-        dot(E, B),
-        dot(E, N)
-    );
+    float NE = max(0.0, dot(N, E));
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
@@ -302,12 +329,21 @@ void main()
         hash(texCoords + time),
         hash(texCoords * 1.1 + time)
     );
-    vec3 tanH = importanceSampleGGX_VNDF(Xi, roughness, tanE);
-    vec3 H = T * tanH.x + B * tanH.y + N * tanH.z;
+    
+    vec3 H = N; // perfect mirror by default
+    if (samplingFunction == 1)
+        H = importanceSampleGGX(Xi, roughness, N);
+    else if (samplingFunction == 2)
+        H = importanceSampleGGX_VNDF(Xi, roughness, N, E);
+    
     vec3 R = reflect(-E, H);
     
     vec3 f0 = mix(vec3(f0_scalar), baseColor, metallic);
     vec3 F = fresnel(max(dot(H, E), 0.0), f0);
+    vec2 brdf = hasBRDFLut?
+        texture(brdfLUT, vec2(NE, roughness)).rg :
+        vec2(1.0, 0.0);
+    F = clamp(F * brdf.x + brdf.y, 0.0, 1.0);
     
     vec4 reflection = sslr(eyePos, R, roughness);
     reflection.rgb *= F;
