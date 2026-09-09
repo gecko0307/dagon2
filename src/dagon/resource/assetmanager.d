@@ -195,7 +195,10 @@ class AssetManager: Owner, GsObject
     void loadSync()
     {
         if (numAssets == 0)
+        {
+            updateLoadingStatus(0, 0, 1.0f, true);
             return;
+        }
         
         uint assetIndex = 0;
         float progress = 0.0f;

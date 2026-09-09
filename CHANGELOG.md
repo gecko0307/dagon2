@@ -58,6 +58,8 @@ Dagon 2.0.1 - TBD
     - ImGui integration now provides a built-in UI boilerplate class
   - `dagon2:audio`
     - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
+  - `dagon2:video`
+    - `Video` class now works as a render task
   - `dagon:openvr` is not available anymore because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
 - **Misc**
   - Dagon now uses dlib 1.7.1.
