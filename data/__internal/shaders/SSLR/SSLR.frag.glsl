@@ -166,9 +166,10 @@ layout(location = 0) out vec4 outColor;
 const float samplingJitter = 0.8; // 0.9
 
 /*
- * Stochastic screen-space ray tracing function.
+ * Screen-space ray tracing function.
  * Samples radiance buffer along the eye-space vector R from eye-space position P.
  * Roughness is used to reduce noise: fade out/early exit for surfaces that are too rough.
+ * Returns [color, alpha]
  */
 vec4 sslr(vec3 P, vec3 R, float roughness)
 {
