@@ -80,7 +80,7 @@ vec3 importanceSampleGGX(vec2 Xi, float roughness, vec3 N)
 
 /*
  * Visible Normal Distribution Function for GGX.
- * Based on the paper "Sampling Visible GGX Normals with Spherical Caps" (J. Dupuy, A. Benyoub)
+ * Based on the paper "Sampling Visible GGX Normals with Spherical Caps" (J. Dupuy, A. Benyoub, 2023)
  */
 vec3 importanceSampleGGX_VNDF(vec2 Xi, float roughness, vec3 N, vec3 E)
 {
