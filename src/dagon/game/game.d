@@ -103,6 +103,22 @@ class Game: BaseGame
         
         // Create render config
         rendererConfig = New!Configuration(this);
+        
+        // Define constants for profile
+        rendererConfig.props.set(DPropType.Number, "LowQuality", "0");
+        rendererConfig.props.set(DPropType.Number, "HighQuality", "1");
+        rendererConfig.props.set(DPropType.Number, "UltraQuality", "2");
+        
+        // Define constants for sslr.samplingFunction
+        rendererConfig.props.set(DPropType.Number, "PerfectMirror", "0");
+        rendererConfig.props.set(DPropType.Number, "GGX", "1");
+        rendererConfig.props.set(DPropType.Number, "GGX_VNDF", "2");
+        
+        // Define constants for antialiasing
+        rendererConfig.props.set(DPropType.Number, "None", "0");
+        rendererConfig.props.set(DPropType.Number, "FXAA", "1");
+        rendererConfig.props.set(DPropType.Number, "SMAA", "2");
+        
         foreach(fs; vfs.mounted)
         {
             rendererConfig.fromFile(fs, rendererConfigFilename);
@@ -182,6 +198,9 @@ class Game: BaseGame
             renderer.sslrPass.sslrShader.historyWeight = clamp(rendererConfig.props["sslr.historyWeight"].toFloat, 0.0f, 1.0f);
         if ("sslr.motionWeight" in rendererConfig.props)
             renderer.sslrPass.sslrShader.motionWeight = clamp(rendererConfig.props["sslr.motionWeight"].toFloat, 0.0f, 1.0f);
+        if ("sslr.samplingFunction" in rendererConfig.props)
+            renderer.sslrPass.sslrShader.samplingFunction = cast(SSLRSamplingFunction)clamp(rendererConfig.props["sslr.samplingFunction"].toUInt,
+                SSLRSamplingFunction.PerfectMirror, SSLRSamplingFunction.GGX_VNDF);
         if ("sslr.blur" in rendererConfig.props)
             renderer.reflectionPass.reflectionShader.blurEnabled = cast(bool)(rendererConfig.props["sslr.blur"].toUInt);
         if ("sslr.blurRadius" in rendererConfig.props)
@@ -249,13 +268,13 @@ class Game: BaseGame
         
         if ("antialiasing" in rendererConfig.props)
         {
-            string aa = rendererConfig.props["antialiasing"].toString;
-            if (aa == "FXAA")
+            uint aa = rendererConfig.props["antialiasing"].toUInt;
+            if (aa == 1)
             {
                 renderer.fxaaPass.active = true;
                 renderer.smaaPass.active = false;
             }
-            else if (aa == "SMAA")
+            else if (aa == 2)
             {
                 renderer.fxaaPass.active = false;
                 renderer.smaaPass.active = true;

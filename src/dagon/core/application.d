@@ -723,6 +723,19 @@ class Application: EventListener, Updateable
         config = New!Configuration(this);
         bool configFileFound = false;
         
+        // Define config constants for log.level
+        config.props.set(DPropType.Number, "All", "0");
+        config.props.set(DPropType.Number, "Debug", "1");
+        config.props.set(DPropType.Number, "Info", "2");
+        config.props.set(DPropType.Number, "Warning", "3");
+        config.props.set(DPropType.Number, "Error", "4");
+        config.props.set(DPropType.Number, "FatalError", "5");
+        
+        // Define config constants for vsync
+        config.props.set(DPropType.Number, "Off", "0");
+        config.props.set(DPropType.Number, "On", "1");
+        config.props.set(DPropType.Number, "Mailbox", "2");
+        
         // Load initial config from executable directory
         String initConfigPath = String(directory);
         initConfigPath ~= dirSeparator;
@@ -1540,15 +1553,7 @@ class Application: EventListener, Updateable
         
         if ("log.level" in config.props)
         {
-            string logLevelStr = config.props["log.level"].toString;
-            if (logLevelStr == "debug")
-                this.logLevel = LogLevel.Debug;
-            else if (logLevelStr == "info")
-                this.logLevel = LogLevel.Info;
-            else if (logLevelStr == "warning")
-                this.logLevel = LogLevel.Warning;
-            else if (logLevelStr == "error")
-                this.logLevel = LogLevel.Error;
+            this.logLevel = cast(LogLevel)clamp(config.props["log.level"].toUInt, LogLevel.All, LogLevel.FatalError);
             dagon.core.logger.logLevel = this.logLevel;
         }
         

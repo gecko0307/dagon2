@@ -41,11 +41,13 @@ Built-in *.conf files are fully reserved for Dagon's internal mechanisms, and it
 Log settings:
 
 * `log.enabled` - `0` or `1`, disables or enables the logger. Default is `1`
-* `log.level` - string, minimum verbosity level of the logger. Default is `"debug"` in debug builds and `"info"` in release builds. Supported options are:
-  * `"debug"` - debug mode, prints all messages
-  * `"info"` - prints informational messages, warnings and errors
-  * `"warning"` - prints warnings and errors
-  * `"error"` - prints only errors
+* `log.level` - numeric constant, minimum verbosity level of the logger. Default is `Debug` in debug builds and `Info` in release builds. Supported options are:
+  * `All` = `0` - prints all messages
+  * `Debug` = `1` - debug mode, prints all messages
+  * `Info` = `2` - prints informational messages, warnings and errors
+  * `Warning` = `3` - prints warnings and errors
+  * `Error` = `4` - prints only errors
+  * `FatalError` = `5` - prints only fatal errors
 * `log.toStdout` - `0` or `1`, disables or enables printing log messages to the standard output (console). Default is `1`
 * `log.timestampTags` - `0` or `1`, disables or enables timestamps in log messages. Default is `0`
 * `log.levelTags` - `0` or `1`, disables or enables level tags in log messages. Default is `1`
@@ -77,7 +79,10 @@ Application settings:
 
 * `fullscreen` - `0` or `1`, run in windowed or fullscreen mode. This value overrides default one hardcoded in the application
 * `fullscreenWindowed` - `0` or `1`, enables "windowed fullscreen" mode. The application runs in a borderless screen-sized window, which allows for easy switching to other applications. Default is `0`
-* `vsync` - `0` for immediate buffer swap; `1` for synchronization with the vertical retrace; `2` for Mailbox mode. Default is `2`, but it may be not supported on some systems, in which cases it falls back to 
+* `vsync` - numeric constant, vertical synchronization mode. Default is `Mailbox`, but it may be not supported on some systems, in which cases it falls back to `On`. Supported options are:
+  * `Off` = `0` - no synchronization, immediate buffer swap. May cause screen tearing
+  * `On` = `1` - synchronization with the vertical retrace. Eliminates tearing, but can cause input lag. Limits the frame rate to display refresh rate
+  * `Mailbox` = `2` - Mailbox VSync mode. Eliminates tearing while reducing input lag by replacing queued frames with the newest rendered frame. Allows higher frame rates
 * `updatesPerSecond` - number of logic updates per second (UPS). This can be set to `auto` or `0` to synchronize updates with the display refresh rate. Default is `60`
 * `maxTimersCount` - maximum number of simultaneous timers. Default is `1024`. `0` is treated as a default number
 * `hideConsole` - `0` or `1`, show or hide the console window. It is convenient to leave it when debugging the game and hide it for end users. Default is `0`
@@ -138,7 +143,10 @@ Event manager settings:
 
 Recognized by the `Game` class, applied to the `Game.renderer`.
 
-* `profile` - renderer quality profile. Supported values are `0` (low quality), `1` (high quality), `2` (ultra quality). Default is `2`. All explicitly defined options below override the profile
+* `profile` - numeric constant, renderer quality profile. Default is `2`. All explicitly defined options below override the profile. Supported values are:
+  * `LowQuality` = `0`
+  * `HighQuality` = `1`
+  * `UltraQuality` = `2`
 
 * `decals.enabled` - `0` or `1`, disable or enable decals. Default is `1`
 
@@ -193,7 +201,10 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `lensDistortion.k1` - 
 * `lensDistortion.k2` - 
 
-* `antialiasing` - anti-aliasing algorithm. Supported values are `"None"`, `"FXAA"`, `"SMAA"`. Default is `"SMAA"` in high/ultra quality profile, and `"FXAA"` in low quality profile
+* `antialiasing` - numeric constant, anti-aliasing algorithm. Default is `SMAA` in high/ultra quality profile, and `FXAA` in low quality profile. Supported values are:
+  * `None` = `0` - disable anti-aliasing
+  * `FXAA` = `1` - fast approximate anti-aliasing
+  * `SMAA` = `2` - subpixel morphological anti-aliasing
 
 * `sharpening.enabled` - `0` or `1`, disable or enable sharpening filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile
 * `sharpening.strength` -
