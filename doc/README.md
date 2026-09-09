@@ -13,7 +13,7 @@ Realistic minimum system requirements (for Full HD rendering at 60 fps):
 - RAM: application-dependent, usually 8 Gb minimum
 - GPU: Vulkan-capable, tested on GeForce RTX 3050
 - VRAM: application-dependent, 6 Gb minimum
-- OS: 64-bit Windows 10 or higher / Linux.
+- OS: 64-bit Windows or Linux.
 
 ## Architecture
 
