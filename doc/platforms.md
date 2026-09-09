@@ -2,9 +2,25 @@
 
 Dagon is written in [D2](https://dlang.org/) and requires an up-to-date D toolchain. Supported compilers are [DMD](https://dlang.org/download.html#dmd) and [LDC](https://github.com/ldc-developers/ldc#installation). [DUB](https://dub.pm/) is used as a build system and a dependency manager; it is usually bundled with the binary release of a compiler.
 
-To use Dagon with DUB, either add it as a dependency to your application (`dub add dagon`), or generate a project template (`dub init --type=dagon`).
+The engine targets only x86_64 desktop platforms.
 
-The engine targets x86_64 desktop platforms.
+## Compilation
+
+To build Dagon with DUB, either add it as a dependency to your application (`dub add dagon2`), or generate a project template (`dub init --type=dagon2`).
+
+We strongly recommend using [LDC](https://github.com/ldc-developers/ldc) and compiling in release mode to achieve maximum CPU performance:
+
+```
+dub build --compiler=ldc2 --build=release-nobounds
+```
+
+To use Dagon repository directly instead of a release (for example, to modify the engine), you can clone it with Git and specify the local path to the `dagon2` dependency in your `dub.json` or `dub.selections.json`:
+
+```
+"dagon2": { "path": "path/to/your/dagon2/copy" }
+```
+
+Do not delete `data/__internal` folder! It is used to store engine's internal data such as shaders and textures.
 
 ## Linux Tips
 
