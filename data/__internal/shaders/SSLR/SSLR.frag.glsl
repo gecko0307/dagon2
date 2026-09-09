@@ -285,9 +285,10 @@ vec4 sslr(vec3 P, vec3 R, float roughness)
             finalUV.xy = finalUV.xy * 0.5 + 0.5;
             finalUV.y = 1.0 - finalUV.y;
 
-            // Fade out reflection at edges
-            vec2 edgeFactor = smoothstep(vec2(0.0), vec2(0.2), finalUV) * (1.0 - smoothstep(vec2(0.8), vec2(1.0), finalUV));
-            float screenFade = edgeFactor.x * edgeFactor.y;
+            // Fade out at screen borders
+            vec2 fov = 0.05 * vec2(ubo.resolution.y / ubo.resolution.x, 1.0);
+            vec2 borderFactor = smoothstep(vec2(0.0), fov, finalUV) * (1.0 - smoothstep(vec2(1.0) - fov, vec2(1.0), finalUV));
+            float screenFade = borderFactor.x * borderFactor.y;
             float alpha = clamp(screenFade, 0.0, 1.0) * roughnessFactor;
 
             return vec4(texture(radianceBuffer, finalUV).rgb, alpha);
