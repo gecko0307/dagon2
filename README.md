@@ -46,11 +46,11 @@ New features and major changes from Dagon 0.x/1.x:
   - Renderer now leverages SDL GPU, targeting Vulkan
   - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. Normals are now stored in world space to achieve frame coherence and mitigate R10G10B10A2 rounding errors. All stochastic techniques now use permuted congruential generator as a hash function
   - Renderer quality profiles support: `LowQuality`, `HighQuality`, `UltraQuality`
-  - Stochastic screen-space reflections (SSSR) support
-  - HDR (scRGB) output support
+  - Physically-based stochastic screen-space reflections (SSSR)
+  - HDR (scRGB) output
   - The renderer now uses separate irradiance cubemap
   - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
-  - Temporal SSAO support
+  - Temporal SSAO
   - Fog effect is now applied in a separate pass. Ground fog support
   - Shadeless materials in deferred pipeline
 - **Graphics components**
