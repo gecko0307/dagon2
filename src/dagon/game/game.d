@@ -117,6 +117,11 @@ class Game: BaseGame
         rendererConfig.props.set(DPropType.Number, "GGX", "1");
         rendererConfig.props.set(DPropType.Number, "GGX_VNDF", "2");
         
+        // Define constants for tone mapping
+        rendererConfig.props.set(DPropType.Number, "Base", "0");
+        rendererConfig.props.set(DPropType.Number, "Punchy", "1");
+        rendererConfig.props.set(DPropType.Number, "PunchyLegacy", "2");
+        
         // Define constants for antialiasing
         rendererConfig.props.set(DPropType.Number, "None", "0");
         rendererConfig.props.set(DPropType.Number, "FXAA", "1");
@@ -229,21 +234,14 @@ class Game: BaseGame
         if ("tonemapping.look" in rendererConfig.props)
         {
             auto lookProp = rendererConfig.props["tonemapping.look"];
-            if (lookProp.type == DPropType.String)
+            if (lookProp.type == DPropType.Number)
             {
-                switch(lookProp.toString)
+                switch(lookProp.toUInt)
                 {
-                    case "Base":
-                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Base;
-                        break;
-                    case "Punchy":
-                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Punchy;
-                        break;
-                    case "PunchyLegacy":
-                        renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy;
-                        break;
-                    default:
-                        break;
+                    case 0: renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Base; break;
+                    case 1: renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.Punchy; break;
+                    case 2: renderer.tonemappingPass.tonemappingShader.look = AgXLookPreset.PunchyLegacy; break;
+                    default: break;
                 }
             }
         }
