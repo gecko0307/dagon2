@@ -844,17 +844,6 @@ class Application: EventListener, Updateable
             assimpLibraryPath = config.props["Assimp.path"].toString;
         version(Windows)
         {
-            if ("SDL3.path.windows" in config.props)
-                sdlLibraryPath = config.props["SDL3.path.windows"].toString;
-            if ("SDL3Image.path.windows" in config.props)
-                sdlImageLibraryPath = config.props["SDL3Image.path.windows"].toString;
-            if ("KTX.path.windows" in config.props)
-                ktxLibraryPath = config.props["KTX.path.windows"].toString;
-            if ("FreeType.path.windows" in config.props)
-                freetypeLibraryPath = config.props["FreeType.path.windows"].toString;
-            if ("Assimp.path.windows" in config.props)
-                assimpLibraryPath = config.props["Assimp.path.windows"].toString;
-            
             if (sdlLibraryPath == "auto")
                 sdlLibraryPath = "SDL3.dll";
             
@@ -872,15 +861,6 @@ class Application: EventListener, Updateable
         }
         else version(linux)
         {
-            if ("SDL3.path.linux" in config.props)
-                sdlLibraryPath = config.props["SDL3.path.linux"].toString;
-            if ("SDL3Image.path.linux" in config.props)
-                sdlImageLibraryPath = config.props["SDL3Image.path.linux"].toString;
-            if ("KTX.path.linux" in config.props)
-                ktxLibraryPath = config.props["KTX.path.linux"].toString;
-            if ("FreeType.path.linux" in config.props)
-                freetypeLibraryPath = config.props["FreeType.path.linux"].toString;
-            
             if (sdlLibraryPath == "auto")
                 sdlLibraryPath = "libSDL3.so.0";
             
@@ -1368,16 +1348,6 @@ class Application: EventListener, Updateable
         
         if ("gpu.shaderCache.path" in config.props)
             shaderCachePath = config.props["gpu.shaderCache.path"].toString;
-        version(Windows)
-        {
-            if ("gpu.shaderCache.path.windows" in config.props)
-                shaderCachePath = config.props["gpu.shaderCache.path.windows"].toString;
-        }
-        else version(linux)
-        {
-            if ("gpu.shaderCache.path.linux" in config.props)
-                shaderCachePath = config.props["gpu.shaderCache.path.linux"].toString;
-        }
         logInfo("Shader cache path: ", shaderCachePath);
         if (!.isValidPath(shaderCachePath))
             exitWithError("Invalid shader cache path");
@@ -1386,16 +1356,6 @@ class Application: EventListener, Updateable
         
         if ("gpu.textureCache.path" in config.props)
             textureCachePath = config.props["gpu.textureCache.path"].toString;
-        version(Windows)
-        {
-            if ("gpu.textureCache.path.windows" in config.props)
-                textureCachePath = config.props["gpu.textureCache.path.windows"].toString;
-        }
-        else version(linux)
-        {
-            if ("gpu.textureCache.path.linux" in config.props)
-                textureCachePath = config.props["gpu.textureCache.path.linux"].toString;
-        }
         logInfo("Texture cache path: ", textureCachePath);
         if (!.isValidPath(textureCachePath))
             exitWithError("Invalid texture cache path");
@@ -1510,20 +1470,6 @@ class Application: EventListener, Updateable
             defaultFontSans = config.props["font.sans"].toString;
         if ("font.monospace" in config.props)
             defaultFontMonospace = config.props["font.monospace"].toString;
-        version(Windows)
-        {
-            if ("font.sans.windows" in config.props)
-                defaultFontSans = config.props["font.sans.windows"].toString;
-            if ("font.sans.monospace" in config.props)
-                defaultFontMonospace = config.props["font.sans.monospace"].toString;
-        }
-        else version(linux)
-        {
-            if ("font.sans.linux" in config.props)
-                defaultFontSans = config.props["font.sans.linux"].toString;
-            if ("font.sans.linux" in config.props)
-                defaultFontMonospace = config.props["font.sans.linux"].toString;
-        }
         if ("font.size" in config.props)
             defaultFontSize = config.props["font.size"].toUInt;
         fontManager = New!FontManager(this);

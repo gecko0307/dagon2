@@ -233,6 +233,42 @@ struct DProperty
 }
 
 /**
+ * Removes platform-specific postfixes,
+ * ruling out identifiers that don't fit the current platform.
+ * Recognizes patterns like "something.linux.x86_64"
+ */
+string depostfix(string name)
+{
+    // CPU architecture
+    version(X86)
+        name = name.chomp(".x86");
+    else version(X86_64)
+        name = name.chomp(".x86_64");
+    else version(ARM)
+        name = name.chomp(".arm");
+    
+    // OS
+    version(Windows)
+        name = name.chomp(".windows");
+    else version(Posix)
+    {
+        version(linux)
+            name = name.chomp(".linux");
+        else version(OSX)
+            name = name.chomp(".mac");
+        else version(BSD)
+            name = name.chomp(".bsd");
+        name = name.chomp(".posix");
+    }
+    else version(Android)
+        name = name.chomp(".android");
+    else version(iOS)
+        name = name.chomp(".ios");
+    
+    return name;
+}
+
+/**
  * Stores and manages a collection of named properties.
  *
  * Description:
@@ -316,6 +352,7 @@ class Properties: Owner
      */
     void set(DPropType type, string name, string value)
     {
+        name = name.depostfix;
         auto p = name in props;
         if (p)
         {
