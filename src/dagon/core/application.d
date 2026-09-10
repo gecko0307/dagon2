@@ -137,6 +137,14 @@ enum DagonEvent
     Exit = -1
 }
 
+/// Supported operating systems enumeration.
+enum OperatingSystem
+{
+    Windows,
+    Linux,
+    MacOS
+}
+
 /// Supported window systems enumeration.
 enum WindowSystem
 {
@@ -439,6 +447,9 @@ class Application: EventListener, Updateable
     /// SPIRV-Cross context.
     spvc_context spvcContext;
     
+    /// Operating system.
+    OperatingSystem os;
+    
     /// System information.
     SysInfo systemInfo;
     
@@ -717,7 +728,7 @@ class Application: EventListener, Updateable
         // Important paths
         this.path = thisExePath();
         this.directory = dirName(path);
-        this.appDataFolderName = ".dagon";
+        this.appDataFolderName = ".dagon2";
         this.appDataPath = this.appDataFolderName;
         if (this.appDataFolderName.length > 0)
         {
@@ -790,6 +801,13 @@ class Application: EventListener, Updateable
         logInfo("OS: ", systemInfo.osName, " ", systemInfo.osVersion);
         logInfo("System locale: ", locale);
         logInfo("Selected locale: ", userLocale);
+        
+        version(Windows)
+            os = OperatingSystem.Windows;
+        else version(linux)
+            os = OperatingSystem.Linux;
+        else version(OSX)
+            os = OperatingSystem.MacOS;
         
         // Mount directories to the VFS
         mount(this.directory);
@@ -1569,20 +1587,6 @@ class Application: EventListener, Updateable
             appDataFolderName = config.props["vfs.appDataFolder"].toString;
         if ("vfs.mount" in config.props)
             customMountPaths = config.props["vfs.mount"].toString;
-        version(Windows)
-        {
-            if ("vfs.appDataFolder.windows" in config.props)
-                appDataFolderName = config.props["vfs.appDataFolder.windows"].toString;
-            if ("vfs.mount.windows" in config.props)
-                customMountPaths = config.props["vfs.mount.windows"].toString;
-        }
-        else version(linux)
-        {
-            if ("vfs.appDataFolder.linux" in config.props)
-                appDataFolderName = config.props["vfs.appDataFolder.linux"].toString;
-            if ("vfs.mount.linux" in config.props)
-                customMountPaths = config.props["vfs.mount.linux"].toString;
-        }
     }
     
     /**
