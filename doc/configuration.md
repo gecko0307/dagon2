@@ -51,6 +51,35 @@ A literal dollar sign can be written as `$$`:
 price: "Cost: $$100";
 ```
 
+A property can have a platform-specific variant by appending a platform postfix to its name:
+
+```
+somePath.windows.x86_64: "C:/somewhere";
+somePath.linux.x86_64: "/somewhere";
+```
+
+When running on a specific platform, its platform-specific variant overrides the generic property. If no platform-specific variant is defined, the generic value is used.
+
+Supported OS postfixes:
+
+```
+.windows
+.linux
+.mac
+.bsd
+.posix
+.android
+.ios
+```
+
+CPU postfix is optional. Supported CPU postfixes:
+
+```
+.x86
+.x86_64
+.arm
+```
+
 ## Built-in Conf Files
 
 Dagon recognizes a number of built-in *.conf files (`settings.conf`, `render.conf`, `input.conf`, `audio.conf`) that are loaded from each VFS-mounted path. User-defined *.conf files (in APPDATA and custom paths) override root ones (in executable directory).
@@ -135,32 +164,13 @@ GPU settings:
 * `gpu.anisotropicFiltering` - `0` or `1`, disable or enable anisotropic filtering by default for all textures. Default is `0`
 * `gpu.defaultTextureAnisotropy` - default anisotropic filtering level for all textures loaded using the asset manager. The value is clamped between `1.0` and the maximum anisotropy supported by hardware (`"auto"`). If anisotropic filtering is not supported, this is set to `1.0`. Default is `1.0`
 
-SDL3 settings:
+Shared libraries:
 
 * `SDL3.path` - path to SDL3 shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"SDL3.dll"` is used under Windows, and `"libSDL3.so.0"` is used under Linux
-* `SDL3.path.windows` - path to SDL3 shared library under Windows, overrides `SDL3.path`. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified, `"SDL3.dll"` is used
-* `SDL3.path.linux` - path to SDL3 shared library under Linux, overrides `SDL3.path`. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified, `"libSDL3.so.0"` is used
 * `SDL3Image.path` - path to SDL3_Image shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"SDL3_Image.dll"` is used under Windows, and `"libSDL3_image.so"` is used under Linux
-* `SDL3Image.path.windows` - path to SDL3_Image shared library under Windows, overrides `SDL3Image.path`. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified, `"SDL3_Image.dll"` is used
-* `SDL3Image.path.linux` - path to SDL3_Image shared library under Linux, overrides `SDL3Image.path`. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified, `"libSDL3_image.so"` is used
-
-FreeType settings:
-
 * `FreeType.path` - path to FreeType shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"freetype-6.dll"` is used under Windows, and under Linux the path is automatically determined by the library loader
-* `FreeType.path.windows` - path to FreeType shared library under Windows, overrides `FreeType.path`. If empty string or `"auto"` specified, `"freetype-6.dll"` is used
-* `FreeType.path.linux` - path to FreeType shared library under Linux, overrides `FreeType.path`. If empty string or `"auto"` specified, the path is automatically determined by the library loader
-
-KTX settings:
-
 * `KTX.path` - path to libktx shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"ktx.dll"` is used under Windows, and `"libktx.so"` is used under Linux
-* `KTX.path.windows` - path to libktx shared library under Windows, overrides `KTX.path`. If empty string or `"auto"` specified, `"ktx.dll"` is used
-* `KTX.path.linux` - path to libktx shared library under Linux, overrides `KTX.path`. If empty string or `"auto"` specified, `"libktx.so"` is used
-
-Assimp settings:
-
 * `Assimp.path` - path to Assimp shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"Assimp.dll"` is used under Windows, and `"libassimp.so"` is used under Linux
-* `Assimp.path.windows` - path to Assimp shared library under Windows, overrides `Assimp.path`. If empty string or `"auto"` specified, `"Assimp.dll"` is used
-* `Assimp.path.linux` - path to Assimp shared library under Linux, overrides `Assimp.path`. If empty string or `"auto"` specified, `"libassimp.so"` is used
 
 Event manager settings:
 
