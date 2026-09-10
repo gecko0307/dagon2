@@ -544,12 +544,6 @@ class Application: EventListener, Updateable
     /// Is OpenGL debug output enabled.
     bool enableDebugOutput = false;
     
-    /// Is shader binary cache enabled.
-    //bool enableShaderCache = false;
-    
-    /// Is DDS texture cache enabled.
-    //bool enableTextureCache = false;
-    
     /// Path to the default sans font (for the built-in font manager).
     string defaultFontSans = "data/__internal/fonts/LiberationSans-Regular.ttf";
     
@@ -749,8 +743,11 @@ class Application: EventListener, Updateable
         // Define config variables for application paths
         config.props.set(DPropType.String, "exePath", this.path);
         config.props.set(DPropType.String, "exeDirectory", this.directory);
-        config.props.set(DPropType.String, "appDataFolderName", this.appDataFolderName);
+        config.props.set(DPropType.String, "vfs.appDataFolder", this.appDataFolderName);
         config.props.set(DPropType.String, "appDataPath", this.appDataPath);
+        
+        // Define basic config constants
+        config.props.set(DPropType.String, "auto", "auto");
         
         // Define config constants for log.level
         config.props.set(DPropType.Number, "All", "0");
@@ -1365,12 +1362,10 @@ class Application: EventListener, Updateable
             _imageFileFormatSupported[ImageFileFormat.KTX2] = false;
         }
         
-        // Init resource cache
+        // Init built-in resource cache
         resourceCache = New!ResourceCache(this);
         _resourceCache = resourceCache;
         
-        //if ("gpu.shaderCache.enabled" in config.props)
-        //    enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
         if ("gpu.shaderCache.path" in config.props)
             shaderCachePath = config.props["gpu.shaderCache.path"].toString;
         version(Windows)
@@ -1389,8 +1384,6 @@ class Application: EventListener, Updateable
         else 
             .mkdirRecurse(shaderCachePath);
         
-        //if ("gpu.textureCache.enabled" in config.props)
-        //    enableTextureCache = cast(bool)(config.props["gpu.textureCache.enabled"].toUInt);
         if ("gpu.textureCache.path" in config.props)
             textureCachePath = config.props["gpu.textureCache.path"].toString;
         version(Windows)

@@ -477,7 +477,7 @@ string copyStr(T)(T[] s)
 }
 
 /**
- * 
+ * Interpolates a string with known properties.
  */
 bool interpolateString(string propName, string propValue, Properties props, ref String result)
 {

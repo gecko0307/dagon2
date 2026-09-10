@@ -28,6 +28,29 @@ Lines beginning with double slash (`//`) are treated as comments and ignored:
 // Some comment
 ```
 
+Properties can reference other properties:
+
+```
+numberOption2: numberOption;
+```
+
+String values can contain references to other properties using the `${propertyName}` syntax. The reference is replaced with the value of the specified property when the configuration is parsed:
+
+```
+baseOption: "World";
+interpolatedOption: "Hello, ${baseOption}!";
+```
+
+After parsing, `interpolatedOption` contains `"Hello, World!"`.
+
+The referenced property must be defined before it is used.
+
+A literal dollar sign can be written as `$$`:
+
+```
+price: "Cost: $$100";
+```
+
 ## Built-in Conf Files
 
 Dagon recognizes a number of built-in *.conf files (`settings.conf`, `render.conf`, `input.conf`, `audio.conf`) that are loaded from each VFS-mounted path. User-defined *.conf files (in APPDATA and custom paths) override root ones (in executable directory).
@@ -36,7 +59,13 @@ Built-in *.conf files are fully reserved for Dagon's internal mechanisms, and it
 
 ### settings.conf
 
-`settings.conf` contains runtime settings recognozed by the `Application` class. If the file doesn't exist, the engine will print a warning and run with default settings.
+`settings.conf` contains runtime settings recognized by the `Application` class. If the file doesn't exist, the engine will print a warning and run with default settings.
+
+For `settings.conf` files the application defines the following built-in variables that you can access in custom properties:
+
+* `exePath` - absolute path of the executable, including the executable file name
+* `exeDirectory` - absolute directory where the executable is located
+* `appDataPath` - absolute path of the game data folder. This is usually in `APPDATA` under Windows or in `HOME` under Linux. Game data folder can be used to store user-specific data, such as mods and save files.
 
 Log settings:
 
@@ -55,7 +84,7 @@ Log settings:
 
 VFS settings:
 
-* `vfs.appDataFolder` - game data folder name in `APPDATA` directory (`HOME` under Linux). These value override default one hardcoded in the application
+* `vfs.appDataFolder` - game data folder name in `APPDATA` directory (`HOME` under Linux). These value overrides default one hardcoded in the application
 * `vfs.appDataFolder.windows` - overrides `vfs.appDataFolder` under Windows
 * `vfs.appDataFolder.linux` - overrides `vfs.appDataFolder` under Linux
 * `vfs.mount` - additional paths to mount in the VFS, separated by semicolon (`"my/path;my/another/path"`)
@@ -98,8 +127,8 @@ GPU settings:
 
 * `gpu.shaderCache.enabled` - `0` or `1`, cache compiled shader binaries (SPIR-V code) to files for reuse instead of compiling shaders on each run. Default is `1`
 * `gpu.shaderCache.path` - path to a folder for storing cached shader binaries. Default is `"data/__internal/shader_cache"`
-* `gpu.shaderCache.path.windows` - overrides `gl.shaderCache.path` under Windows
-* `gpu.shaderCache.path.linux` - overrides `gl.shaderCache.linux` under Windows
+* `gpu.shaderCache.path.windows` - overrides `gpu.shaderCache.path` under Windows
+* `gpu.shaderCache.path.linux` - overrides `gpu.shaderCache.linux` under Windows
 * `gpu.shaderCache.enableLogging` - `0` or `1`, switch logging of shader cache operations
 * `gpu.textureCache.enableLogging` - `0` or `1`, switch logging of texture cache operations
 * `gpu.debugOutput` - `0` or `1`, force disable or enable GPU debug output. Default is `1` in debug builds, `0` in release builds. This option is ignored if `logLevel` is higher than `"debug"`
@@ -125,13 +154,13 @@ KTX settings:
 
 * `KTX.path` - path to libktx shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"ktx.dll"` is used under Windows, and `"libktx.so"` is used under Linux
 * `KTX.path.windows` - path to libktx shared library under Windows, overrides `KTX.path`. If empty string or `"auto"` specified, `"ktx.dll"` is used
-* `KTX.path.linux` - path to libktx shared library under Linux, overrides `KTX.path`. If empty string or `"auto"` specified, `"libktx.dll"` is used
+* `KTX.path.linux` - path to libktx shared library under Linux, overrides `KTX.path`. If empty string or `"auto"` specified, `"libktx.so"` is used
 
 Assimp settings:
 
 * `Assimp.path` - path to Assimp shared library. If empty string specified, the path is automatically determined by the library loader. If `"auto"` specified (default case), `"Assimp.dll"` is used under Windows, and `"libassimp.so"` is used under Linux
 * `Assimp.path.windows` - path to Assimp shared library under Windows, overrides `Assimp.path`. If empty string or `"auto"` specified, `"Assimp.dll"` is used
-* `Assimp.path.linux` - path to Assimp shared library under Linux, overrides `Assimp.path`. If empty string or `"auto"` specified, `"libassimp.dll"` is used
+* `Assimp.path.linux` - path to Assimp shared library under Linux, overrides `Assimp.path`. If empty string or `"auto"` specified, `"libassimp.so"` is used
 
 Event manager settings:
 
@@ -215,9 +244,9 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 
 ### input.conf
 
-`input.conf` contains input bindings recognozed by the `InputManager` class.
+`input.conf` contains input bindings recognized by the `InputManager` class.
 
-Binding definition format consists of device type and name (or number) coresponding to button or axis of this device.
+Binding definition format consists of device type and name (or number) corresponding to button or axis of this device.
 
 - `kb` - keyboard (`kb_up`, `kb_w`, etc.)
 - `ma` - mouse axis (`ma_x`, `ma_y`)

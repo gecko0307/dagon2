@@ -104,6 +104,9 @@ class Game: BaseGame
         // Create render config
         rendererConfig = New!Configuration(this);
         
+        // Define basic config constants
+        rendererConfig.props.set(DPropType.String, "auto", "auto");
+        
         // Define constants for profile
         rendererConfig.props.set(DPropType.Number, "LowQuality", "0");
         rendererConfig.props.set(DPropType.Number, "HighQuality", "1");

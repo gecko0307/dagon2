@@ -138,6 +138,11 @@ class AudioManager: EventListener
         this.config = New!Configuration(this);
         this.vfs = application.vfs;
         
+        // Define basic config constants
+        this.config.props.set(DPropType.String, "auto", "auto");
+        
+        // TODO: define backend constants
+        
         foreach(fs; vfs.mounted)
         {
             config.fromFile(fs, "audio.conf");
