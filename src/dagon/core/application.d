@@ -54,6 +54,7 @@ import core.stdc.string;
 import dlib.core.memory;
 import dlib.core.ownership;
 import dlib.core.stream;
+import dlib.memory.arena;
 import dlib.image;
 import dlib.filesystem;
 import dlib.text.str;
@@ -319,8 +320,11 @@ class Application: EventListener, Updateable
     /// Absolute directory containing the executable.
     string directory;
     
-    /// The application folder name (used under the HOME or APPDATA directory).
+    /// The application data folder name (used under the HOME or APPDATA directory).
     string appDataFolderName;
+    
+    /// Absolute path to the application data.
+    string appDataPath;
     
     /// Additional VFS mount paths defined in settings.conf.
     string customMountPaths;
@@ -541,7 +545,10 @@ class Application: EventListener, Updateable
     bool enableDebugOutput = false;
     
     /// Is shader binary cache enabled.
-    bool enableShaderCache = false;
+    //bool enableShaderCache = false;
+    
+    /// Is DDS texture cache enabled.
+    //bool enableTextureCache = false;
     
     /// Path to the default sans font (for the built-in font manager).
     string defaultFontSans = "data/__internal/fonts/LiberationSans-Regular.ttf";
@@ -666,6 +673,9 @@ class Application: EventListener, Updateable
     /// Indicates that SDL GPU should initialize OpenXR instance (preserved for future, currently not supported).
     bool useOpenXR = false;
     
+    ///
+    Arena tmpArena;
+    
     protected
     {
         SDL_Cursor*[12] cursors;
@@ -692,6 +702,9 @@ class Application: EventListener, Updateable
      */
     this(uint winWidth, uint winHeight, bool fullscreen, string windowTitle, string[] args, Owner owner = null)
     {
+        // Initialize arena
+        this.tmpArena = New!Arena(1024, this);
+        
         // Initialize with hardcoded parameters
         this.windowWidth = winWidth;
         this.windowHeight = winHeight;
@@ -711,6 +724,16 @@ class Application: EventListener, Updateable
         this.path = thisExePath();
         this.directory = dirName(path);
         this.appDataFolderName = ".dagon";
+        this.appDataPath = this.appDataFolderName;
+        if (this.appDataFolderName.length > 0)
+        {
+            string homeDirVar = "";
+            version(Windows) homeDirVar = "APPDATA";
+            version(Posix) homeDirVar = "HOME";
+            auto homeDir = environment.get(homeDirVar, "");
+            if (homeDir.length)
+                this.appDataPath = buildPath(homeDir, this.appDataFolderName);
+        }
         
         // Set default locale
         locale = systemLocale();
@@ -722,6 +745,12 @@ class Application: EventListener, Updateable
         // Create main config
         config = New!Configuration(this);
         bool configFileFound = false;
+        
+        // Define config variables for application paths
+        config.props.set(DPropType.String, "exePath", this.path);
+        config.props.set(DPropType.String, "exeDirectory", this.directory);
+        config.props.set(DPropType.String, "appDataFolderName", this.appDataFolderName);
+        config.props.set(DPropType.String, "appDataPath", this.appDataPath);
         
         // Define config constants for log.level
         config.props.set(DPropType.Number, "All", "0");
@@ -778,6 +807,9 @@ class Application: EventListener, Updateable
                 mount(path);
         }
         _vfs = vfs;
+        
+        appDataPath = vfs.appDataPath;
+        config.props.set(DPropType.String, "vfs.appDataPath", appDataPath);
         
         // Load overrifing configs from additional VFS directories
         if (vfs.mounted.length > 1)
@@ -1337,8 +1369,8 @@ class Application: EventListener, Updateable
         resourceCache = New!ResourceCache(this);
         _resourceCache = resourceCache;
         
-        if ("gpu.shaderCache.enabled" in config.props)
-            enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
+        //if ("gpu.shaderCache.enabled" in config.props)
+        //    enableShaderCache = cast(bool)(config.props["gpu.shaderCache.enabled"].toUInt);
         if ("gpu.shaderCache.path" in config.props)
             shaderCachePath = config.props["gpu.shaderCache.path"].toString;
         version(Windows)
@@ -1351,6 +1383,32 @@ class Application: EventListener, Updateable
             if ("gpu.shaderCache.path.linux" in config.props)
                 shaderCachePath = config.props["gpu.shaderCache.path.linux"].toString;
         }
+        logInfo("Shader cache path: ", shaderCachePath);
+        if (!.isValidPath(shaderCachePath))
+            exitWithError("Invalid shader cache path");
+        else 
+            .mkdirRecurse(shaderCachePath);
+        
+        //if ("gpu.textureCache.enabled" in config.props)
+        //    enableTextureCache = cast(bool)(config.props["gpu.textureCache.enabled"].toUInt);
+        if ("gpu.textureCache.path" in config.props)
+            textureCachePath = config.props["gpu.textureCache.path"].toString;
+        version(Windows)
+        {
+            if ("gpu.textureCache.path.windows" in config.props)
+                textureCachePath = config.props["gpu.textureCache.path.windows"].toString;
+        }
+        else version(linux)
+        {
+            if ("gpu.textureCache.path.linux" in config.props)
+                textureCachePath = config.props["gpu.textureCache.path.linux"].toString;
+        }
+        logInfo("Texture cache path: ", textureCachePath);
+        if (!.isValidPath(textureCachePath))
+            exitWithError("Invalid texture cache path");
+        else 
+            .mkdirRecurse(textureCachePath);
+        
         shaderCacheStorage = resourceCache.addStorage(ResourceType.Shader, ".spv", shaderCachePath);
         textureCacheStorage = resourceCache.addStorage(ResourceType.Texture, ".dds", textureCachePath);
         
