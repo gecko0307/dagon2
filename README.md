@@ -29,6 +29,7 @@ New features and major changes from Dagon 0.x/1.x:
   - Mailbox Vsync support, significantly reducing input lag
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - String interpolation for *.conf properties: `"${propName}"`
+  - Platform-specific property postfixes (`something.windows` or `something.linux`) are now first-class feature, supported universally and transparently for all properties. No need to manually check them anymore
   - Predefined symbolic constants for numeric config properties
   - `log.level` config property is now a number
   - Referencing support in *.conf files syntax. Any property can be reused like a variable

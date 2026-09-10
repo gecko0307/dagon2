@@ -10,6 +10,7 @@ Dagon 2.0.1 - TBD
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Referencing support in *.conf files syntax. Any property can be reused like a variable
   - String interpolation for *.conf properties: `"${propName}"`
+  - Platform-specific property postfixes (`something.windows` or `something.linux`) are now first-class feature, supported universally and transparently for all properties. No need to manually check them anymore
   - Predefined symbolic constants for numeric config properties
   - `log.level` config property is now a number
   - Many classes across the engine now use a flat hash map (with [xxHash64](https://xxhash.com/) hash function) instead of `Dict`, achieving 36x better performance on insertion and 15x on searching compared to Dagon 1.x
