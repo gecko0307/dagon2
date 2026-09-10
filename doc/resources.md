@@ -20,7 +20,13 @@ vertexModule.create("filename.vert.glsl", "shaders/filename.vert.glsl",
 
 Internally, `ShaderModule` compiles the source to SPIR-V and caches it to disk for reuse. It is then recompiled only if the source file is newer than the SPIR-V file.
 
-You can load SPIR-V modules directly:
+By default shader cache is stored in `data/__internal/shader_cache`, but you can override it via settings.conf:
+
+```
+gpu.shaderCache.path: "${appDataPath}/data/shader_cache";
+```
+
+You can also load SPIR-V modules directly:
 
 ```d
 uint[] spirvBuffer = cast(uint[])read("filename.vert.spv");
@@ -55,12 +61,18 @@ TextureAsset aTexture = loadTexture("assets/my_texture.png", &conversionOptions,
 
 For full control over the sampler, you can pass a pointer to custom `SDL_GPUSamplerCreateInfo` as `creationOptions.samplerCreateInfo`. If it is not null, it will override `repeatUV`, `bilinearFiltering` and `anisotropicFiltering`.
 
+By default texture cache is stored in `data/__internal/texture_cache`, but you can override it via settings.conf:
+
+```
+gpu.textureCache.path: "${appDataPath}/data/texture_cache";
+```
+
 ## 3D Models
 
 TODO
 
 ## Asset Manager
 
-Asset manager allows the game to prepare all assets in advance and load them in batch. This is useful if loading takes some time, and you want to render something on the screen during the process. Asynchronous loading implemented by the `AssetManager` class makes that possible, by doing all the work in a background thread. Main thread keeps running, allowing your game to do anything while assets are loaded.
+Asset manager allows the game to prepare all assets in advance and load them in batch. This is useful if loading takes time, and you want to render something on the screen during the process. Asynchronous loading implemented in the `AssetManager` class makes that possible, by doing all the work in a background thread. Main thread keeps running, allowing your game to do anything while assets are loaded.
 
 TODO
