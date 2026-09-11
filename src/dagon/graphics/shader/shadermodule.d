@@ -24,11 +24,26 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * High level API for the shader toolchain.
+ *
+ * Description:
+ * `dagon.graphics.shader.shadermodule` provides convenient classes
+ * that abstract away GLSL compilation and introspection process,
+ * outputting SPIR-V code, ready to use `SDL_GPUShader*`, and information
+ * about uniforms used in the shader.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.graphics.shader.shadermodule;
 
 import std.stdio;
 import std.file;
 import std.conv;
+import std.string;
 import std.algorithm.searching: count;
 
 import dlib.core.memory;
@@ -41,6 +56,7 @@ import dagon.core.gpu;
 import dagon.core.spvc;
 import dagon.graphics.shader.glsl;
 
+/// Programmable pipeline stages enumeration.
 enum PipelineStage
 {
     Vertex = 0,
@@ -48,24 +64,44 @@ enum PipelineStage
     Compute = 2
 }
 
+/// Shader source types enumeration.
 enum ShaderSourceType
 {
     Buffer = 0,
     File = 1
 }
 
+/// Shader source languages enumeration.
 enum ShaderLanguage
 {
     GLSL = 0
 }
 
-class ShaderUniform: Owner
+/**
+ * Base class for shader uniforms.
+ * A uniform is a global shader variable that is passed to the shader from the host application.
+ * Uniforms are so named because they don't change from one shader invocation to the next within a draw call,
+ * thus their value is uniform among all invocations.
+ * Dagon supports four uniform object types: samplers, uniform buffers, storage buffersm, and storage textures.
+ * Each uniform variable is binded to a known descriptor set (0-4) and a binding withing that set.
+ * This information is retrieved from the shader source code during the introspection step and stored
+ * in the `ShaderUniform` object.
+ */
+abstract class ShaderUniform: Owner
 {
+    /// Uniform name.
     string name;
+    
+    /// Descriptor set.
     uint set;
+    
+    /// Binding within the set.
     uint binding;
+    
+    /// Uniform buffers and samplers are always read-only, storage buffers and storage textures can be read-write.
     bool readonly = true;
     
+    ///
     this(string name, uint set, uint binding, Owner owner)
     {
         super(owner);
@@ -75,32 +111,52 @@ class ShaderUniform: Owner
     }
 }
 
+/**
+ * A sampler is a shader uniform variable used to read data from a texture.
+ */
 class ShaderSampler: ShaderUniform
 {
+    ///
     this(string name, uint set, uint binding, Owner owner)
     {
         super(name, set, binding, owner);
     }
 }
 
-class ShaderStorageBuffer: ShaderUniform
-{
-    this(string name, uint set, uint binding, Owner owner)
-    {
-        super(name, set, binding, owner);
-    }
-}
-
-class ShaderStorageTexture: ShaderUniform
-{
-    this(string name, uint set, uint binding, Owner owner)
-    {
-        super(name, set, binding, owner);
-    }
-}
-
+/**
+ * A uniform buffer object (UBO) allows to pass small amounts
+ * (usually several KB) of read-only data to shaders.
+ */
 class ShaderUniformBuffer: ShaderUniform
 {
+    ///
+    this(string name, uint set, uint binding, Owner owner)
+    {
+        super(name, set, binding, owner);
+    }
+}
+
+/**
+ * A storage buffer object (SSBO) lets shaders read and write
+ * large blocks of structured data. Vulkan guarantees 128 MB minimum per buffer.
+ * Unlike uniform buffers, shaders can modify data inside storage buffers.
+ */
+class ShaderStorageBuffer: ShaderUniform
+{
+    ///
+    this(string name, uint set, uint binding, Owner owner)
+    {
+        super(name, set, binding, owner);
+    }
+}
+
+/**
+ * A storage texture, or storage image in GLSL,
+ * allow shaders to perform read-write operations on texture data.
+ */
+class ShaderStorageTexture: ShaderUniform
+{
+    ///
     this(string name, uint set, uint binding, Owner owner)
     {
         super(name, set, binding, owner);
@@ -135,40 +191,75 @@ bool isFieldsOffsetAligned(T, alias numBytes)()
 /// Alias for checking std140 alignment compliance for a struct.
 alias isStd140Compliant(T) = isFieldsOffsetAligned!(T, 16);
 
-///
+/**
+ * A shader module is an independent unit of compilation for a certain stage of the programmable pipeline.
+ * It can be a vertex module, fragment module, or a compute module.
+ * Shader module can be created from GLSL source code or directly from SPIR-V code.
+ * `ShaderModule` automatically caches SPIR-V code to disk and reuses it at subsequent executions.
+ * The shader is recompiled only if the source file's modification timestamp is newer
+ * than the cached module's timestamp.
+ */
 class ShaderModule: Owner
 {
    protected:
     ubyte[] spirvInternal;
     
    public:
+    ///
     GPU gpu;
+    
+    ///
     SDL_GPUShader* shader;
     
+    /// Unique shader name, used for SPIR-V caching.
     string name;
+    
+    ///
     uint[] spirv;
+    
+    ///
     PipelineStage pipelineStage;
+    
+    ///
     bool valid = false;
     
+    ///
     uint localSizeX = 1;
+    
+    ///
     uint localSizeY = 1;
+    
+    ///
     uint localSizeZ = 1;
     
+    /// Array of samplers used by the module.
     ShaderSampler[] samplers;
+    
+    /// Array of storage buffers used by the module.
     ShaderStorageBuffer[] storageBuffers;
+    
+    /// Array of storage textures used by the module.
     ShaderStorageTexture[] storageTextures;
+    
+    /// Array of uniform buffers used by the module.
     ShaderUniformBuffer[] uniformBuffers;
     
+    /// Returns the number of storage buffers, either read-only or read-write.
     final uint countStorageBuffers(bool readonly) const
     {
         return cast(uint)storageBuffers.count!(b => b.readonly == readonly);
     }
 
+    /// Returns the number of storage textures, either read-only or read-write.
     final uint countStorageTextures(bool readonly) const
     {
         return cast(uint)storageTextures.count!(b => b.readonly == readonly);
     }
     
+    ///
+    string entryPoint = "main";
+    
+    ///
     this(GPU gpu, Owner owner)
     {
         super(owner);
@@ -176,16 +267,23 @@ class ShaderModule: Owner
         this.valid = false;
     }
     
+    ///
     ~this()
     {
         if (samplers.length) Delete(samplers);
         if (storageBuffers.length) Delete(storageBuffers);
         if (storageTextures.length) Delete(storageTextures);
         if (uniformBuffers.length) Delete(uniformBuffers);
-        
         if (spirvInternal.length) Delete(spirvInternal);
     }
     
+    /**
+     * Initializes the shader module from the shader source. Currently only GLSL 4.5+ is supported as a source language.
+     * The input source is interpreted according to the given `sourceType`.
+     * If it is `ShaderSourceType.File`, then the source string is understood as a file path, and the shader is loaded from a file.
+     * If it is `ShaderSourceType.Buffer`, then the source string is used as the shader itself.
+     * It is strongly recommended to use `ShaderSourceType.File` to benefit from automatic caching.
+     */
     bool create(string name, string source, ShaderSourceType sourceType, ShaderLanguage sourceLanguage, PipelineStage pipelineStage)
     {
         this.name = name;
@@ -258,6 +356,7 @@ class ShaderModule: Owner
         return valid;
     }
     
+    /// Initializes the shader module from externally compiled SPIR-V code.
     bool create(string name, uint[] spirv, PipelineStage pipelineStage)
     {
         this.name = name;
@@ -275,6 +374,7 @@ class ShaderModule: Owner
         return valid;
     }
     
+    /// Returns SPIR-V code as a byte array, if present. Otherwise returns an empty array.
     ubyte[] spirvAsBytes() const
     {
         if (spirv.length)
@@ -419,7 +519,7 @@ class ShaderModule: Owner
         SDL_GPUShaderCreateInfo info;
         info.code = vsSPIRVBytes.ptr;
         info.code_size = vsSPIRVBytes.length;
-        info.entrypoint = "main"; // TODO: get from shader?
+        info.entrypoint = entryPoint.toStringz;
         info.format = SDL_GPU_SHADERFORMAT_SPIRV;
         
         if (pipelineStage == PipelineStage.Vertex)

@@ -24,6 +24,14 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * Abstract shader classes.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.graphics.shader.shader;
 
 import dlib.core.ownership;
@@ -32,39 +40,57 @@ import dagon.core.gpu;
 import dagon.graphics.state;
 import dagon.graphics.shader.shadermodule;
 
+/**
+ * Basic shader class that all other shader types inherit from.
+ * It has not much use other than type unification.
+ */
 abstract class BaseShader: Owner
 {
+    ///
     GPU gpu;
     
+    ///
     this(GPU gpu, Owner owner)
     {
         super(owner);
         this.gpu = gpu;
     }
     
+    ///
     void bindParameters(GraphicsState* state)
     {
         //
     }
 }
 
+/**
+ * 
+ */
 abstract class GraphicsShader: BaseShader
 {
+    ///
     ShaderModule vertexModule;
+    
+    ///
     ShaderModule fragmentModule;
     
+    ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
     }
 }
 
+///
 alias Shader = GraphicsShader;
 
+///
 abstract class ComputeShader: BaseShader
 {
+    ///
     ShaderModule computeModule;
 
+    ///
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);

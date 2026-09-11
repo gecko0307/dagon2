@@ -24,6 +24,14 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
+
+/**
+ * GLSL compilation on top of GLSLang library.
+ *
+ * Copyright: Timur Gafarov 2026
+ * License: $(LINK2 https://boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Timur Gafarov
+ */
 module dagon.graphics.shader.glsl;
 
 import std.stdio;
@@ -32,14 +40,22 @@ import dagon.core.logger;
 import dagon.core.glslang;
 import dagon.graphics.shader.shadermodule;
 
+/// Structure that holds GLSL compilation result.
 struct ShaderCompilationResult
 {
+    /// SPIR-V code, if success is true.
     uint[] spirv;
+    
+    /// Compilation success.
     bool success;
     
+    /// GLSLang shader object.
     glslang_shader_t* shader;
+    
+    /// GLSLang program object.
     glslang_program_t* program;
     
+    /// Releases GLSLang resources associated with the shader.
     void free()
     {
         if (shader)
@@ -49,6 +65,9 @@ struct ShaderCompilationResult
     }
 }
 
+/**
+ * Compiles GLSL shader to SPIR-V for the given pipeline stage.
+ */
 ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineStage)
 {
     ShaderCompilationResult res;
@@ -145,6 +164,7 @@ ShaderCompilationResult compileGLSLtoSPIRV(string src, PipelineStage pipelineSta
     return res;
 }
 
+/// Default GLSLang resource structure.
 __gshared glslang_resource_t glslangDefaultResource = {
     max_lights: 32,
     max_clip_planes: 6,
