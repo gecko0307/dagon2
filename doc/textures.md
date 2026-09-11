@@ -5,6 +5,7 @@ A texture is a raster image used for per-pixel data sampling in shaders. Texture
 ## Image File Formats
 
 Dagon supports all popular image formats via SDL_Image, libktx and a number of built-in decoders.
+
 - **PNG** - lossless format, best for data exchange between programs
 - **JPEG** - lossy compression, best for large images such as backgrounds and splash screens
 - **BMP** - standard lossless format on Windows, used by some old image editors
@@ -28,6 +29,7 @@ Dagon supports all popular image formats via SDL_Image, libktx and a number of b
 - **LBM** (InterLeaved BitMap) - bitmap format originating from Amiga systems, very rarely found today.
 
 Not all features supported by each format are available to Dagon applications. Dagon's texture system is not an image editor backend, it was mainly designed as a lightweight and efficient intermediary for decoding and uploading images to VRAM, not manipulating them. For example, Dagon doesn't support:
+
 - Animated images. Frame-by-frame animation is usually implemented by offsetting texture coordinates on a spritesheet which is independent of image format
 - Multi-layered images. XCF layers are merged into one image
 - In-memory indexed formats and other non-standard color systems. All images are converted to RGBA8, or use some other GPU-native pixel format
@@ -40,6 +42,7 @@ Not all features supported by each format are available to Dagon applications. D
 Understanding pixel formats is crusial for dealing with textures in games. Dagon supports many pixel formats, including block-compressed ones, but each image file format supports only its own subset.
 
 Popular uncompressed pixel formats include:
+
 - RGBA8 – 4 channels, 8 bits per channel
 - RGB8 – 3 channels, 8 bits per channel
 - RG8 – 2 channels, 8 bits per channel
@@ -63,6 +66,7 @@ Dagon performs color space conversions automatically where required.
 ## HDR Textures
 
 High dynamic range (HDR) textures store color data with a wider numeric range per channel. Typical formats are:
+
 - RGBA16F – half-precision floating point, 16 bits per channel
 - RGBA32F – full-precision floating point, 32 bits per channel
 
@@ -73,6 +77,7 @@ HDR textures are mainly used for storing linear color buffers, lightmaps, enviro
 Compressed textures are often used to reduce GPU memory usage. GPU compression is different from offline compression algorithms such as Huffman coding. It breaks images to fixed-size blocks and compresses each individually, encoding colors as indices of a procedurally-generated palette. This approach allows GPU to fetch and decode any part of the image independently from others, making the technique very fast and cache-friendly.
 
 Dagon supports all standard compression formats available on desktop GPUs:
+
 - DXT1/BC1 – color only, 4 bpp
 - DXT3/BC2 – color + low-precision alpha, 8 bpp
 - DXT5/BC3 – color + high-precision alpha, 8 bpp
@@ -86,7 +91,8 @@ Compressed textures are typically loaded from DDS or KTX files.
 Dagon allows to compress textures to BC1, BC3, BC4, BC5 and BC7 on the fly. To do this, specify `compressionFormat` property for newly created `TextureAsset`:
 
 ```d
-asset.conversionOptions.compressionFormat = TextureCompressionFormat.BC3;
+asset.conversionOptions.compressionFormat =
+    TextureCompressionFormat.BC3;
 ```
 
 ## Container Formats: DDS vs KTX
@@ -112,6 +118,7 @@ Cubemaps are textures composed of 6 square faces, used for environment mapping a
 ## Tools
 
 Some great texture tools:
+
 - [Texture Tools Exporter](https://developer.nvidia.com/texture-tools-exporter) - compressor by NVIDIA, supports a lot of formats and works with both DDS and KTX. Includes mipmap generator, cubemap generator, and normal map generator
 - [KTX-Software](https://github.com/khronosgroup/ktx-software) - official set of tools from Khronos to work with KTX and KTX2
 - [IBLBaker](https://github.com/derkreature/IBLBaker) - a tool for environment map prefiltering

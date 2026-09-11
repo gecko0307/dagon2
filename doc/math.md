@@ -1,6 +1,7 @@
 # Math
 
 Dagon comes with a powerful and highly efficient vector math library, `dlib.math`. It implements all algebraic objects necessary for real-time graphics:
+
 - 2D, 3D and 4D vectors
 - 2x2, 3x3 and 4x4 transformation matrices
 - Quaternions.

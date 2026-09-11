@@ -1,6 +1,6 @@
 # Configuration
 
-This guide covers Dagon's built-in runtime configuration system. The engine uses *.conf files to store user-controllable settings.
+This guide covers Dagon's built-in runtime configuration system. The engine uses `*.conf` files to store user-controllable settings.
 
 ## Syntax
 
@@ -82,7 +82,7 @@ CPU postfix is optional. Supported CPU postfixes:
 
 ## Built-in Conf Files
 
-Dagon recognizes a number of built-in *.conf files (`settings.conf`, `render.conf`, `input.conf`, `audio.conf`) that are loaded from each VFS-mounted path. User-defined *.conf files (in APPDATA and custom paths) override root ones (in executable directory).
+Dagon recognizes a number of built-in `*.conf` files (`settings.conf`, `render.conf`, `input.conf`, `audio.conf`) that are loaded from each VFS-mounted path. User-defined `*.conf` files (in APPDATA and custom paths) override root ones (in executable directory).
 
 Built-in *.conf files are fully reserved for Dagon's internal mechanisms, and it is not recommended to use them for storing game-specific settings. The engine doesn't modify them, so you can implement a visual configurator in your game that modifies these files.
 
@@ -276,8 +276,10 @@ left: "kb_a, kb_left";
 right: "kb_d, kb_right";
 jump: "kb_space";
 interact: "kb_e";
+```
 
 Supported key names:
+
 - `kb_a` .. `kb_z`, `kb_0` .. `kb_9`
 - `kb_-`, `kb_=`, `kb_[`, `kb_]`, `kb_\`, `kb_#`, `kb_;`, `kb_'`, `kb_,`, `kb_.`, `kb_/`
 - `kb_return`, `kb_escape`, `kb_backspace`, `kb_delete`, `kb_tab`, `kb_space`, `kb_capsLock`
@@ -307,10 +309,12 @@ Supported key names:
 - `kb_call`, `kb_endcall`
 
 Supported mouse button and axis names:
+
 - `mb_left`, `mb_middle`, `mb_right`, `mb_x1`, `mb_x2`
 - `ma_x`, `ma_y`
 
 Supported gamepad button and axis names:
+
 - `gb_dpup`, `gb_dpdown`, `gb_dpleft`, `gb_dpright`
 - `gb_a`, `gb_b`, `gb_x`, `gb_y`
 - `gb_back`, `gb_guide`, `gb_start`

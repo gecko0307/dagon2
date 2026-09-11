@@ -1,0 +1,45 @@
+from: markdown
+to: pdf
+pdf-engine: xelatex # или weasyprint / typst
+
+input-files:
+  - doc/README.md
+  - doc/basics.md
+  - doc/math.md
+  - doc/entity.md
+  - doc/materials.md
+  - doc/resources.md
+  - doc/textures.md
+  - doc/event-system.md
+  - doc/configuration.md
+  - doc/localization.md
+  - doc/rendering.md
+  - doc/shaders.md
+  - doc/asset-format.md
+  - doc/camera-controller.md
+  - doc/physics.md
+  - doc/audio.md
+  - doc/video.md
+
+output-file: dagon2-guidebook.pdf
+
+toc: true
+toc-depth: 2
+number-sections: false
+
+variables:
+  documentclass: report
+  title: "Dagon 2 Guidebook"
+  author: "Timur Gafarov"
+  lang: "en-US"
+  mainfont: "Liberation Serif"
+  monofont: "Liberation Mono"
+  monofontoptions: "Scale=0.85"
+  geometry:
+    - a4paper
+    - margin=2.5cm
+  header-includes:
+    - |
+      \usepackage{titlesec}
+      \titleformat{\chapter}[block]{\normalfont\huge\bfseries}{\thechapter. }{0pt}{\huge}
+      \titlespacing*{\chapter}{0pt}{-20pt}{40pt}

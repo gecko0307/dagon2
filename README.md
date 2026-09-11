@@ -125,6 +125,8 @@ Documentation
 -------------
 API reference in HTML format can be generated from source code using ddox (`dub build -b ddox`). Be aware that documentation is currently incomplete.
 
+`doc` folder contains Markdown sources for the *Dagon 2 Guidebook* that can be compiled to PDF using [Pandoc](https://pandoc.org/): `pandoc -d pandoc.yaml`. The Guidebook contains essential information for beginner users, details on various components of the engine and the theory behind its inner mechanisms.
+
 License
 -------
 Distributed under the Boost Software License, Version 1.0 (see accompanying file COPYING or at http://www.boost.org/LICENSE_1_0.txt). Third-party dependencies are distributed under their own [licenses](https://github.com/gecko0307/dagon2/tree/main/license).

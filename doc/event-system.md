@@ -73,13 +73,15 @@ class MyDevice: InputDevice
     {
         this.eventManager = eventManager;
         
-        // Initialize the device. Return false on failure and true on success
+        // Initialize the device.
+        // Return false on failure and true on success
     }
     
     bool pollEvents()
     {
         // Emit next pending event using `eventManager.addEvent`.
-        // Return true if there are more events to poll, otherwise return false
+        // Return true if there are more events to poll,
+        // otherwise return false
     }
 }
 ```

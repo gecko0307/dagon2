@@ -17,12 +17,15 @@
 # DUB
 .dub
 dub.selections.json
-docs.json
-__dummy.html
-docs/
 
 # Code coverage
 *.lst
 
 # Local tests
 test/
+
+# Documentation output
+docs/
+docs.json
+__dummy.html
+dagon2-guidebook.pdf

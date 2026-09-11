@@ -3,6 +3,7 @@
 ## Engine Architecture
 
 Dagon application is built on several API layers:
+
 - **World** - User-defined game logics. Dagon follows Inversion of Control principle: user logics happen in event handlers that are called automatically by the core framework. The world is managed by the `Game` class.
 - **Application** - Root-level object of the engine. It manages the game window and the main loop, does basic game configuration, loads and initializes shared libraries and performs other low-level tasks.
 - **Game Subsystems** - Built-in managers. These include event manager, renderer, resource cache, shader compiler, scripting engine, physics engine, etc.
@@ -99,6 +100,7 @@ Scene (root)
 ```
 
 Each entity can have:
+
 - TRS transformation (position, rotation, scale)
 - Drawable (visual geometry; usually a triangle mesh)
 - Material (a set of properties describing a surface)
@@ -110,6 +112,7 @@ TODO: scene creation example
 ## The Game Loop
 
 Every frame follows this sequence:
+
 - Event dispatch. Processes SDL events like keyboard, mouse, or gamepad input, and custom events;
 - Update. Calls `update` method for everything that should be updated per-frame. Updates are fixed, usually at 60 Hz rate, but this can be configured. Update is where entities recalculate their transformation matrices; 
 - Post-update. This is used in cases when some controller logic depend on up-to-date global state (like camera following and transformation constraints);

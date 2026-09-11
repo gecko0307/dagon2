@@ -1,6 +1,7 @@
 # Dagon 2 Asset Format (DAF)
 
 DAF is a binary serialization format for meshes and associated data, introduced in Dagon 2.0. The format's main goals are:
+
 - Storing data in a form suitable for direct uploading to video memory with zero overhead. Unlike glTF, in DAF vertex buffers have a fixed format consistent with the engine pipeline, requiring no conversion.
 - Maximum deserialization efficiency. glTF requires JSON parsing and dynamic construction of fairly complex objects in memory (lists, dictionaries), while loading DAF is simply reinterpretation of byte buffer slices into arrays of POD structures. DAF saves memory and reduces the risk of memory leaks because it doesn't require much allocations.
 - Partial deserialization. The decoder can read only the data it needs from DAF without decoding the rest.
@@ -14,18 +15,38 @@ DAF is an extensible format in which any additional data structures and even dyn
 
 At the beginning of the file there is 4-byte magic string that should be `DAF\0`. Then goes the header:
 
-```
+```d
 struct DAFHeader
 {
-    uint formatVersion; // Must be 100 (version 1.0.0)
-    uint flags; // Bit flags (reserved)
-    uint fileSize; // Total file size, including the header
-    uint chunkTableOffset; // Offset of the chunk table relative to the beginning of the file
-    uint chunkCount; // Number of chunks (DAFChunk structures)
-    uint stringTableOffset; // Offset of the string table relative to the beginning of the file
-    uint stringTableSize; // Size of the string table
-    uint buffersOffset; // Offset of the buffer section relative to the beginning of the file
-    uint buffersSize; // Size of the buffer section
+    // Must be 100 (version 1.0.0)
+    uint formatVersion;
+    
+    // Bit flags (reserved)
+    uint flags;
+    
+    // Total file size, including the header
+    uint fileSize;
+    
+    // Offset of the chunk table
+    // relative to the beginning of the file
+    uint chunkTableOffset;
+    
+    // Number of chunks (DAFChunk structures)
+    uint chunkCount;
+    
+    // Offset of the string table
+    // relative to the beginning of the file
+    uint stringTableOffset;
+    
+    // Size of the string table
+    uint stringTableSize;
+    
+    // Offset of the buffer section
+    // relative to the beginning of the file
+    uint buffersOffset;
+    
+    // Size of the buffer section
+    uint buffersSize;
 }
 ```
 
@@ -35,7 +56,7 @@ Data in DAF is stored as arrays of structures (each structure must be 4-byte ali
 
 The chunk table is the global scene index, an array of DAFChunk structures. Each DAFChunk points to the location of a chunk in the file.
 
-```
+```d
 enum DAFChunkType
 {
     Entities = 0,
@@ -49,10 +70,18 @@ enum DAFChunkType
 
 struct DAFChunk
 {
-    uint type; // Chunk type
-    uint offset; // Offset of the first element in the chunk relative to the beginning of the file
-    uint count; // Number of elements in the chunk
-    uint stride; // Size of each element in the chunk
+    // Chunk type
+    uint type;
+    
+    // Offset of the first element in the chunk
+    // relative to the beginning of the file
+    uint offset;
+    
+    // Number of elements in the chunk
+    uint count;
+    
+    // Size of each element in the chunk
+    uint stride;
 }
 ```
 
@@ -68,11 +97,14 @@ Null-terminated strings are introduced for direct compatibility with C libraries
 
 In chunk structures, string references are stored as a slice of this array:
 
-```
+```d
 struct DAFString
 {
-    uint stringOffset; // offset relative to the start of the string table
-    uint stringSize; // string length in bytes (not number of characters!)
+    // offset relative to the start of the string table
+    uint stringOffset;
+    
+    // string length in bytes (not number of characters!)
+    uint stringSize;
 }
 ```
 
@@ -86,21 +118,52 @@ Binary data, including that uploaded to the GPU, is stored as buffers in a buffe
 
 A standard chunk that stores a list of scene objects (Entity).
 
-```
+```d
 struct DAFEntity
 {
-    DAFString name; // name
-    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
-    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
-    uint flags; // bit flags
-    int parent; // index of the parent Entity, or -1 if no parent
-    float[3] position; // local position
-    float[4] rotation; // local rotation
-    float[3] scale; // local scale
-    int mesh; // mesh index in the mesh chunk, or -1 if there is no mesh
-    int poseTable; // pose table index in the pose table chunk, or -1 if there is no pose table
-    uint userDataBuffer; // offset to the start of the user property buffer (relative to DAFHeader.buffersOffset)
-    uint userDataSize; // size of the user property buffer, or 0 if the Entity has no properties (in this case, userDataBuffer should also be 0)
+    // name
+    DAFString name;
+    
+    // offset to the start of the class buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint classList;
+    
+    // number of classes.
+    // If 0, then classList must also be 0 and is ignored.
+    uint numClasses;
+    
+    // bit flags
+    uint flags;
+    
+    // index of the parent Entity,
+    // or -1 if no parent
+    int parent;
+    
+    // local position
+    float[3] position;
+    
+    // local rotation
+    float[4] rotation;
+    
+    // local scale
+    float[3] scale;
+    
+    // mesh index in the mesh chunk,
+    // or -1 if there is no mesh
+    int mesh;
+    
+    // pose table index in the pose table chunk,
+    // or -1 if there is no pose table
+    int poseTable;
+    
+    // offset to the start of the user property buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint userDataBuffer;
+    
+    // size of the user property buffer,
+    // or 0 if the Entity has no properties
+    // (in this case, userDataBuffer should also be 0)
+    uint userDataSize;
 }
 ```
 
@@ -108,7 +171,7 @@ struct DAFEntity
 
 Standard chunk storing a list of meshes.
 
-```
+```d
 struct DAFMesh
 {
     DAFString name; // name
@@ -136,7 +199,7 @@ Bit Flags:
 
 The vertex buffer consists of three-component vectors:
 
-```
+```d
 struct DAFVertex
 {
     float x, y, z;
@@ -145,7 +208,7 @@ struct DAFVertex
 
 The normal buffer consists of three-component unit vectors:
 
-```
+```d
 struct DAFNormal
 {
     float x, y, z;
@@ -154,7 +217,7 @@ struct DAFNormal
 
 The texture coordinate buffer consists of two-component vectors:
 
-```
+```d
 struct DAFTexcoord
 {
     float x, y;
@@ -163,7 +226,7 @@ struct DAFTexcoord
 
 The bone buffer consists of four-component integer vectors (bone indices):
 
-```
+```d
 struct DAFVertexBones
 {
     uint b1, b2, b3, b4;
@@ -172,7 +235,7 @@ struct DAFVertexBones
 
 The bone weight buffer consists of four-component vectors:
 
-```
+```d
 struct DAFBoneWeights
 {
     float w1, w2, w3, w4;
@@ -181,7 +244,7 @@ struct DAFBoneWeights
 
 A facegroup is a group of triangles sharing a common material (thus, different materials can be assigned to different parts of the mesh). The facegroup buffer is an array of DAFFaceGroup structures:
 
-```
+```d
 struct DAFFaceGroup
 {
     int material; // index of the material in the material chunk, or -1 if there is no material (in this case, the engine uses the default material)
@@ -194,7 +257,7 @@ struct DAFFaceGroup
 
 Standard chunk storing a list of materials.
 
-```
+```d
 enum BlendMode: uint
 {
     Opaque = 0,
@@ -233,7 +296,7 @@ struct DAFMaterial
 
 Standard chunk storing a list of textures.
 
-```
+```d
 enum DAFTextureSemantic: uint
 {
     Unspecified = 0,
@@ -275,7 +338,7 @@ Bit Flags:
 
 Buffer storing a key-value pair:
 
-```
+```d
 enum DPropType: uint
 {
     Undefined = 0,
@@ -293,6 +356,7 @@ struct DAFUserDataEntry
 ```
 
 The value string must store textual data supported by the standard Dagon Properties mechanism, namely:
+
 - Real numbers - for example, 10, 0.5
 - Boolean values ​​- true, false
 - Strings - for example, "some string" (quotation marks must be present)

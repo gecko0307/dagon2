@@ -14,8 +14,12 @@ In Dagon 2, a shader module is an independent unit of compilation for a certain 
 
 ```d
 ShaderModule vertexModule = New!ShaderModule(gpu, this);
-vertexModule.create("filename.vert.glsl", "shaders/filename.vert.glsl",
-    ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
+vertexModule.create(
+    "filename.vert.glsl",
+    "shaders/filename.vert.glsl",
+    ShaderSourceType.File,
+    ShaderLanguage.GLSL,
+    PipelineStage.Vertex);
 ```
 
 Internally, `ShaderModule` compiles the source to SPIR-V and caches it to disk for reuse. It is then recompiled only if the source file is newer than the SPIR-V file.
@@ -30,7 +34,10 @@ You can also load SPIR-V modules directly:
 
 ```d
 uint[] spirvBuffer = cast(uint[])read("filename.vert.spv");
-vertexModule.create("filename.vert.spv", spirvBuffer, PipelineStage.Vertex);
+vertexModule.create(
+    "filename.vert.spv",
+    spirvBuffer,
+    PipelineStage.Vertex);
 ```
 
 ## Textures
@@ -38,7 +45,11 @@ vertexModule.create("filename.vert.spv", spirvBuffer, PipelineStage.Vertex);
 Textures are loaded using `World.loadTexture` method:
 
 ```d
-TextureAsset loadTexture(string filename, ImageConversionOptions* conversionOptions, TextureCreationOptions* creationOptions, bool cache = true)
+TextureAsset loadTexture(
+    string filename,
+    ImageConversionOptions* conversionOptions,
+    TextureCreationOptions* creationOptions,
+    bool cache = true)
 ```
 
 It decodes files using standard `TextureAsset` class which covers all image formats supported by the engine, relying on SDL3_Image library. It also supports compression and can optionally cache textures to DDS files for faster subsequent loading. `ImageConversionOptions` define compression format and some other pre-processing options, and `TextureCreationOptions` is used to initialize a GPU texture:
@@ -56,7 +67,10 @@ TextureCreationOptions creationOptions = {
     samplerCreateInfo: null
 };
 
-TextureAsset aTexture = loadTexture("assets/my_texture.png", &conversionOptions, &creationOptions);
+TextureAsset aTexture = loadTexture(
+    "assets/my_texture.png",
+    &conversionOptions,
+    &creationOptions);
 ```
 
 For full control over the sampler, you can pass a pointer to custom `SDL_GPUSamplerCreateInfo` as `creationOptions.samplerCreateInfo`. If it is not null, it will override `repeatUV`, `bilinearFiltering` and `anisotropicFiltering`.

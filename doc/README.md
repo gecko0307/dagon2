@@ -52,12 +52,12 @@ Dagon is organized around several packages:
 
 ### Beginner topics:
 - [Basics](basics.md) - Understand the basic Dagon application structure
+- [Math](math.md) - Linear algebra used for building 3D worlds
 - [Entity](entity.md) - Building scenes from basic transformable objects
 - [Materials](materials.md) - Controlling the visual appearance of game objects
 - [Resources](resources.md) - Loading and managing game assets
 - [Textures](textures.md) - Using external images
 - [Event System](event-system.md) - Handling user input and other OS events in the game
-- [FAQ](FAQ.md)
 
 ### Intermediate topics:
 - [Configuration](configuration.md) - Tweaking the engine in run time
@@ -69,5 +69,6 @@ Dagon is organized around several packages:
 - [Asset Format](asset-format.md) - Dagon's native 3D model format, DAF
 - [Camera Controller](camera-controller.md) - Blending camera transformations
 - [Physics](physics.md) - Jolt physics integration
+- [Audio](audio.md) - Audio playback using SoLoud
 - [Video](video.md) - Video playback using libVLC
 - [Scripting](gscript/README.md) - Scripting with GScript3 language.
