@@ -28,6 +28,11 @@ toc: true
 toc-depth: 2
 number-sections: false
 
+file-scope: true
+
+filters:
+  - links-filter.lua
+
 variables:
   documentclass: report
   title: "Dagon 2 Guidebook"
@@ -39,6 +44,10 @@ variables:
   geometry:
     - a4paper
     - margin=2.5cm
+  colorlinks: true
+  linkcolor: "blue"
+  urlcolor: "cyan"
+  toccolor: "black"
   header-includes:
     - |
       \usepackage{titlesec}
