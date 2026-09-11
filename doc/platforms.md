@@ -16,7 +16,7 @@ dub build --compiler=ldc2 --build=release-nobounds
 
 To use Dagon repository directly instead of a release (for example, to modify the engine), you can clone it with Git and specify the local path to the `dagon2` dependency in your `dub.json` or `dub.selections.json`:
 
-```
+```json
 "dagon2": { "path": "path/to/your/dagon2/copy" }
 ```
 
@@ -52,32 +52,47 @@ However, this requires a resource file compiler. Much easier way is to use [Elec
 
 ```json
 "postBuildCommands-windows-x86_64": [
-    "$PACKAGE_DIR\\rcedit-x64 \"app.exe\" --set-file-version \"1.0.0.0\" --set-product-version \"1.0.0\" --set-icon \"$PACKAGE_DIR\\icon.ico\" --application-manifest \"$PACKAGE_DIR\\app.manifest\""
+    "$PACKAGE_DIR\\rcedit-x64
+        \"app.exe\"
+        --set-file-version \"1.0.0.0\"
+        --set-product-version \"1.0.0\"
+        --set-icon \"$PACKAGE_DIR\\icon.ico\"
+        --application-manifest \"$PACKAGE_DIR\\app.manifest\""
 ]
 ```
 
+Note: The above command has been split across multiple lines for readability and fitting to the PDF, but in a real JSON file it should be on one line.
+
 An example manifest file:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
     <!-- Version compatibility -->
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
         <application>
-            <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/> <!-- Windows 10, 11 -->
-            <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/> <!-- Windows 8.1 -->
-            <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/> <!-- Windows 8 -->
-            <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/> <!-- Windows 7 -->
+            <!-- Windows 10, 11 -->
+            <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+            <!-- Windows 8.1 -->
+            <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+            <!-- Windows 8 -->
+            <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
+            <!-- Windows 7 -->
+            <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
         </application>
     </compatibility>
     
     <!-- DPI-awareness -->
     <asmv3:application>
         <asmv3:windowsSettings>
-            <!-- For Windows 10 и 11: -->
-            <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
-            <!-- For older versions: -->
-            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+            <!-- For Windows 10 and 11 -->
+            <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">
+                PerMonitorV2
+            </dpiAwareness>
+            <!-- For older versions -->
+            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">
+                true/pm
+            </dpiAware>
         </asmv3:windowsSettings>
     </asmv3:application>
 </assembly>

@@ -53,6 +53,7 @@ Dagon is organized around several packages:
 
 ### Beginner topics:
 
+- [Platforms and Toolchain](platforms.md) - How to build Dagon applications
 - [Basics](basics.md) - Understand the basic Dagon application structure
 - [Math](math.md) - Linear algebra used for building 3D worlds
 - [Entity](entity.md) - Building scenes from basic transformable objects

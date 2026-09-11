@@ -4,6 +4,7 @@ pdf-engine: xelatex # или weasyprint / typst
 
 input-files:
   - doc/README.md
+  - doc/platforms.md
   - doc/basics.md
   - doc/math.md
   - doc/entity.md
