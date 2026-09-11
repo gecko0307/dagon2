@@ -9,6 +9,7 @@ Dagon is named after a god from H. P. Lovecraft's Cthulhu Mythos pantheon. This 
 ## System Requirements
 
 Realistic minimum system requirements (for Full HD rendering at 60 fps):
+
 - CPU: Intel Core i3-10100 / AMD Ryzen 3 3100
 - RAM: application-dependent, usually 8 Gb minimum
 - GPU: Vulkan-capable, tested on GeForce RTX 3050
@@ -51,6 +52,7 @@ Dagon is organized around several packages:
 ## Further reading
 
 ### Beginner topics:
+
 - [Basics](basics.md) - Understand the basic Dagon application structure
 - [Math](math.md) - Linear algebra used for building 3D worlds
 - [Entity](entity.md) - Building scenes from basic transformable objects
@@ -60,10 +62,12 @@ Dagon is organized around several packages:
 - [Event System](event-system.md) - Handling user input and other OS events in the game
 
 ### Intermediate topics:
+
 - [Configuration](configuration.md) - Tweaking the engine in run time
 - [Localization](localization.md) - Translating in-game text to user's language
 
 ### Advanced topics:
+
 - [Rendering](rendering.md) - Render pipeline overview
 - [Shaders](shaders.md) - GPU programming
 - [Asset Format](asset-format.md) - Dagon's native 3D model format, DAF
