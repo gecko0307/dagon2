@@ -109,6 +109,12 @@ class OBJAsset: Asset
     /// Meshes for each group in the OBJ file.
     Dict!(Mesh, string) groupMesh;
 
+    ///
+    bool generateNormals = false;
+    
+    ///
+    bool generateTangents = false;
+
     /// Constructs an OBJ asset.
     this(GPU gpu, string filename, Owner owner)
     {
@@ -160,7 +166,7 @@ class OBJAsset: Asset
         Vector2f[] tmpTexcoords;
         Array!ObjFace tmpFaces;
         
-        bool needGenNormals = false;
+        bool needGenNormals = generateNormals;
         
         if (!numVerts)
             logWarning("OBJ file \"", filename, "\" has no vertices");
@@ -242,7 +248,8 @@ class OBJAsset: Asset
                         tmpTexcoords,
                         tmpNormals,
                         tmpVertices,
-                        needGenNormals
+                        needGenNormals,
+                        generateTangents
                     );
                 }
                 
@@ -318,7 +325,8 @@ class OBJAsset: Asset
                 tmpTexcoords,
                 tmpNormals,
                 tmpVertices,
-                needGenNormals
+                needGenNormals,
+                generateTangents
             );
         }
         
@@ -327,7 +335,8 @@ class OBJAsset: Asset
             tmpTexcoords,
             tmpNormals,
             tmpVertices,
-            needGenNormals);
+            needGenNormals,
+            generateTangents);
         
         Delete(fileStr);
         tmpStr.free();
@@ -366,7 +375,8 @@ class OBJAsset: Asset
         Vector2f[] tmpTexcoords,
         Vector3f[] tmpNormals,
         Vector3f[] tmpVertices,
-        bool needGenNormals)
+        bool needGenNormals,
+        bool needGenTangents)
     {
         auto m = New!Mesh(gpu, this);
         
@@ -430,6 +440,9 @@ class OBJAsset: Asset
         if (needGenNormals)
             m.generateNormals();
         
+        if (needGenTangents)
+            m.generateTangents();
+        
         m.calcBoundingBox();
         
         m.dataReady = true;
@@ -467,6 +480,12 @@ class OBJAsset: Asset
         {
             Delete(m.normals);
             m.normals = [];
+        }
+        
+        if (m.tangents.length)
+        {
+            Delete(m.tangents);
+            m.tangents = [];
         }
         
         if (m.texcoords.length)

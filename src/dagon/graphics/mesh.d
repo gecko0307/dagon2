@@ -67,7 +67,10 @@ enum VertexAttribute
     Texcoord = 1,
     
     /// Normals - array of float[3].
-    Normal = 2
+    Normal = 2,
+    
+    /// Tangents - array of float[4]
+    Tangent = 3
 }
 
 /**
@@ -111,10 +114,15 @@ struct FaceGroup
  * Represents an indexed 3D mesh.
  *
  * Description:
- * The `Mesh` class stores vertex positions, normals,
- * texture coordinates, and triangle indices.
+ * The `Mesh` class stores arrays of vertex positions, normals,
+ * texture coordinates, triangle indices, and face groups,
+ * managing their GPU counterparts.
+ * It doesn't by itself allocate actual mesh data and doesn't
+ * manage its lifetime. This is delegated to external code
+ * on purpose, so that the mesh can store slices to other
+ * buffers instead of dedicated allocations.
  */
-class Mesh: Owner, Drawable
+class Mesh: Owner, Drawable, TriangleSet
 {
     /// Symbolic name.
     string name;
@@ -134,6 +142,9 @@ class Mesh: Owner, Drawable
     /// Array of vertex normals.
     Vector3f[] normals;
 
+    /// Array of vertex tangents (optional).
+    Vector4f[] tangents;
+
     /// Array of texture coordinates.
     Vector2f[] texcoords;
 
@@ -146,16 +157,19 @@ class Mesh: Owner, Drawable
     /// Axis-aligned bounding box for the mesh.
     AABB boundingBox;
     
-    ///
+    /// GPU vertex positions buffer.
     SDL_GPUBuffer* positionBuffer;
     
-    ///
+    /// GPU texture coordinates buffer.
     SDL_GPUBuffer* texcoordBuffer;
     
-    ///
+    /// GPU normals buffer.
     SDL_GPUBuffer* normalBuffer;
     
-    ///
+    /// GPU tangents buffer.
+    SDL_GPUBuffer* tangentBuffer;
+    
+    /// GPU index buffer.
     SDL_GPUBuffer* indexBuffer;
     
     /// Material for the mesh (optional).
@@ -177,19 +191,45 @@ class Mesh: Owner, Drawable
     /// Destructor.
     ~this()
     {
+        release();
+    }
+    
+    ///
+    void release()
+    {
         if (positionBuffer)
+        {
             gpu.releaseBuffer(positionBuffer);
+            positionBuffer = null;
+        }
+        
         if (texcoordBuffer)
+        {
             gpu.releaseBuffer(texcoordBuffer);
+            texcoordBuffer = null;
+        }
+        
         if (normalBuffer)
+        {
             gpu.releaseBuffer(normalBuffer);
+            normalBuffer = null;
+        }
+        
+        if (tangentBuffer)
+        {
+            gpu.releaseBuffer(tangentBuffer);
+            tangentBuffer = null;
+        }
+        
         if (indexBuffer)
+        {
             gpu.releaseBuffer(indexBuffer);
+            indexBuffer = null;
+        }
     }
     
     /**
      * Calculates the axis-aligned bounding box for the mesh.
-     *
      * Sets the `boundingBox` member based on the furthest vertex extents.
      */
     void calcBoundingBox()
@@ -232,7 +272,15 @@ class Mesh: Owner, Drawable
         tri.t1[0] = texcoords[f[0]];
         tri.t1[1] = texcoords[f[1]];
         tri.t1[2] = texcoords[f[2]];
+        if (tangents.length)
+        {
+            tri.tg[0] = tangents[f[0]];
+            tri.tg[1] = tangents[f[1]];
+            tri.tg[2] = tangents[f[2]];
+        }
         tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
+        if (material)
+            tri.materialIndex = material.id;
         return tri;
     }
     
@@ -259,6 +307,7 @@ class Mesh: Owner, Drawable
         return result;
     }
     
+    /// Returns total number of triangles in the mesh.
     size_t numTriangles()
     {
         return indices.length;
@@ -267,14 +316,16 @@ class Mesh: Owner, Drawable
     /**
      * Generates smooth vertex normals for the mesh based on triangle geometry.
      * Overwrites the `normals` array with computed normals.
+     * `normals` array should already be allocated.
      */
-    void generateNormals()
+    bool generateNormals()
     {
-        if (normals.length == 0)
-            return;
-    
+        if (vertices.length == 0 ||
+            normals.length == 0)
+            return false;
+        
         normals[] = Vector3f(0.0f, 0.0f, 0.0f);
-    
+        
         foreach(i, ref f; indices)
         {
             Vector3f v0 = vertices[f[0]];
@@ -292,6 +343,89 @@ class Mesh: Owner, Drawable
         {
             normals[i] = n.normalized;
         }
+        
+        return true;
+    }
+    
+    /**
+     * Generates tangent vectors for the mesh based on existing vertex data.
+     * Requires vertices, normals, texcoords, and indices.
+     * Overwrites the `tangents` array with computed tangents (alighed with U-direction in texture space).
+     * `tangents` array should already be allocated.
+     */
+    bool generateTangents()
+    {
+        if (indices.length == 0 ||
+            vertices.length == 0 ||
+            normals.length == 0 ||
+            tangents.length == 0 ||
+            texcoords.length == 0)
+            return false;
+        
+        // Temporary array for accumulating tangents and bitangents
+        Vector3f[] tSum = New!(Vector3f[])(vertices.length);
+        Vector3f[] bSum = New!(Vector3f[])(vertices.length);
+        tSum[] = Vector3f(0.0f, 0.0f, 0.0f);
+        bSum[] = Vector3f(0.0f, 0.0f, 0.0f);
+        
+        foreach(ref tri; indices)
+        {
+            uint i0 = tri[0];
+            uint i1 = tri[1];
+            uint i2 = tri[2];
+            
+            Vector3f v0 = vertices[i0];
+            Vector3f v1 = vertices[i1];
+            Vector3f v2 = vertices[i2];
+            
+            Vector2f uv0 = texcoords[i0];
+            Vector2f uv1 = texcoords[i1];
+            Vector2f uv2 = texcoords[i2];
+            
+            Vector3f edge1 = v1 - v0;
+            Vector3f edge2 = v2 - v0;
+            
+            Vector2f duv1 = uv1 - uv0;
+            Vector2f duv2 = uv2 - uv0;
+            
+            float det = (duv1.x * duv2.y) - (duv2.x * duv1.y);
+            
+            // Skip degenerate UV triangles
+            if (abs(det) < 1e-8f)
+                continue;
+            
+            float f = 1.0f / det;
+            
+            Vector3f tangent   = (edge1 * duv2.y - edge2 * duv1.y) * f;
+            Vector3f bitangent = (edge2 * duv1.x - edge1 * duv2.x) * f;
+            
+            tSum[i0] += tangent;
+            tSum[i1] += tangent;
+            tSum[i2] += tangent;
+            
+            bSum[i0] += bitangent;
+            bSum[i1] += bitangent;
+            bSum[i2] += bitangent;
+        }
+        
+        foreach(i, ref tangent; tangents)
+        {
+            Vector3f n = normals[i];
+            Vector3f t = tSum[i];
+            Vector3f b = bSum[i];
+
+            // Gram-Schmidt orthogonalization
+            t = (t - n * dot(n, t)).normalized;
+            
+            float handedness = dot(cross(n, t), b) < 0.0f ? -1.0f : 1.0f;
+            
+            tangent = Vector4f(t.x, t.y, t.z, handedness);
+        }
+        
+        Delete(tSum);
+        Delete(bSum);
+        
+        return true;
     }
     
     /**
@@ -305,18 +439,37 @@ class Mesh: Owner, Drawable
         
         if (!dataReady)
             return;
-
-        positionBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector3f.sizeof * vertices.length);
-        normalBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector3f.sizeof * vertices.length);
-        texcoordBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector2f.sizeof * vertices.length);
-        indexBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_INDEX, uint.sizeof * 3 * indices.length);
-
-        gpu.uploadBuffer(vertices.ptr, Vector3f.sizeof * vertices.length, positionBuffer);
-        gpu.uploadBuffer(normals.ptr, Vector3f.sizeof * vertices.length, normalBuffer);
-        gpu.uploadBuffer(texcoords.ptr, Vector2f.sizeof * vertices.length, texcoordBuffer);
-        gpu.uploadBuffer(indices.ptr, uint.sizeof * 3 * indices.length, indexBuffer);
         
-        canRender = true;
+        if (vertices.length)
+        {
+            positionBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector3f.sizeof * vertices.length);
+            gpu.uploadBuffer(vertices.ptr, Vector3f.sizeof * vertices.length, positionBuffer);
+        }
+        
+        if (normals.length)
+        {
+            normalBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector3f.sizeof * normals.length);
+            gpu.uploadBuffer(normals.ptr, Vector3f.sizeof * vertices.length, normalBuffer);
+        }
+        
+        if (tangents.length)
+        {
+            tangentBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector4f.sizeof * tangents.length);
+            gpu.uploadBuffer(tangents.ptr, Vector4f.sizeof * tangents.length, tangentBuffer);
+        }
+        
+        if (texcoords.length)
+        {
+            texcoordBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_VERTEX, Vector2f.sizeof * texcoords.length);
+            gpu.uploadBuffer(texcoords.ptr, Vector2f.sizeof * vertices.length, texcoordBuffer);
+        }
+        
+        if (indices.length)
+        {
+            indexBuffer = gpu.createBuffer(SDL_GPU_BUFFERUSAGE_INDEX, uint.sizeof * 3 * indices.length);
+            gpu.uploadBuffer(indices.ptr, uint.sizeof * 3 * indices.length, indexBuffer);
+            canRender = true;
+        }
     }
     
     /**
@@ -335,6 +488,8 @@ class Mesh: Owner, Drawable
                 pass.bindVertexBuffer(VertexAttribute.Position, positionBuffer);
                 pass.bindVertexBuffer(VertexAttribute.Texcoord, texcoordBuffer);
                 pass.bindVertexBuffer(VertexAttribute.Normal, normalBuffer);
+                if (tangentBuffer && state.bindTangents)
+                    pass.bindVertexBuffer(VertexAttribute.Tangent, tangentBuffer);
                 pass.bindIndexBuffer(indexBuffer, SDL_GPU_INDEXELEMENTSIZE_32BIT);
                 
                 if (facegroups.length)

@@ -224,6 +224,12 @@ class DagonAsset: Asset, TriangleSet
     Array!TextureAsset textureAssets;
     
     ///
+    bool generateNormals = false;
+    
+    ///
+    bool generateTangents = false;
+    
+    ///
     bool compressTextures = false;
     
     ///
@@ -466,6 +472,12 @@ class DagonAsset: Asset, TriangleSet
             mesh.prepareBuffers();
             mesh.calcBoundingBox();
             
+            if (generateNormals)
+                mesh.generateNormals();
+            
+            if (generateTangents)
+                mesh.generateTangents();
+            
             this.meshes.append(mesh);
         }
         
@@ -566,17 +578,20 @@ class DagonAsset: Asset, TriangleSet
                 Mesh mesh = cast(Mesh)entity.drawable;
                 if (mesh)
                 {
-                    /*
+                    Matrix4x4f mat = entity.modelMatrix;
+                    
                     if (mesh.facegroups.length)
                     {
                         foreach(ref fg; mesh.facegroups)
                         {
+                            int materialIndex = -1;
+                            if (fg.material)
+                                materialIndex = fg.material.id;
+                            
                             auto fgTriangles = mesh.indices[fg.firstTriangle..fg.firstTriangle+fg.numTriangles];
-                            foreach(i, ref triIndices; fgTriangles)
+                            foreach(i, ref f; fgTriangles)
                             {
                                 Triangle tri = mesh.getTriangle(i);
-                                
-                                Matrix4x4f mat = entity.modelMatrix;
                                 
                                 tri.v[0] = tri.v[0] * mat;
                                 tri.v[1] = tri.v[1] * mat;
@@ -588,7 +603,7 @@ class DagonAsset: Asset, TriangleSet
                                 
                                 tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
                                 
-                                logInfo(tri.v);
+                                tri.materialIndex = materialIndex;
                                 
                                 result = dg(&tri);
                                 if (result)
@@ -598,9 +613,9 @@ class DagonAsset: Asset, TriangleSet
                     }
                     else
                     {
-                        foreach(Triangle* tri; mesh)
+                        foreach(i, ref f; mesh.indices)
                         {
-                            Matrix4x4f mat = entity.modelMatrix;
+                            Triangle tri = mesh.getTriangle(i);
                             
                             tri.v[0] = tri.v[0] * mat;
                             tri.v[1] = tri.v[1] * mat;
@@ -612,29 +627,10 @@ class DagonAsset: Asset, TriangleSet
                             
                             tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
                             
-                            result = dg(tri);
+                            result = dg(&tri);
                             if (result)
                                 break;
                         }
-                    }
-                    */
-                    
-                    Matrix4x4f mat = entity.modelMatrix;
-                    foreach(i, ref f; mesh.indices)
-                    {
-                        Triangle tri = mesh.getTriangle(i);
-                        
-                        tri.v[0] = tri.v[0] * mat;
-                        tri.v[1] = tri.v[1] * mat;
-                        tri.v[2] = tri.v[2] * mat;
-                        tri.n[0] = mat.rotate(tri.n[0]);
-                        tri.n[1] = mat.rotate(tri.n[1]);
-                        tri.n[2] = mat.rotate(tri.n[2]);
-                        tri.normal = (tri.n[0] + tri.n[1] + tri.n[2]) / 3.0f;
-                        
-                        result = dg(&tri);
-                        if (result)
-                            break;
                     }
                 }
             }
@@ -643,6 +639,7 @@ class DagonAsset: Asset, TriangleSet
         return result;
     }
     
+    /// Returns total number of triangles in the asset.
     size_t numTriangles()
     {
         size_t tris = 0;

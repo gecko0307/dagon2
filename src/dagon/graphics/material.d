@@ -45,16 +45,21 @@ import dlib.image.color;
 
 import dagon.graphics.texture;
 
+///
 enum BlendMode
 {
     Opaque,
     Transparent
 }
 
+///
 class Material: Owner
 {
     /// Material name.
     string name;
+    
+    /// Optional ID (e.g. for physics and trimesh traversal).
+    int id = -1;
     
     /// Base color (albedo) constant.
     Color4f baseColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);

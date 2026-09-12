@@ -109,6 +109,9 @@ struct GraphicsState
     ///
     bool occlusionEnabled = false;
     
+    ///
+    bool bindTangents = false;
+    
     // TODO: other data
     
     void reset()
