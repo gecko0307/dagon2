@@ -25,9 +25,9 @@ There are some disadvantages as well:
 
 Dagon implements the theory described in *Real Shading in Unreal Engine 4* (Karis 2013). It utilizes physically-based GGX/Trowbridge-Reitz model, analogous to Disney Principled BRDF. GGX, in turn, is based on the Cook-Torrance specular model and combines microfacet distribution term, shadowing-masking term, and Fresnel term:
 
-```
-Ls = (D * G * F) / (4 * NV * NL)
-```
+$$
+L_{s} = \frac{FGD}{4(N \cdot L)(N \cdot V)}
+$$
 
 - **D (microfacet distribution)** - describes the statistical distribution of microfacets in the given point on a macrosurface. It measures how many microfacets are aligned facing the half-vector between the light direction and the view vector. Dagon uses the optimized GGX distribution function given in *Microfacet Models for Refraction Through Rough Surfaces* (Walter, Marschner, Li, Torrance, 2007).
 - **G (geometric shadowing-masking)** - describes how much light is blocked by microfacets at the given viewing angle. Masking occurs when a microfacet reflecting light toward the viewer is hidden by neighboring microfacets. Shadowing occurs when a microfacet is blocked from the light source and receives no illumination. Following Karis [2013], Dagon uses Schlick's approximation fitted to Smith shadowing-masking function to reduce computational costs while maintaining visual accuracy, rather than evaluating the full Smith GGX formulation given by Walter et al. [2007]. Disney's roughness remapping is used for analytical light sources [Burley 2012].
@@ -35,9 +35,9 @@ Ls = (D * G * F) / (4 * NV * NL)
 
 For the diffuse part, Dagon uses the simple Lambertian model, with the BRDF normalized by `1/π`. To conserve energy, the diffuse contribution is reduced by the fraction of light reflected by the specular component:
 
-```
-Ld = 1/PI * albedo * NL * (1 – F) * (1 – metallic)
-```
+$$
+L_{d} = \frac{1}{\pi}C_{d}(N \cdot L)(1-F)(1-M)
+$$
 
 ## Image-Based Lighting
 
@@ -65,9 +65,9 @@ In Dagon, ambient occlusion is computed in screen space, by raymarchig the depth
 
 In addition to the usual diffuse occlusion, Dagon supports approximated specular occlusion based on the formula suggested by Lagarde and de Rousiers [2014]:
 
-```
-pow(NV + AO, gloss) – 1 + AO
-```
+$$
+(N \cdot V + AO)^{gloss} - 1 + AO
+$$
 
 ## Multiple Scattering
 

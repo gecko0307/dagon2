@@ -174,22 +174,64 @@ Standard chunk storing a list of meshes.
 ```d
 struct DAFMesh
 {
-    DAFString name; // name
-    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
-    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
-    uint flags; // bit flags
-    uint vertexBuffer; // offset to the start of the vertex buffer (relative to DAFHeader.buffersOffset)
-    uint normalBuffer; // offset to the start of the normal buffer (relative to DAFHeader.buffersOffset)
-    uint texcoordBuffer; // offset to the start of the texture coordinate buffer (relative to DAFHeader.buffersOffset)
-    uint bonesBuffer; // offset of the bone buffer start (relative to DAFHeader.buffersOffset)
-    uint boneWeightsBuffer; // offset of the bone weights buffer start (relative to DAFHeader.buffersOffset)
-    uint numVertices; // number of vertices
-    uint indicesBuffer; // index buffer
-    uint numTrangles; // total number of triangles
-    uint faceGroupBuffer; // offset of the facegroup buffer start (relative to DAFHeader.buffersOffset)
-    uint numFaceGroups; // number of facegroups
-    uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
-    uint userDataSize; // size of the user property buffer, or 0 if the mesh has no properties (in this case, userDataBuffer should also be 0)
+    // name
+    DAFString name;
+    
+    // offset to the start of the class buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint classList;
+    
+    // number of classes.
+    // If 0, then classList must also be 0 and is ignored.
+    uint numClasses;
+    
+    // bit flags
+    uint flags;
+    
+    // offset to the start of the vertex buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint vertexBuffer;
+    
+    // offset to the start of the normal buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint normalBuffer;
+    
+    // offset to the start of the texture coordinate buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint texcoordBuffer;
+    
+    // offset of the bone buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint bonesBuffer;
+    
+    // offset of the bone weights buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint boneWeightsBuffer;
+    
+    // number of vertices
+    uint numVertices;
+    
+    // index buffer
+    uint indicesBuffer;
+    
+    // total number of triangles
+    uint numTrangles;
+    
+    // offset of the facegroup buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint faceGroupBuffer;
+    
+    // number of facegroups
+    uint numFaceGroups;
+    
+    // offset of the user property buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint userDataBuffer;
+    
+    // size of the user property buffer,
+    // or 0 if the mesh has no properties
+    // (in this case, userDataBuffer should also be 0)
+    uint userDataSize;
 }
 ```
 
@@ -247,9 +289,17 @@ A facegroup is a group of triangles sharing a common material (thus, different m
 ```d
 struct DAFFaceGroup
 {
-    int material; // index of the material in the material chunk, or -1 if there is no material (in this case, the engine uses the default material)
-    uint firstTriangle; // offset of the first triangle (relative to DAFMesh.indicesBuffer)
-    uint numTriangles; // number of triangles
+    // index of the material in the material chunk,
+    // or -1 if there is no material
+    // (in this case, the engine uses the default material)
+    int material;
+    
+    // offset of the first triangle
+    // (relative to DAFMesh.indicesBuffer)
+    uint firstTriangle;
+    
+    // number of triangles
+    uint numTriangles;
 }
 ```
 
@@ -267,28 +317,75 @@ enum BlendMode: uint
 struct DAFMaterial
 {
     DAFString name;
-    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
-    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
-    uint flags; // bit flags (reserved)
+    
+    // offset to the start of the class buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint classList;
+    
+    // number of classes.
+    // If 0, then classList must also be 0 and is ignored.
+    uint numClasses;
+    
+    // bit flags (reserved)
+    uint flags;
+    
     float[4] baseColor;
+    
     float roughness;
+    
     float metallic;
+    
     float[4] emissionColor;
+    
     float emissionEnergy;
+    
     float ior;
+    
     float iorLevel;
+    
     float subsurfaceScattering;
+    
     float opacity;
+    
     float alphaClipThreshold;
+    
     uint shadeless;
+    
     BlendMode blendMode;
-    int baseColorTexture; // offset of the base color DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no base color texture
-    int normalTexture; // offset of the normal DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no normal texture
-    int heightTexture; // offset of the height DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no height texture
-    int roughnessMetallicTexture; // offset of the roughness-metallic DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no roughness-metallic texture
-    int emissionTexture; // offset of the emission DAFTexture (relative to DAFMesh.indicesBuffer), or -1 if there is no emission texture
-    uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
-    uint userDataSize; // size of the user property buffer, or 0 if the mesh has no properties (in this case, userDataBuffer should also be 0)
+    
+    // offset of the base color DAFTexture
+    // (relative to DAFMesh.indicesBuffer),
+    // or -1 if there is no base color texture
+    int baseColorTexture;
+    
+    // offset of the normal DAFTexture
+    // (relative to DAFMesh.indicesBuffer),
+    // or -1 if there is no normal texture
+    int normalTexture;
+    
+    // offset of the height DAFTexture
+    // (relative to DAFMesh.indicesBuffer),
+    // or -1 if there is no height texture
+    int heightTexture;
+    
+    // offset of the roughness-metallic DAFTexture
+    // (relative to DAFMesh.indicesBuffer),
+    // or -1 if there is no roughness-metallic texture
+    int roughnessMetallicTexture;
+    
+    // offset of the emission DAFTexture
+    // (relative to DAFMesh.indicesBuffer),
+    // or -1 if there is no emission texture
+    int emissionTexture;
+    
+    // offset of the user property buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint userDataBuffer;
+    
+    // size of the user property buffer,
+    // or 0 if the mesh has no properties
+    // (in this case, userDataBuffer should also be 0)
+    uint userDataSize;
 }
 ```
 
@@ -316,15 +413,34 @@ enum DAFTextureFilter: uint
 struct DAFTexture
 {
     DAFString filename;
-    uint classList; // offset to the start of the class buffer (relative to DAFHeader.buffersOffset)
-    uint numClasses; // number of classes. If 0, then classList must also be 0 and is ignored.
-    uint flags; // bit flags
+    
+    // offset to the start of the class buffer
+    // (relative to DAFHeader.buffersOffset)
+    uint classList;
+    
+    // number of classes.
+    // If 0, then classList must also be 0 and is ignored.
+    uint numClasses;
+    
+    // bit flags
+    uint flags;
+    
     DAFTextureFilter minFilter;
+    
     DAFTextureFilter magFilter;
+    
     DAFTextureFilter mipmapMode;
+    
     DAFTextureSemantic semantic;
-    uint userDataBuffer; // offset of the user property buffer start (relative to DAFHeader.buffersOffset)
-    uint userDataSize; // size of the user property buffer, or 0 if the texture has no properties (in this case, userDataBuffer should also be 0)
+    
+    // offset of the user property buffer start
+    // (relative to DAFHeader.buffersOffset)
+    uint userDataBuffer;
+    
+    // size of the user property buffer,
+    // or 0 if the texture has no properties
+    // (in this case, userDataBuffer should also be 0)
+    uint userDataSize;
 }
 ```
 

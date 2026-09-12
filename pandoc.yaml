@@ -1,6 +1,6 @@
 from: markdown
 to: pdf
-pdf-engine: xelatex # или weasyprint / typst
+pdf-engine: xelatex
 
 input-files:
   - doc/README.md

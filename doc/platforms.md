@@ -26,9 +26,7 @@ Do not delete `data/__internal` folder! It is used to store engine's internal da
 
 Distributing Linux applications has historically been a difficult task. Dagon is specificially designed to develop disto-agnostic, portable applications that do not require installation, so users can simply download a bundle, unpack it to their home folder, and run the executable. The engine is self-contained: Dagon's DUB recipe automatically copies all the necessary shared libraries to the project.
 
-With this in mind, on Linux it is **strongly recommended** to build with `-rpath=$ORIGIN` flag that tells the dynamic linker to look for shared libraries (.so files) relative to the location of the executable. Otherwise the linker will search the libraries in the system, and the user will be required to install them first (or use `LD_LIBRARY_PATH`), which is not convenient.
-
-Add the following to your `dub.json`:
+With this in mind, on Linux it is **strongly recommended** to build with `-rpath=$ORIGIN` flag that tells the dynamic linker to look for shared libraries (.so files) relative to the location of the executable. Otherwise the linker will search the libraries in the system, and the user will be required to install them first (or use `LD_LIBRARY_PATH`), which is not very convenient. Add the following to your `dub.json`:
 
 ```json
 "lflags-linux": ["-rpath=$$ORIGIN"]
@@ -61,7 +59,7 @@ However, this requires a resource file compiler. Much easier way is to use [Elec
 ]
 ```
 
-Note: The above command has been split across multiple lines for readability and fitting to the PDF, but in a real JSON file it should be on one line.
+*Note: The above command has been split across multiple lines for readability and fitting to the PDF, but in a real JSON file it should be on one line.*
 
 An example manifest file:
 

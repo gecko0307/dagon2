@@ -4,12 +4,16 @@
 
 Dagon application is built on several API layers:
 
-- **World** - User-defined game logics. Dagon follows Inversion of Control principle: user logics happen in event handlers that are called automatically by the core framework. The world is managed by the `Game` class.
-- **Application** - Root-level object of the engine. It manages the game window and the main loop, does basic game configuration, loads and initializes shared libraries and performs other low-level tasks.
-- **Game Subsystems** - Built-in managers. These include event manager, renderer, resource cache, shader compiler, scripting engine, physics engine, etc.
+- **World** - User-defined game logics. Dagon follows Inversion of Control principle: user logics happen in event handlers (`World` class methods) that are called automatically by the core framework.
+- **Application**, **BaseGame**, or **Game** - Root-level object of the framework. It manages the game window and the main loop, does basic game configuration, loads and initializes shared libraries and performs other low-level tasks. `Application` is very basic and usually is not used directly; `BaseGame` extends `Application` with world management; `Game` class also provides a 3D renderer.
+- **Game Subsystems** - Built-in managers. These include event manager, inpu manager, renderer, resource cache, shader compiler, scripting engine, physics engine, etc.
 - **Graphics** - Graphical data that include entities, meshes, materials, textures and specialized abstractions (lights, decals, shadow maps). The game creates and configures them to build virtual 3D worlds.
-- **SDL GPU / Vulkan** - GPU abstraction. User code is not required to work with the GPU directly, becase Dagon provides high-level API to create 3D objects, although this is necessary to extend the engine.
-- **SDL** - Low-level multimedia framework that talks to the operating system. This layer abstracts platform-specific details such as window management and input handling.
+- **SDL GPU over Vulkan** - GPU abstraction. User code is not required to work with the GPU directly, becase Dagon provides a high-level API to create 3D objects, although this is necessary to extend the engine.
+- **SDL** - Low-level multimedia framework that talks to the operating system. This layer abstracts platform-specific details such as window management and input handling. SDL is used internally by the most part of the core framework.
+
+Why Dagon is an object-oriented framework and not a library? One reason is because games are complex software; they require special methodology and workarounds to run fast and talk to the operating system efficiently. For example, games generally shouldn't allocate dynamic memory and make system calls during the loop (except in a background thread), thus requiring a specific memory management approach that heavily relies on pre-allocation. To make it work automatically, class ownership paradigm is used. User input and event handling are another tasks that are not so easy to get right without a framework. It's impractical to give users a procedural game engine API, expecting them to understand how to use it correctly.
+
+Dagon, however, follows a sane kind of OOP that doesn't turn code into inheritance hell. Inheritance is 2-3 levels maximum, and the engine relies more on interfaces and composition than on class inheritance.
 
 ## Game and World
 

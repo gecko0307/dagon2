@@ -54,7 +54,8 @@ class MyWorld: World
         audio.play(sound);
     }
     
-    // Post-update is used to ensure all world transformations are valid and ready to feed into the manager
+    // Post-update is used to ensure all world transformations
+    // are valid and ready to feed into the manager
     override void onPostUpdate(Time t)
     {
         audio.update(t);
