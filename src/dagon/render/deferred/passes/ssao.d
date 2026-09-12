@@ -39,6 +39,7 @@ import dagon.core.time;
 import dagon.core.crashhandler;
 import dagon.graphics.state;
 import dagon.graphics.mesh;
+import dagon.graphics.material;
 import dagon.graphics.shapes;
 import dagon.graphics.shader;
 import dagon.render.renderer;
@@ -259,6 +260,11 @@ class SSAOPass: RenderPass
     override void update(Time t)
     {
         ssaoShader.update(t);
+    }
+    
+    override bool shouldRenderMaterial(Material m)
+    {
+        return m.blendMode == BlendMode.Opaque; // && !m.isHair;
     }
     
     override void render(GraphicsState* state)

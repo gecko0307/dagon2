@@ -24,7 +24,7 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module dagon.render.deferred.passes.forward;
+module dagon.render.deferred.passes.hair;
 
 import dlib.core.memory;
 import dlib.core.ownership;
@@ -50,7 +50,7 @@ import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.gparams;
 import dagon.render.postprocessing.context;
 
-struct ForwardShaderVertexUniformBuffer
+struct HairShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f normalMatrix;
@@ -58,7 +58,7 @@ struct ForwardShaderVertexUniformBuffer
     Matrix4x4f prevModelViewMatrix;
 }
 
-struct ForwardShaderFragmentUniformBuffer
+struct HairShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;
     Color4f baseColor;
@@ -70,30 +70,29 @@ struct ForwardShaderFragmentUniformBuffer
     Vector4f resolution;
 }
 
-class ForwardShader: Shader
+class HairShader: Shader
 {
    protected:
-    ForwardShaderVertexUniformBuffer vsUBO;
-    ForwardShaderFragmentUniformBuffer fsUBO;
+    HairShaderVertexUniformBuffer vsUBO;
+    HairShaderFragmentUniformBuffer fsUBO;
     
    public:
-    bool enableGammaCorrection = true;
     
     this(GPU gpu, Owner owner)
     {
         super(gpu, owner);
         
         vertexModule = New!ShaderModule(gpu, this);
-        vertexModule.create("Forward.vert.glsl", "data/__internal/shaders/Forward/Forward.vert.glsl",
+        vertexModule.create("Hair.vert.glsl", "data/__internal/shaders/Hair/Hair.vert.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Vertex);
         
         fragmentModule = New!ShaderModule(gpu, this);
-        fragmentModule.create("Forward.frag.glsl", "data/__internal/shaders/Forward/Forward.frag.glsl",
+        fragmentModule.create("Hair.frag.glsl", "data/__internal/shaders/Hair/Hair.frag.glsl",
             ShaderSourceType.File, ShaderLanguage.GLSL, PipelineStage.Fragment);
         
         if (!vertexModule.valid || !fragmentModule.valid)
         {
-            exitWithError("Failed to create ForwardShader");
+            exitWithError("Failed to create HairShader");
         }
         
         vsUBO.modelViewMatrix = Matrix4x4f.identity;
@@ -168,6 +167,14 @@ class ForwardShader: Shader
             fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
         
         // Set texture present flags and bind assigned textures
+        if (material.baseColorTexture)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasBaseColorTexture;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 0);
+        
         // TODO:
         /*
         if (specularTexture)
@@ -188,12 +195,12 @@ class ForwardShader: Shader
     }
 }
 
-class ForwardPass: RenderPass
+class HairPass: RenderPass
 {
     GPU gpu;
     GBuffer gbuffer;
-    ForwardShader forwardShader;
-    SDL_GPUColorTargetInfo colorTargetInfo;
+    HairShader hairShader;
+    SDL_GPUColorTargetInfo[4] colorTargetInfo;
     SDL_GPUDepthStencilTargetInfo depthTargetInfo;
     
     this(Renderer renderer, GBuffer gbuffer)
@@ -202,15 +209,15 @@ class ForwardPass: RenderPass
         this.gpu = renderer.gpu;
         this.gbuffer = gbuffer;
         
-        forwardShader = New!ForwardShader(gpu, this);
-        shader = forwardShader;
+        hairShader = New!HairShader(gpu, this);
+        shader = hairShader;
         
         SDL_GPUGraphicsPipelineCreateInfo pipelineCreateInfo;
-        pipelineCreateInfo.vertex_shader = forwardShader.vertexModule.shader;
-        pipelineCreateInfo.fragment_shader = forwardShader.fragmentModule.shader;
+        pipelineCreateInfo.vertex_shader = hairShader.vertexModule.shader;
+        pipelineCreateInfo.fragment_shader = hairShader.fragmentModule.shader;
         pipelineCreateInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
         
-        SDL_GPUVertexBufferDescription[3] vbDescriptions;
+        SDL_GPUVertexBufferDescription[4] vbDescriptions;
         
         vbDescriptions[0].slot = 0;
         vbDescriptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
@@ -226,11 +233,16 @@ class ForwardPass: RenderPass
         vbDescriptions[2].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
         vbDescriptions[2].instance_step_rate = 0;
         vbDescriptions[2].pitch = Vector3f.sizeof;
+        
+        vbDescriptions[3].slot = 3;
+        vbDescriptions[3].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+        vbDescriptions[3].instance_step_rate = 0;
+        vbDescriptions[3].pitch = Vector4f.sizeof;
 
         pipelineCreateInfo.vertex_input_state.num_vertex_buffers = vbDescriptions.length;
         pipelineCreateInfo.vertex_input_state.vertex_buffer_descriptions = vbDescriptions.ptr;
         
-        SDL_GPUVertexAttribute[3] vertexAttributes;
+        SDL_GPUVertexAttribute[4] vertexAttributes;
     
         // Position
         vertexAttributes[0].buffer_slot = VertexAttribute.Position;
@@ -250,21 +262,27 @@ class ForwardPass: RenderPass
         vertexAttributes[2].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
         vertexAttributes[2].offset = 0;
         
+        // Tangents
+        vertexAttributes[3].buffer_slot = VertexAttribute.Tangent;
+        vertexAttributes[3].location = VertexAttribute.Tangent;
+        vertexAttributes[3].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4;
+        vertexAttributes[3].offset = 0;
+        
         pipelineCreateInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.length;
         pipelineCreateInfo.vertex_input_state.vertex_attributes = vertexAttributes.ptr;
         
-        SDL_GPUColorTargetDescription colorTargetDescription;
-        colorTargetDescription.format = gbuffer.config.radianceTargetFormat;
-        colorTargetDescription.blend_state.enable_blend = false;
-        colorTargetDescription.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
-        colorTargetDescription.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
-        colorTargetDescription.blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-        colorTargetDescription.blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-        colorTargetDescription.blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
-        colorTargetDescription.blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        SDL_GPUColorTargetDescription[4] colorTargetsDescription;
+        colorTargetsDescription[0].format = gbuffer.config.radianceTargetFormat;
+        colorTargetsDescription[0].blend_state.enable_blend = false;
+        colorTargetsDescription[1].format = gbuffer.config.normalTargetFormat;
+        colorTargetsDescription[1].blend_state.enable_blend = false;
+        colorTargetsDescription[2].format = gbuffer.config.roughnessMetallicTargetFormat;
+        colorTargetsDescription[2].blend_state.enable_blend = false;
+        colorTargetsDescription[3].format = gbuffer.config.velocityTargetFormat;
+        colorTargetsDescription[3].blend_state.enable_blend = false;
         
-        pipelineCreateInfo.target_info.num_color_targets = 1;
-        pipelineCreateInfo.target_info.color_target_descriptions = &colorTargetDescription;
+        pipelineCreateInfo.target_info.num_color_targets = 3;
+        pipelineCreateInfo.target_info.color_target_descriptions = colorTargetsDescription.ptr;
         pipelineCreateInfo.target_info.depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
         pipelineCreateInfo.target_info.has_depth_stencil_target = true;
         
@@ -284,9 +302,21 @@ class ForwardPass: RenderPass
         
         graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu.device, &pipelineCreateInfo);
         
-        colorTargetInfo.clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
-        colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+        colorTargetInfo[0].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[0].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo[0].store_op = SDL_GPU_STOREOP_STORE;
+        
+        colorTargetInfo[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[1].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo[1].store_op = SDL_GPU_STOREOP_STORE;
+        
+        colorTargetInfo[2].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[2].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo[2].store_op = SDL_GPU_STOREOP_STORE;
+        
+        colorTargetInfo[3].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[3].load_op = SDL_GPU_LOADOP_LOAD;
+        colorTargetInfo[3].store_op = SDL_GPU_STOREOP_STORE;
         
         depthTargetInfo.clear_depth = 1.0f;
         depthTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
@@ -299,15 +329,15 @@ class ForwardPass: RenderPass
         depthTargetInfo.layer = 0;
         depthTargetInfo.texture = gbuffer.depthBuffer;
         
-        colorTargetsInfo = &colorTargetInfo;
-        numColorTargets = 1;
+        colorTargetsInfo = colorTargetInfo.ptr;
+        numColorTargets = colorTargetInfo.length;
         depthStencilTargetInfo = &depthTargetInfo;
         enableDepthTarget = true;
     }
     
     override bool shouldRenderMaterial(Material m)
     {
-        return m.blendMode == BlendMode.Transparent && !m.isHair;
+        return m.isHair;
     }
     
     override void render(GraphicsState* state)
@@ -315,10 +345,15 @@ class ForwardPass: RenderPass
         if (state.scene is null)
             return;
         
-        colorTargetInfo.texture = gbuffer.radianceBuffer;
+        colorTargetInfo[0].texture = gbuffer.radianceBuffer;
+        colorTargetInfo[1].texture = gbuffer.normalBuffer;
+        colorTargetInfo[2].texture = gbuffer.roughnessMetallicBuffer;
+        colorTargetInfo[3].texture = gbuffer.velocityBuffer;
         depthTargetInfo.texture = gbuffer.depthBuffer;
         
-        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "FORWARD");
+        state.bindTangents = true;
+        
+        debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "HAIR");
         beginPass();
         
         foreach(entity; state.scene.entities)
@@ -331,12 +366,14 @@ class ForwardPass: RenderPass
                 else
                     state.material = renderer.defaultMaterial;
                 
-                forwardShader.bindParameters(state);
+                hairShader.bindParameters(state);
                 entity.drawable.render(state);
             }
         }
         
         endPass();
         debug SDL_PopGPUDebugGroup(renderer.commandBuffer);
+        
+        state.bindTangents = false;
     }
 }

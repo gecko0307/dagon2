@@ -253,6 +253,8 @@ class DagonAsset: Asset, TriangleSet
         {
             if (mesh.facegroups.length)
                 Delete(mesh.facegroups);
+            if (mesh.tangents.length)
+                Delete(mesh.tangents);
         }
         
         meshes.free();
@@ -468,15 +470,18 @@ class DagonAsset: Asset, TriangleSet
                 mesh.facegroups[i] = FaceGroup(fg.firstTriangle, fg.numTriangles, material, true);
             }
             
-            mesh.dataReady = true;
-            mesh.prepareBuffers();
-            mesh.calcBoundingBox();
-            
             if (generateNormals)
                 mesh.generateNormals();
             
             if (generateTangents)
+            {
+                mesh.tangents = New!(Vector4f[])(mesh.vertices.length);
                 mesh.generateTangents();
+            }
+            
+            mesh.dataReady = true;
+            mesh.prepareBuffers();
+            mesh.calcBoundingBox();
             
             this.meshes.append(mesh);
         }

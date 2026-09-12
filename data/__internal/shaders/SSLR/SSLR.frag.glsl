@@ -324,6 +324,13 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
+    
+    if (shadingMask == 0.0)
+    {
+        outColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
     vec4 color = texture(colorBuffer, texCoords);
     vec3 baseColor = toLinear(color.rgb);
     

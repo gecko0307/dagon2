@@ -124,6 +124,9 @@ class Material: Owner
      */
     Texture skyboxTexture;
     
+    /// Mip level to use for skyboxTexture.
+    float skyboxTextureMipLevel = 0.0f;
+    
     /// Surface opacity factor. Base color alpha is multiplied by this value to enable animated fade effects.
     float opacity = 1.0f;
     
@@ -137,8 +140,8 @@ class Material: Owner
      */
     bool shadeless = false;
     
-    /// Mip level to use for skyboxTexture.
-    float skyboxTextureMipLevel = 0.0f;
+    /// Hair material uses a separate anistropic BRDF (Kajiya-Kay).
+    bool isHair = false;
     
     /**
      * Determines if the renderer should write eye space Z coordinate of the surface to the depth buffer.

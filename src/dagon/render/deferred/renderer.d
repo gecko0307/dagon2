@@ -50,6 +50,7 @@ import dagon.render.deferred.passes.sunlight;
 import dagon.render.deferred.passes.lightvolume;
 import dagon.render.deferred.passes.fog;
 import dagon.render.deferred.passes.forward;
+import dagon.render.deferred.passes.hair;
 import dagon.render.postprocessing.context;
 import dagon.render.postprocessing.passes.reflection;
 import dagon.render.postprocessing.passes.sslr;
@@ -82,8 +83,9 @@ class DeferredRenderer: Renderer
     SelfIlluminationPass selfIlluminationPass;
     SunLightPass sunLightPass;
     LightVolumePass lightVolumePass;
-    FogPass fogPass;
     ForwardPass forwardPass;
+    HairPass hairPass;
+    FogPass fogPass;
     BufferCopyPass bufferCopyPass;
     SSLRPass sslrPass;
     ReflectionPass reflectionPass;
@@ -125,9 +127,10 @@ class DeferredRenderer: Renderer
         selfIlluminationPass = New!SelfIlluminationPass(this, gbuffer);
         sunLightPass = New!SunLightPass(this, gbuffer);
         lightVolumePass = New!LightVolumePass(this, gbuffer);
-        fogPass = New!FogPass(this, gbuffer);
         // TODO: particles pass
         forwardPass = New!ForwardPass(this, gbuffer);
+        hairPass = New!HairPass(this, gbuffer);
+        fogPass = New!FogPass(this, gbuffer);
         bufferCopyPass = New!BufferCopyPass(this, ppContext);
         sslrPass = New!SSLRPass(this, ppContext);
         reflectionPass = New!ReflectionPass(this, ppContext);

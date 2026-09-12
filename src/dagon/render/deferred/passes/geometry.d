@@ -313,7 +313,7 @@ class GeometryPass: RenderPass
     
     override bool shouldRenderMaterial(Material m)
     {
-        return m.blendMode == BlendMode.Opaque;
+        return m.blendMode == BlendMode.Opaque && !m.isHair;
     }
     
     override void render(GraphicsState* state)
