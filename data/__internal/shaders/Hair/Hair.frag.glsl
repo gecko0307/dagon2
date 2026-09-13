@@ -193,10 +193,10 @@ void main()
     prevPosScreen.y = 1.0 - prevPosScreen.y; // Adapt to Vulkan
     vec2 velocity = posScreen - prevPosScreen;
     
-    outRadiance = vec4(radiance, alpha);
-    outNormal = vec4(wN * 0.5 + 0.5, alpha); // fit the normal to 0..1
-    outRoughnessMetallic = vec4(0.0, 1.0, 0.0, alpha);
-    outVelocity = vec4(velocity, matMotionBlurMask, alpha);
+    outRadiance = vec4(radiance, 1.0);
+    outNormal = vec4(wN * 0.5 + 0.5, 1.0); // fit the normal to 0..1
+    outRoughnessMetallic = vec4(0.0, 1.0, 0.0, 0.0);
+    outVelocity = vec4(velocity, matMotionBlurMask, 0.0);
     
     gl_FragDepth = gl_FragCoord.z;
 }
