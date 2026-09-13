@@ -32,7 +32,7 @@ Not all features supported by each format are available to Dagon applications. D
 
 - Animated images. Frame-by-frame animation is usually implemented by offsetting texture coordinates on a spritesheet which is independent of image format
 - Multi-layered images. XCF layers are merged into one image
-- In-memory indexed formats and other non-standard color systems. All images are converted to RGBA8, or use some other GPU-native pixel format
+- In-memory indexed formats and other non-standard color systems. All images are internally converted to RGBA8, or use some other GPU-native pixel format
 - Vector images. SVG images are rasterized
 - Embedded color profiles. All data is treated as either sRGB or linear, depending on usage context
 - EXIF metadata.
@@ -70,7 +70,7 @@ High dynamic range (HDR) textures store color data with a wider numeric range pe
 - RGBA16F – half-precision floating point, 16 bits per channel
 - RGBA32F – full-precision floating point, 32 bits per channel
 
-HDR textures are mainly used for storing linear color buffers, lightmaps, environment maps, and intermediate render targets in post-processing pipelines. Dagon supports loading such textures from RGBE/Radiance HDR, DDS and KTX/KTX2 files.
+HDR textures are mainly used for storing linear color buffers, lightmaps, environment maps, and other high-precision data. Dagon supports loading such textures from RGBE/Radiance HDR, DDS and KTX/KTX2 files.
 
 ## Texture Compression
 
@@ -94,6 +94,15 @@ Dagon allows to compress textures to BC1, BC3, BC4, BC5 and BC7 on the fly. To d
 asset.conversionOptions.compressionFormat =
     TextureCompressionFormat.BC3;
 ```
+
+Recommended formats for runtime compression are the following:
+
+- Color textures without alpha channel - BC1
+- Color textures with alpha channel - BC3 or BC7
+- Normal maps - uncompressed
+- Height maps - BC4
+- Roughness-metallic maps - BC1 (not compatible with BC5 because data is stored in green and blue channels)
+- Emission maps - BC1
 
 ## Container Formats: DDS vs KTX
 

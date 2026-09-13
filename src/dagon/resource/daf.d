@@ -202,7 +202,11 @@ struct DAFTexture
 
 //version = DAFDebug;
 
-///
+/**
+ * Asset that decodes DAF files (Dagon Asset Format).
+ * This is a very machine-friendly binary format that stores
+ * meshes, materials, and entities.
+ */
 class DagonAsset: Asset, TriangleSet
 {
     ///
