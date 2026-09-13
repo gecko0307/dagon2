@@ -1054,6 +1054,10 @@ class Application: EventListener, Updateable
 
             logInfo("Wintab API present: ", wintabPresent);
         }
+        else
+        {
+            loadedWintabSupport = WintabSupport.noLibrary;
+        }
         
         // Init SDL
         sdlSubsystems =

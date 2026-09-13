@@ -646,6 +646,9 @@ class DagonAsset: Asset, TriangleSet
                     }
                 }
             }
+            
+            if (result)
+                break;
         }
         
         return result;

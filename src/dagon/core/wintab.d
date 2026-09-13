@@ -37,6 +37,13 @@ DEALINGS IN THE SOFTWARE.
  */
 module dagon.core.wintab;
 
+enum WintabSupport
+{
+    noLibrary,
+    badLibrary,
+    v140
+}
+
 version(Windows):
 
 import core.sys.windows.windows;
@@ -512,13 +519,6 @@ __gshared
     da_WTMgrClose WTMgrClose;
     da_WTMgrDefContext WTMgrDefContext;
     da_WTMgrDefContextEx WTMgrDefContextEx;
-}
-
-enum WintabSupport
-{
-    noLibrary,
-    badLibrary,
-    v140
 }
 
 private
