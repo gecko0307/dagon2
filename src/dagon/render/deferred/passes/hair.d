@@ -121,7 +121,7 @@ class HairShader: Shader
         auto entity = state.entity;
         auto material = state.material;
         auto sun = scene.sun;
-        auto specularTexture = scene.specularTexture;
+        auto irradianceTexture = scene.irradianceTexture;
         
         vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
@@ -195,20 +195,16 @@ class HairShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
         
-        // TODO:
-        /*
-        if (specularTexture)
+        // Diffuse envmap
+        if (irradianceTexture)
         {
-            pass.bindTexture(PipelineStage.Fragment, 1, specularTexture);
-            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasSpecularTexture;
-            fsUBO.flags[GeomFlags.MaxSpecularMipLevel] = specularTexture.mipLevels - 1;
+            pass.bindTexture(PipelineStage.Fragment, 2, irradianceTexture);
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasAmbientTexture;
         }
         else
         {
-            pass.bindDefaultTexture(PipelineStage.Fragment, 1);
-            fsUBO.flags[GeomFlags.MaxSpecularMipLevel] = 0;
+            pass.bindDefaultTexture(PipelineStage.Fragment, 2);
         }
-        */
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

@@ -29,6 +29,7 @@ float bayer4x4(vec2 screenPos)
 
 layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 layout(set = 2, binding = 1) uniform sampler2D normalTexture;
+layout(set = 2, binding = 2) uniform samplerCube irradianceTexture;
 
 layout(set = 3, binding = 0) uniform UniformBuffer
 {
@@ -93,6 +94,7 @@ layout(location = 7) in vec4 prevPosition;
 #define hasHeightTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_HEIGHT_TEXTURE) != 0)
 #define hasEmissionTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_EMISSION_TEXTURE) != 0)
 #define hasSkyboxTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SKYBOX_TEXTURE) != 0)
+#define hasAmbientTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_AMBIENT_TEXTURE) != 0)
 #define hasSSSTexture ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_SSS_TEXTURE) != 0)
 #define isShaded ((ubo.flags[FLAGS_ENTITY] & ENTFLAG_SHADED) != 0)
 #define isStatic ((ubo.flags[FLAGS_ENTITY] & ENTFLAG_STATIC) != 0)
@@ -112,6 +114,14 @@ const float tanNormalYFactor = -1.0;
 
 const float parallaxScale = 0.03;
 const float parallaxBias = -0.01;
+
+vec3 sampleIrradiance(in vec3 wN)
+{
+    if (hasAmbientTexture)
+        return texture(irradianceTexture, wN).rgb * ubo.ambientColor.a;
+    else
+        return ubo.ambientColor.rgb * ubo.ambientColor.a;
+}
 
 void main()
 {
@@ -155,13 +165,18 @@ void main()
             discard;
     }
     
+    vec3 hairColor = toLinear(baseColor.rgb);
+    
+    // Ambient lighting
+    vec3 radiance = hairColor * sampleIrradiance(wN);
+    
     // TODO: make uniform
     const vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    const vec3 L = ubo.lighVector.xyz;
     const float lightEnergy = 1.0f;
     const float specularPower = 128.0;
     
     // Kajiya-Kay anisotropic BRDF
+    const vec3 L = ubo.lighVector.xyz;
     float TL = abs(dot(T, L));
     float TE = abs(dot(T, E));
     float sinTL = sqrt(max(0.0, 1.0 - TL * TL));
@@ -169,9 +184,7 @@ void main()
     float diffuse = sinTL;
     float specAngle = TL * TE + sinTL * sinTE;
     float specular = pow(max(0.0, specAngle), specularPower);
-    //vec3 radiance = lightColor * (toLinear(baseColor.rgb) * diffuse + specular) * lightEnergy;
-    vec3 hairColor = toLinear(baseColor.rgb);
-    vec3 radiance = lightColor * (hairColor * diffuse + specular) * lightEnergy;
+    radiance += lightColor * (hairColor * diffuse + specular) * lightEnergy;
     
     // Screen-space velocity
     vec2 posScreen = (currPosition.xy / currPosition.w) * 0.5 + 0.5;

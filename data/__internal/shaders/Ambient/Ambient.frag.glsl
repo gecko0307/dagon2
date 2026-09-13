@@ -98,11 +98,7 @@ void main()
     vec4 color = texture(colorBuffer, texCoords);
     
     if (shadingMask == 0.0)
-    {
-        outRadiance = color;
-        outDiffuse = color;
-        return;
-    }
+        discard;
     
     vec3 baseColor = toLinear(color.rgb);
     float diffuseOcclusion = 1.0;

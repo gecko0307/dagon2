@@ -278,9 +278,9 @@ class AmbientPass: RenderPass
             return;
         
         colorTargetInfo[0].texture = gbuffer.radianceBuffer;
-        colorTargetInfo[0].clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[0].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         colorTargetInfo[1].texture = gbuffer.diffuseBuffer;
-        colorTargetInfo[1].clear_color =  SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetInfo[1].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         debug SDL_PushGPUDebugGroup(renderer.commandBuffer, "AMBIENT");
         beginPass();

@@ -296,7 +296,7 @@ class GBuffer: Owner
         textureCreateInfo.format = config.radianceTargetFormat;
         radianceBuffer = SDL_CreateGPUTexture(gpu.device, &textureCreateInfo);
         colorTargetsInfo[5].texture = radianceBuffer;
-        //colorTargetsInfo[5].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
+        colorTargetsInfo[5].clear_color = SDL_FColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         // Occlusion
         textureCreateInfo.format = SDL_GPU_TEXTUREFORMAT_R16_FLOAT;
@@ -383,7 +383,7 @@ class GBuffer: Owner
             colorBufferClearColor.r,
             colorBufferClearColor.g,
             colorBufferClearColor.b, 0.0f);
-        colorTargetsInfo[5].clear_color = SDL_FColor(
+        colorTargetsInfo[3].clear_color = SDL_FColor(
             colorBufferClearColor.r,
             colorBufferClearColor.g,
             colorBufferClearColor.b, 1.0f);
