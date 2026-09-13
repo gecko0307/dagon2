@@ -241,7 +241,7 @@ abstract class RenderPass: Owner
     
     /**
      * Binds a uniform structure to the specified pipeline stage and binding slot.
-     * The struct must be std140 compliant.
+     * The structure must be std140 compliant.
      *
      * Params:
      *   stage = The pipeline stage (Vertex or Fragment).
@@ -254,6 +254,23 @@ abstract class RenderPass: Owner
             SDL_PushGPUVertexUniformData(renderer.commandBuffer, binding, uniformStruct, cast(uint)T.sizeof);
         else if (stage == PipelineStage.Fragment)
             SDL_PushGPUFragmentUniformData(renderer.commandBuffer, binding, uniformStruct, cast(uint)T.sizeof);
+    }
+    
+    /**
+     * Binds an array of uniform structures to the specified pipeline stage and binding slot.
+     * Each structure must be std140 compliant and properly padded to round up to a 16-byte multiple.
+     *
+     * Params:
+     *   stage = The pipeline stage (Vertex or Fragment).
+     *   binding = The binding slot index.
+     *   uniformStructs = Array of structures.
+     */
+    void bindUniformBuffer(T)(PipelineStage stage, uint binding, T[] uniformStructs) if (isStd140Compliant!T)
+    {
+        if (stage == PipelineStage.Vertex)
+            SDL_PushGPUVertexUniformData(renderer.commandBuffer, binding, uniformStructs.ptr, cast(uint)(T.sizeof * uniformStructs.length));
+        else if (stage == PipelineStage.Fragment)
+            SDL_PushGPUFragmentUniformData(renderer.commandBuffer, binding, uniformStructs.ptr, cast(uint)(T.sizeof * uniformStructs.length));
     }
     
     /**

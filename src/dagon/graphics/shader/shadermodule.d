@@ -188,8 +188,11 @@ bool isFieldsOffsetAligned(T, alias numBytes)()
     else return false;
 }
 
-/// Alias for checking std140 alignment compliance for a struct.
-alias isStd140Compliant(T) = isFieldsOffsetAligned!(T, 16);
+/// Compile-time condition for checking std140 alignment compliance for a struct.
+template isStd140Compliant(T)
+{
+    enum isStd140Compliant = (T.sizeof % 16 == 0) && isFieldsOffsetAligned!(T, 16);
+}
 
 /**
  * A shader module is an independent unit of compilation for a certain stage of the programmable pipeline.

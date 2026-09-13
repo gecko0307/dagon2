@@ -76,6 +76,9 @@ class Scene: Owner, GsObject
     /// Scene's directional light.
     Light sun;
     
+    /// Scene's spatial lights used for forward shading.
+    LightSet lights;
+    
     /**
      * Ambient color is used as a fallback
      * when specularTexture/irradianceTexture are not specified.
@@ -131,6 +134,8 @@ class Scene: Owner, GsObject
         
         sun = addLight(LightType.Sun);
         sun.shadowEnabled = true;
+        
+        lights = New!LightSet(this);
     }
     
     /// Destructor.

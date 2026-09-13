@@ -589,6 +589,8 @@ class DagonAsset: Asset, TriangleSet
                 {
                     Matrix4x4f mat = entity.modelMatrix;
                     
+                    /*
+                    // TODO
                     if (mesh.facegroups.length)
                     {
                         foreach(ref fg; mesh.facegroups)
@@ -621,6 +623,7 @@ class DagonAsset: Asset, TriangleSet
                         }
                     }
                     else
+                    */
                     {
                         foreach(i, ref f; mesh.indices)
                         {
