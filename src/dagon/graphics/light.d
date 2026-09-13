@@ -45,7 +45,9 @@ import dlib.core.ownership;
 import dlib.math.vector;
 import dlib.math.matrix;
 import dlib.math.transformation;
+import dlib.geometry.aabb;
 import dlib.image.color;
+import dlib.container.array;
 
 import dagon.core.gpu;
 import dagon.core.time;
@@ -176,5 +178,75 @@ class Light: Entity
         volumeTransformation =
             translationMatrix(positionWorld) *
             scaleMatrix(Vector3f(volumeRadius, volumeRadius, volumeRadius));
+    }
+}
+
+///
+struct LightZone
+{
+    Light[4] lights;
+    AABB boundingBox;
+}
+
+///
+class LightSet: Owner
+{
+    ///
+    Array!LightZone zones;
+    
+    ///
+    this(Owner owner)
+    {
+        super(owner);
+    }
+    
+    ///
+    ~this()
+    {
+        zones.free();
+    }
+    
+    ///
+    void addZone(AABB aabb, Light light1, Light light2, Light light3, Light light4)
+    {
+        LightZone zone;
+        zone.boundingBox = aabb;
+        zone.lights[0] = light1;
+        zone.lights[1] = light2;
+        zone.lights[2] = light3;
+        zone.lights[3] = light4;
+        zones.append(zone);
+    }
+    
+    ///
+    bool getZoneForPoint(Vector3f p, LightZone* outZone)
+    {
+        bool res = false;
+        foreach(zone; zones)
+        {
+            if (zone.boundingBox.containsPoint(p))
+            {
+                *outZone = zone;
+                res = true;
+                break;
+            }
+        }
+        return res;
+    }
+    
+    ///
+    bool getZoneForAABB(AABB aabb, LightZone* outZone)
+    {
+        bool res = false;
+        foreach(zone; zones)
+        {
+            if (zone.boundingBox.intersectsAABB(aabb))
+            {
+                *outZone = zone;
+                res = true;
+                break;
+            }
+        }
+        return res;
     }
 }

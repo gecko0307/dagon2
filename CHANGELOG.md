@@ -33,6 +33,7 @@ Dagon 2.0.1 - TBD
   - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
   - Temporal SSAO support
   - Fog effect is now applied in a separate pass. Ground fog support
+  - Hair rendering using Kajiya-Kay anisotropic BRDF
   - Shadeless materials in deferred pipeline
 - **Graphics components**
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
