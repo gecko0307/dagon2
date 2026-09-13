@@ -95,7 +95,16 @@ void main()
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
     
-    vec3 baseColor = toLinear(texture(colorBuffer, texCoords).rgb);
+    vec4 color = texture(colorBuffer, texCoords);
+    
+    if (shadingMask == 0.0)
+    {
+        outRadiance = color;
+        outDiffuse = color;
+        return;
+    }
+    
+    vec3 baseColor = toLinear(color.rgb);
     float diffuseOcclusion = 1.0;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_OCCLUSION_BUFFER) != 0)
         diffuseOcclusion = texture(occlusionBuffer, texCoords).r;

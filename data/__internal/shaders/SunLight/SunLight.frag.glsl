@@ -160,6 +160,8 @@ void main()
     float roughness = roughnessMetallic.g;
     float metallic = roughnessMetallic.b;
     float shadingMask = roughnessMetallic.a;
+    if (shadingMask == 0.0)
+        discard;
     vec4 color = texture(colorBuffer, texCoords);
     vec3 baseColor = toLinear(color.rgb);
     float sss = color.a;

@@ -47,6 +47,8 @@ void main()
     float fogEnergy = ubo.fogParams.w;
     
     float shadingMask = texture(roughnessMetallicBuffer, texCoords).a;
+    if (shadingMask == 0)
+        discard;
     
     float groundFog = 1.0 - clamp(worldPos.y, 0.0, 1.0);
     groundFog = groundFog * groundFog;
