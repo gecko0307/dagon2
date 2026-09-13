@@ -159,6 +159,8 @@ class GeometryShader: Shader
             fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
         
         // Set texture present flags and bind assigned textures
+        
+        // Base color
         if (material.baseColorTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
@@ -167,6 +169,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 0);
         
+        // Normal
         if (material.normalTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 1, material.normalTexture);
@@ -175,6 +178,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 1);
         
+        // Height
         if (material.heightTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 2, material.heightTexture);
@@ -183,6 +187,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 2);
         
+        // Roughness/metallic
         if (material.roughnessMetallicTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 3, material.roughnessMetallicTexture);
@@ -191,6 +196,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 3);
         
+        // Emission
         if (material.emissionTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 4, material.emissionTexture);
@@ -199,6 +205,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 4);
         
+        // Skybox
         if (material.skyboxTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 5, material.skyboxTexture);
@@ -207,6 +214,7 @@ class GeometryShader: Shader
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 5);
         
+        // SSS
         if (material.subsurfaceScatteringTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 6, material.subsurfaceScatteringTexture);

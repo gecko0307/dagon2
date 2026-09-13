@@ -384,6 +384,10 @@ class GBuffer: Owner
             colorBufferClearColor.r,
             colorBufferClearColor.g,
             colorBufferClearColor.b, 0.0f);
+        colorTargetsInfo[5].clear_color = SDL_FColor(
+            colorBufferClearColor.r,
+            colorBufferClearColor.g,
+            colorBufferClearColor.b, 1.0f);
     }
     
     void swapOcclusionBuffers()

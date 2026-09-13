@@ -68,6 +68,7 @@ struct HairShaderFragmentUniformBuffer
     Color4f ambientColor;
     uint[4] flags;
     Vector4f resolution;
+    Vector4f lighVector;
 }
 
 class HairShader: Shader
@@ -109,6 +110,8 @@ class HairShader: Shader
         fsUBO.ambientColor = Color4f(0.0f, 0.0f, 0.0f, 0.0f);
         
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        
+        fsUBO.lighVector = Vector4f(0.0f, 0.0f, 1.0f, 0.0f);
     }
     
     override void bindParameters(GraphicsState* state)
@@ -117,6 +120,7 @@ class HairShader: Shader
         auto scene = state.scene;
         auto entity = state.entity;
         auto material = state.material;
+        auto sun = scene.sun;
         auto specularTexture = scene.specularTexture;
         
         vsUBO.modelViewMatrix = pass.view.viewMatrix * entity.modelMatrix;
@@ -150,6 +154,11 @@ class HairShader: Shader
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         
+        //
+        fsUBO.lighVector = Vector4f(sun.directionWorld);
+        fsUBO.lighVector.w = 0.0;
+        fsUBO.lighVector = fsUBO.lighVector * pass.view.viewMatrix;
+        
         // Clear all bit flags
         fsUBO.flags[GeomFlags.Texture] = 0;
         fsUBO.flags[GeomFlags.Output] = 0;
@@ -167,6 +176,8 @@ class HairShader: Shader
             fsUBO.flags[GeomFlags.Entity] |= GeomEntityFlags.Shaded;
         
         // Set texture present flags and bind assigned textures
+        
+        // Base color
         if (material.baseColorTexture)
         {
             pass.bindTexture(PipelineStage.Fragment, 0, material.baseColorTexture);
@@ -174,6 +185,15 @@ class HairShader: Shader
         }
         else
             pass.bindDefaultTexture(PipelineStage.Fragment, 0);
+        
+        // Normal
+        if (material.normalTexture)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 1, material.normalTexture);
+            fsUBO.flags[GeomFlags.Texture] |= GeomTextureFlags.HasNormalTexture;
+        }
+        else
+            pass.bindDefaultTexture(PipelineStage.Fragment, 1);
         
         // TODO:
         /*
@@ -273,13 +293,22 @@ class HairPass: RenderPass
         
         SDL_GPUColorTargetDescription[4] colorTargetsDescription;
         colorTargetsDescription[0].format = gbuffer.config.radianceTargetFormat;
-        colorTargetsDescription[0].blend_state.enable_blend = false;
         colorTargetsDescription[1].format = gbuffer.config.normalTargetFormat;
-        colorTargetsDescription[1].blend_state.enable_blend = false;
         colorTargetsDescription[2].format = gbuffer.config.roughnessMetallicTargetFormat;
-        colorTargetsDescription[2].blend_state.enable_blend = false;
         colorTargetsDescription[3].format = gbuffer.config.velocityTargetFormat;
-        colorTargetsDescription[3].blend_state.enable_blend = false;
+        
+        foreach(ref d; colorTargetsDescription)
+        {
+            d.blend_state.enable_blend = false;
+            /*
+            d.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+            d.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+            d.blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            d.blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            d.blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+            d.blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+            */
+        }
         
         pipelineCreateInfo.target_info.num_color_targets = 3;
         pipelineCreateInfo.target_info.color_target_descriptions = colorTargetsDescription.ptr;
@@ -287,7 +316,7 @@ class HairPass: RenderPass
         pipelineCreateInfo.target_info.has_depth_stencil_target = true;
         
         pipelineCreateInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_BACK;
+        pipelineCreateInfo.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
         pipelineCreateInfo.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
         pipelineCreateInfo.rasterizer_state.depth_bias_constant_factor = 0.0f;
         pipelineCreateInfo.rasterizer_state.depth_bias_clamp = 0.0f;
