@@ -1,6 +1,6 @@
 # Dagon 2
 
-Dagon is a 3D game framework for D language. It features deferred HDR renderer, PBR materials, an event manager, scene manager, asset manager, and entity-component model. This guide will help you get started with building games and interactive applications using Dagon.
+[Dagon](https://github.com/gecko0307/dagon2) is a 3D game framework for D language. It features deferred HDR renderer, PBR materials, an event manager, scene manager, asset manager, and entity-component model. This guide will help you get started with building games and interactive applications using Dagon.
 
 ## The Name
 
@@ -67,14 +67,14 @@ Dagon is organized around several packages:
 
 - [Configuration](configuration.md) - Tweaking the engine in run time
 - [Localization](localization.md) - Translating in-game text to user's language
-
-### Advanced topics:
-
-- [Rendering](rendering.md) - Render pipeline overview
-- [Shaders](shaders.md) - GPU programming
 - [Asset Format](asset-format.md) - Dagon's native 3D model format, DAF
 - [Camera Controller](camera-controller.md) - Blending camera transformations
 - [Physics](physics.md) - Jolt physics integration
 - [Audio](audio.md) - Audio playback using SoLoud
 - [Video](video.md) - Video playback using libVLC
+
+### Advanced topics:
+
+- [Rendering](rendering.md) - Render pipeline overview
+- [Shaders](shaders.md) - GPU programming
 - [Scripting](gscript/README.md) - Scripting with GScript3 language.
