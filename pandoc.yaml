@@ -12,6 +12,7 @@ input-files:
   - doc/resources.md
   - doc/textures.md
   - doc/event-system.md
+  - doc/input-manager.md
   - doc/configuration.md
   - doc/localization.md
   - doc/rendering.md
@@ -22,6 +23,9 @@ input-files:
   - doc/audio.md
   - doc/video.md
 
+resource-path:
+  - "doc"
+
 output-file: dagon2-guidebook.pdf
 
 toc: true
@@ -31,6 +35,7 @@ number-sections: false
 file-scope: true
 
 filters:
+  - wrap-code.lua
   - links-filter.lua
 
 variables:

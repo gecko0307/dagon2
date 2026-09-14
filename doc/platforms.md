@@ -43,15 +43,14 @@ Same as on Linux, all the DLLs necessary to run the application are provided aut
 To add an application icon, version information and a manifest, a resource file (`*.res`) can be used:
 
 ```json
-"sourceFiles-windows" : ["app.res"]
+"sourceFiles-windows": ["app.res"]
 ```
 
 However, this requires a resource file compiler. Much easier way is to use [Electron's rcedit](https://github.com/electron/rcedit). Assuming you have rcedit executable (`rcedit-x64.exe`) in your project's directory, you can call it after each build using `postBuildCommands`:
 
 ```json
 "postBuildCommands-windows-x86_64": [
-    "$PACKAGE_DIR\\rcedit-x64
-        \"app.exe\"
+    "$PACKAGE_DIR\\rcedit-x64\"app.exe\"
         --set-file-version \"1.0.0.0\"
         --set-product-version \"1.0.0\"
         --set-icon \"$PACKAGE_DIR\\icon.ico\"

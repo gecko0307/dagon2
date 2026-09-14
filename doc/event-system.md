@@ -60,6 +60,10 @@ Gamepad is a joystick that SDL recognizes as a "standard gamepad" (XInput, DualS
 
 Dagon supports up to 4 simultaneously plugged gamepads/joysticks.
 
+Here's the cheatsheet for gamepad buttons/axes, using Xbox-style gamepad as a reference:
+
+![](images/gamepad.jpg)
+
 ## Custom Hardware Events
 
 If your application needs compatibility with a non-standard input device unsupported by SDL, you can write your own driver for it that integrates with the event system. It should be a class that implements the `InputDevice` interface:

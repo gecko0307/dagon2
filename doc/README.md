@@ -61,6 +61,7 @@ Dagon is organized around several packages:
 - [Resources](resources.md) - Loading and managing game assets
 - [Textures](textures.md) - Using external images
 - [Event System](event-system.md) - Handling user input and other OS events in the game
+- [Input manager](input-manager.md) - Abstractized user input
 
 ### Intermediate topics:
 

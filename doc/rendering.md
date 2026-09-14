@@ -29,9 +29,11 @@ $$
 L_{s} = \frac{FGD}{4(N \cdot L)(N \cdot V)}
 $$
 
-- **D (microfacet distribution)** - describes the statistical distribution of microfacets in the given point on a macrosurface. It measures how many microfacets are aligned facing the half-vector between the light direction and the view vector. Dagon uses the optimized GGX distribution function given in *Microfacet Models for Refraction Through Rough Surfaces* (Walter, Marschner, Li, Torrance, 2007).
-- **G (geometric shadowing-masking)** - describes how much light is blocked by microfacets at the given viewing angle. Masking occurs when a microfacet reflecting light toward the viewer is hidden by neighboring microfacets. Shadowing occurs when a microfacet is blocked from the light source and receives no illumination. Following Karis [2013], Dagon uses Schlick's approximation fitted to Smith shadowing-masking function to reduce computational costs while maintaining visual accuracy, rather than evaluating the full Smith GGX formulation given by Walter et al. [2007]. Disney's roughness remapping is used for analytical light sources [Burley 2012].
-- **F (Fresnel)** - describes the fraction of reflected light depending on the viewing angle. Dagon uses the roughness-dependent modification of Schlick's Fresnel approximation proposed by Sébastien Lagarde [2011]. It doesn't use the spherical Gaussian approximation employed by UE4.
+**D (microfacet distribution)** - describes the statistical distribution of microfacets in the given point on a macrosurface. It measures how many microfacets are aligned facing the half-vector between the light direction and the view vector. Dagon uses the optimized GGX distribution function given in *Microfacet Models for Refraction Through Rough Surfaces* (Walter, Marschner, Li, Torrance, 2007).
+
+**G (geometric shadowing-masking)** - describes how much light is blocked by microfacets at the given viewing angle. Masking occurs when a microfacet reflecting light toward the viewer is hidden by neighboring microfacets. Shadowing occurs when a microfacet is blocked from the light source and receives no illumination. Following Karis [2013], Dagon uses Schlick's approximation fitted to Smith shadowing-masking function to reduce computational costs while maintaining visual accuracy, rather than evaluating the full Smith GGX formulation given by Walter et al. [2007]. Disney's roughness remapping is used for analytical light sources [Burley 2012].
+
+**F (Fresnel)** - describes the fraction of reflected light depending on the viewing angle. Dagon uses the roughness-dependent modification of Schlick's Fresnel approximation proposed by Sébastien Lagarde [2011]. It doesn't use the spherical Gaussian approximation employed by UE4.
 
 For the diffuse part, Dagon uses the simple Lambertian model, with the BRDF normalized by `1/π`. To conserve energy, the diffuse contribution is reduced by the fraction of light reflected by the specular component:
 
