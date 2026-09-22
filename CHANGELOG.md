@@ -6,7 +6,7 @@ Dagon 2.0.1 - TBD
   - Window minimize/restore events
   - Nanosecond-precision timer
   - CPU-friendly frame scheduler
-  - Mailbox Vsync support, significantly reducing input lag (`vsync: 2` in settings.conf)
+  - Mailbox Vsync support, significantly reducing input lag (`vsync: Mailbox` in settings.conf)
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Configuration DSL got a major update. Added referencing support (any property can be reused like a variable) and string interpolation (`"${propName}"`). Platform-specific property postfixes (`something.windows` or `something.linux`) are now first-class feature, supported universally and transparently for all properties. No need to manually check them anymore
   - Predefined symbolic constants for numeric config properties. `log.level` config property is now a number
@@ -27,16 +27,17 @@ Dagon 2.0.1 - TBD
   - Renderer now leverages SDL GPU, targeting Vulkan
   - Improvements and optimizations in almost every stage of the renderer. Many new features such as irradiance mapping, multiple scattering, specular occlusion, and adjustable IOR. Normals are now stored in world space to achieve frame coherence and mitigate R10G10B10A2 rounding errors. All stochastic techniques now use permuted congruential generator as a hash function
   - Renderer quality profiles support: `LowQuality`, `HighQuality`, `UltraQuality`
-  - Stochastic screen-space reflections (SSSR) support
-  - HDR (scRGB) output support
+  - Physically-based stochastic screen-space reflections (SSSR)
+  - HDR (scRGB) output
   - The renderer now uses separate irradiance cubemap
   - BRDF LUT is now generated at runtime instead of loading from `data/__internal`
-  - Temporal SSAO support
+  - Temporal SSAO
   - Fog effect is now applied in a separate pass. Ground fog support
   - Hair rendering using Kajiya-Kay anisotropic BRDF
   - Shadeless materials in deferred pipeline
 - **Graphics components**
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
+  - Mesh tangents generation
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
   - `Environment` class is gone, all environment properties are now part of the `Scene` class
   - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh

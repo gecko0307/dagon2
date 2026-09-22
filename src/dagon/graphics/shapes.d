@@ -482,3 +482,5 @@ class ShapeNormQuad: Owner, Drawable
         pass.drawIndexedPrimitives(cast(uint)indices.length * 3, 1, 0, 0, 0);
     }
 }
+
+// TODO: port other shapes from Dagon 1.x

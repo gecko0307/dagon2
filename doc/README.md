@@ -1,6 +1,6 @@
 # Dagon 2
 
-[Dagon](https://github.com/gecko0307/dagon2) is a 3D game framework for D language. It features deferred HDR renderer, PBR materials, an event manager, scene manager, asset manager, and entity-component model. This guide will help you get started with building games and interactive applications using Dagon.
+[Dagon](https://github.com/gecko0307/dagon2) is a powerful 3D game framework for [D language](https://dlang.org/). It features deferred HDR renderer, PBR materials, an event manager, scene manager, asset manager, and entity-component model. This guide will help you get started with building games and interactive applications using Dagon.
 
 ## The Name
 

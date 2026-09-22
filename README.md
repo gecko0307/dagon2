@@ -26,7 +26,7 @@ New features and major changes from Dagon 0.x/1.x:
   - Window minimize/restore events
   - Nanosecond-precision timer
   - CPU-friendly frame scheduler
-  - Mailbox Vsync support, significantly reducing input lag
+  - Mailbox Vsync support, significantly reducing input lag (`vsync: Mailbox` in settings.conf)
   - HiDPI logic is now handled partly by the engine itself due to API changes in SDL3
   - Configuration DSL got a major update. Added referencing support (any property can be reused like a variable) and string interpolation (`"${propName}"`). Platform-specific property postfixes (`something.windows` or `something.linux`) are now first-class feature, supported universally and transparently for all properties. No need to manually check them anymore
   - Predefined symbolic constants for numeric config properties. `log.level` config property is now a number
@@ -57,6 +57,7 @@ New features and major changes from Dagon 0.x/1.x:
   - Shadeless materials in deferred pipeline
 - **Graphics components**
   - Shader workflow is now based on GLSL 4.60 and includes built-in GLSL to SPIR-V compiler. SPIR-V modules are cached to disk for reuse
+  - Mesh tangents generation
   - Semantic of `Scene` and `World` classes is changed. `Scene` is now just a container for Entities and other graphical data; for user input and game logics `World` should be used
   - `Environment` class is gone, all environment properties are now part of the `Scene` class
   - Better handling of transparent objects. Transparent and opaque meshes are now differentiated per-material, not per-entity. This simplifies asset import and allows mixing transparent and opaque face groups in the same mesh
@@ -74,9 +75,15 @@ New features and major changes from Dagon 0.x/1.x:
 - **Scripting**
   - Built-in [GScript3](https://github.com/gecko0307/gscript3) virtual machine and scripting API.
 - **Extensions**
-  - `dagon2:imgui` - now provides a built-in UI boilerplate class
-  - `dagon2:audio` - underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends
+  - `dagon2:imgui`
+    - ImGui integration now provides a built-in UI boilerplate class
+  - `dagon2:audio`
+    - Underlying sound engine (SoLoud) is updated with SDL3 and DirectSound backends.
+  - `dagon2:video`
+    - `Video` class now works as a render task
   - `dagon:openvr` is not available anymore because interop between SDL GPU and OpenVR is not possible; SDL deliberately abstracts and hides the underlying native graphics API handles. OpenXR support is planned for the long term, but will not happen until SDL 3.6.0.
+- **Misc**
+  - Dagon now uses dlib 1.7.1.
 
 System Requirements
 -------------------
