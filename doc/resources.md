@@ -6,7 +6,7 @@ Resources, also known as assets, are the data loaded by the game in run time fro
 
 Loading assets from disk and decoding them are huge performance bottlenecks, and the overhead of decoding different asset formats vary widely. Some formats are very GPU-friendly and can be used directly, with little to no pre-processing, but some are rather quirky to load. Dagon hides almost all complexity of the asset pipeline under the hood, providing great support for many kinds of asset formats. It also allows for efficient transcoding and caching to reduce subsequent loading times.
 
-Assets can be loaded directly, one by one, or in batch using the asset manager that allows to load them asynchronously (see below).
+Assets can be loaded imperatively, one by one, or declaratively, in batch (see below).
 
 ## Shader Modules
 
@@ -42,7 +42,7 @@ vertexModule.create(
 
 ## Textures
 
-Textures are loaded using `World.loadTexture` method:
+Textures are loaded using `World.assetManager.loadTexture` method:
 
 ```d
 TextureAsset loadTexture(
@@ -67,7 +67,7 @@ TextureCreationOptions creationOptions = {
     samplerCreateInfo: null
 };
 
-TextureAsset aTexture = loadTexture(
+TextureAsset aTexture = assetManager.loadTexture(
     "assets/my_texture.png",
     &conversionOptions,
     &creationOptions);
@@ -85,8 +85,32 @@ gpu.textureCache.path: "${appDataPath}/data/texture_cache";
 
 TODO
 
-## Asset Manager
+## Asynchronous Loading
 
 Asset manager allows the game to prepare all assets in advance and load them in batch. This is useful if loading takes time, and you want to render something on the screen during the process. Asynchronous loading implemented in the `AssetManager` class makes that possible, by doing all the work in a background thread. Main thread keeps running, allowing your game to do anything while assets are loaded.
 
-TODO
+When using asynchronous loading, to execute initialization in a correct order, override `beforeLoad`, `onLoad` and `afterLoad` handlers of the `World` class:
+
+```d
+class MyWorld: World
+{
+    DagonAsset aScene;
+    
+    override void beforeLoad()
+    {
+        aScene = assetManager.create!DagonAsset("data/scene.daf");
+        aScene.cache = true;
+        aScene.compressTextures = true;
+    }
+    
+    override void onLoad(Time t, LoadingStatus status)
+    {
+        //
+    }
+    
+    override void afterLoad()
+    {
+        // Now aScene can be used
+    }
+}
+```

@@ -5,6 +5,7 @@ pdf-engine: xelatex
 input-files:
   - doc/README.md
   - doc/features.md
+  - doc/changes.md
   - doc/platforms.md
   - doc/basics.md
   - doc/math.md
