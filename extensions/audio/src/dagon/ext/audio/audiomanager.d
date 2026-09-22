@@ -51,6 +51,7 @@ import soloud;
 import dagon.ext.audio.soundcomponent;
 import dagon.ext.audio.playlist;
 
+///
 enum AudioBackend
 {
     Auto = Soloud.AUTO, // 0
@@ -74,6 +75,7 @@ enum AudioBackend
     DirectSound = Soloud.DIRECTSOUND // 18
 }
 
+///
 enum AttenuationModel
 {
     NoAttenuation = 0,
@@ -82,12 +84,14 @@ enum AttenuationModel
     ExponentialDistance = 3
 };
 
+///
 enum SoundClass: uint
 {
     SFX = 0,
     Music = 1
 }
 
+///
 struct SoundClassOptions
 {
     float volume;
@@ -96,40 +100,84 @@ struct SoundClassOptions
 
 class AudioManager: EventListener
 {
+    protected string configFilename = "audio.conf";
+    
+    ///
     Application application;
+    
+    ///
     Configuration config;
+    
+    ///
     VirtualFileSystem vfs;
     
+    ///
     SLSupport loadedSLSupport;
+    
+    ///
     bool soloudPresent = true;
+    
+    ///
     uint soloudVersion;
     
+    ///
     bool enabled = true;
     
+    ///
     Soloud audio;
+    
+    ///
     AudioBackend backend;
+    
+    ///
     String backendName;
+    
+    ///
     uint channels;
+    
+    ///
     uint sampleRate;
+    
+    ///
     uint bufferSize;
     
+    ///
     float masterVolume = 1.0f;
-    float masterVolumeCoef = 0.0f; // start with zero, gradually increment to 1.0f
-    float masterFadeInDuration = 0.25f; // in seconds
+    
+    ///
+    protected float masterVolumeCoef = 0.0f;
+    
+    ///
+    float masterFadeInDuration = 0.25f;
+    
+    ///
     SoundClassOptions[32] options;
     
+    ///
     float masterMinDistance = 0.0f;
+    
+    ///
     float masterMaxDistance = 100.0f;
+    
+    ///
     AttenuationModel masterAttenuationModel = AttenuationModel.LinearDistance;
+    
+    ///
     float masterAttenuationRolloffFactor = 1.0f;
+    
+    ///
     float masterDopplerFactor = 1.0f;
     
+    ///
     Entity listener;
     
+    ///
     PlaylistPlayer activePlaylistPlayer;
     
+    ///
     bool multimediaKeysEnabled = true;
     
+    ///
     this(Application application)
     {
         super(application.eventManager, application);
@@ -140,12 +188,25 @@ class AudioManager: EventListener
         
         // Define basic config constants
         this.config.props.set(DPropType.String, "auto", "auto");
-        
-        // TODO: define backend constants
+        this.config.props.set(DPropType.String, "SDL1", "SDL1");
+        this.config.props.set(DPropType.String, "SDL2", "SDL2");
+        this.config.props.set(DPropType.String, "SDL3", "SDL3");
+        this.config.props.set(DPropType.String, "PortAudio", "PortAudio");
+        this.config.props.set(DPropType.String, "WinMM", "WinMM");
+        this.config.props.set(DPropType.String, "XAudio2", "XAudio2");
+        this.config.props.set(DPropType.String, "WASAPI", "WASAPI");
+        this.config.props.set(DPropType.String, "DirectSound", "DirectSound");
+        this.config.props.set(DPropType.String, "ALSA", "ALSA");
+        this.config.props.set(DPropType.String, "JACK", "JACK");
+        this.config.props.set(DPropType.String, "OSS", "OSS");
+        this.config.props.set(DPropType.String, "OpenAL", "OpenAL");
+        this.config.props.set(DPropType.String, "MiniAudio", "MiniAudio");
+        this.config.props.set(DPropType.String, "NoSound", "NoSound");
+        this.config.props.set(DPropType.String, "NullDriver", "NullDriver");
         
         foreach(fs; vfs.mounted)
         {
-            config.fromFile(fs, "audio.conf");
+            config.fromFile(fs, configFilename);
         }
         
         loadedSLSupport = loadSoloud();
@@ -201,9 +262,6 @@ class AudioManager: EventListener
                 case "JACK": backend = AudioBackend.JACK; break;
                 case "OSS": backend = AudioBackend.OSS; break;
                 case "OpenAL": backend = AudioBackend.OpenAL; break;
-                case "CoreAudio": backend = AudioBackend.CoreAudio; break;
-                case "OpenSLES": backend = AudioBackend.OpenSLES; break;
-                case "VitaHomebrew": backend = AudioBackend.VitaHomebrew; break;
                 case "MiniAudio": backend = AudioBackend.MiniAudio; break;
                 case "NoSound": backend = AudioBackend.NoSound; break;
                 case "NullDriver": backend = AudioBackend.NullDriver; break;
@@ -284,6 +342,7 @@ class AudioManager: EventListener
             multimediaKeysEnabled = cast(bool)config.props["multimediaKeysEnabled"].toUInt;
     }
     
+    ///
     ~this()
     {
         if (soloudPresent)
@@ -295,6 +354,7 @@ class AudioManager: EventListener
         backendName.free();
     }
     
+    ///
     void logErrorCode(string filename, int code)
     {
         String errMsg = String(audio.getErrorString(code));
@@ -302,21 +362,25 @@ class AudioManager: EventListener
         errMsg.free();
     }
     
+    ///
     void setVolume(SoundClass soundClass, float volume)
     {
         options[soundClass].volume = volume;
     }
     
+    ///
     void setSFXVolume(float volume)
     {
         options[SoundClass.SFX].volume = volume;
     }
     
+    ///
     void setMusicVolume(float volume)
     {
         options[SoundClass.Music].volume = volume;
     }
     
+    ///
     Wav createSound(short[] buffer, size_t len, float sampleRate, uint numChannels)
     {
         Wav sound = Wav.create();
@@ -324,6 +388,7 @@ class AudioManager: EventListener
         return sound;
     }
     
+    ///
     Wav loadSound(string filename)
     {
         Wav sound = Wav.create();
@@ -338,6 +403,7 @@ class AudioManager: EventListener
         return sound;
     }
     
+    ///
     bool loadMusic(ref WavStream wavStream, string filename)
     {
         InputStream istrm = vfs.openForInput(filename);
@@ -351,6 +417,7 @@ class AudioManager: EventListener
         return result == 0;
     }
     
+    ///
     WavStream loadMusic(string filename)
     {
         WavStream wavStream = WavStream.create();
@@ -358,6 +425,7 @@ class AudioManager: EventListener
         return wavStream;
     }
     
+    ///
     bool streamMusic(ref WavStream wavStream, string filename)
     {
         String filenameCStr = String(filename);
@@ -368,6 +436,7 @@ class AudioManager: EventListener
         return result == 0;
     }
     
+    ///
     WavStream streamMusic(string filename)
     {
         WavStream wavStream = WavStream.create();
@@ -375,6 +444,7 @@ class AudioManager: EventListener
         return wavStream;
     }
     
+    ///
     bool loadTrackerMusic(ref Openmpt openmpt, string filename)
     {
         InputStream istrm = vfs.openForInput(filename);
@@ -388,6 +458,7 @@ class AudioManager: EventListener
         return result == 0;
     }
     
+    ///
     Openmpt loadTrackerMusic(string filename)
     {
         Openmpt openmpt = Openmpt.create();
@@ -395,11 +466,13 @@ class AudioManager: EventListener
         return openmpt;
     }
     
+    ///
     SoundComponent addSoundTo(Entity entity)
     {
         return New!SoundComponent(eventManager, this, entity);
     }
     
+    ///
     PlaylistPlayer addPlaylistPlayer()
     {
         PlaylistPlayer p = New!PlaylistPlayer(this, this);
@@ -407,6 +480,7 @@ class AudioManager: EventListener
         return p;
     }
     
+    ///
     int play(SoloudObject sound, uint soundClass, bool looping = false)
     {
         if (!enabled)
@@ -417,6 +491,7 @@ class AudioManager: EventListener
         return voice;
     }
     
+    ///
     int playAtPosition(SoloudObject sound, uint soundClass, Vector3f position, bool looping = false)
     {
         if (!enabled)
@@ -431,68 +506,80 @@ class AudioManager: EventListener
         return voice;
     }
     
+    ///
     int play(SoloudObject sound, bool looping = false)
     {
         return play(sound, SoundClass.SFX, looping);
     }
     
+    ///
     int playAtPosition(SoloudObject sound, Vector3f position, bool looping = false)
     {
         return playAtPosition(sound, SoundClass.SFX, position, looping);
     }
     
+    ///
     int playMusic(SoloudObject sound, bool looping = false)
     {
         return play(sound, SoundClass.Music, looping);
     }
     
+    ///
     int playMusicAtPosition(SoloudObject sound, Vector3f position, bool looping = false)
     {
         return playAtPosition(sound, SoundClass.Music, position, looping);
     }
     
+    ///
     void stopAll()
     {
         if (enabled)
             audio.stopAll();
     }
     
+    ///
     void stop(int voice)
     {
         if (enabled)
             audio.stop(voice);
     }
     
+    ///
     void pauseAll()
     {
         if (enabled)
             audio.setPauseAll(true);
     }
     
+    ///
     void pause(int voice)
     {
         if (enabled)
             audio.setPause(voice, true);
     }
     
+    ///
     void resumeAll()
     {
         if (enabled)
             audio.setPauseAll(false);
     }
     
+    ///
     void resume(int voice)
     {
         if (enabled)
             audio.setPause(voice, false);
     }
     
+    ///
     void togglePause(int voice)
     {
         if (enabled)
             audio.setPause(voice, !audio.getPause(voice));
     }
     
+    ///
     bool isPlaying(int voice)
     {
         if (enabled)
@@ -501,26 +588,31 @@ class AudioManager: EventListener
             return false;
     }
     
+    ///
     void setVolume(int voice, float volume)
     {
         audio.setVolume(voice, volume);
     }
     
+    ///
     void setPlaySpeed(int voice, float speed)
     {
         audio.setRelativePlaySpeed(voice, speed);
     }
     
+    ///
     void setMinMaxDistance(int voice, float minDistance, float maxDistance)
     {
         audio.set3dSourceMinMaxDistance(voice, minDistance, maxDistance);
     }
     
+    ///
     void setAttenuation(int voice, AttenuationModel attenuationModel, float attenuationRolloffFactor)
     {
         audio.set3dSourceAttenuation(voice, attenuationModel, attenuationRolloffFactor);
     }
     
+    ///
     void update(Time time)
     {
         processEvents();
@@ -550,6 +642,7 @@ class AudioManager: EventListener
             activePlaylistPlayer.update();
     }
     
+    ///
     override void onKeyDown(int key)
     {
         if (activePlaylistPlayer && multimediaKeysEnabled)
