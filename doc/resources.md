@@ -105,12 +105,14 @@ class MyWorld: World
     
     override void onLoad(Time t, LoadingStatus status)
     {
-        //
+        // This is like onUpdate, but called while assets are loaded
     }
     
     override void afterLoad()
     {
         // Now aScene can be used
+        Entity eSceneRoot = aScene.rootEntity;
+        scene.useEntity(eSceneRoot, true);
     }
 }
 ```
