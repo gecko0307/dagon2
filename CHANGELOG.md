@@ -65,6 +65,20 @@ Dagon 2.0.1 - TBD
 - **Misc**
   - Dagon now uses dlib 1.7.1.
 
+Dagon 1.7.0 - TBD
+-----------------
+- **Misc**
+  - Dagon now uses dlib 1.8.1.
+
+Dagon 1.6.2 - 20 Sep, 2026
+--------------------------
+- **Core**
+  - Fix use after free error for logging at controller release
+- **Assets**
+  - BC5 texture compression support
+- **Misc**
+  - Some Linux shared libraries are patched with rpath=$ORIGIN where necessary for portability.
+
 Dagon 1.6.1 - 19 Aug, 2026
 --------------------------
 - **Core**
