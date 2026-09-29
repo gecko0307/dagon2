@@ -84,10 +84,10 @@ void main()
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
     vec3 wN = normalize(texture(normalBuffer, texCoords).rgb * 2.0 - 1.0);
-    vec3 wE = normalize(mat3(ubo.invViewMatrix) * eyePos);
-    vec3 wR = reflect(wE, wN);
+    vec3 wE = -normalize(mat3(ubo.invViewMatrix) * eyePos);
+    vec3 wR = reflect(-wE, wN);
     
-    float NE = clamp(dot(wN, -wE), 0.0, 1.0);
+    float NE = clamp(dot(wN, wE), 0.0, 1.0);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, texCoords);
     float f0_scalar = roughnessMetallic.r;
