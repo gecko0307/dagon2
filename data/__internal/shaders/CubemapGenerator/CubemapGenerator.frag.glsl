@@ -11,7 +11,7 @@ vec2 envMapEquirect(vec3 dir)
 }
 
 layout(set = 2, binding = 0) uniform sampler2D envmap;
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 pixelToWorldMatrix;
 } ubo;

@@ -57,11 +57,13 @@ import dagon.render.renderer;
 import dagon.render.pass;
 
 /// Uniform buffer object for BRDF LUT vertex shader stage.
+@Std140Guaranteed
 struct BRDFLUTShaderVertexUniformBuffer
 {
 }
 
 /// Uniform buffer object for BRDF LUT fragment shader stage.
+@Std140Guaranteed
 struct BRDFLUTShaderFragmentUniformBuffer
 {
     /// Vector that stores output resolution in pixels in its x, y components.

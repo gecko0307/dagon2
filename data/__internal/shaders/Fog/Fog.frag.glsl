@@ -20,7 +20,7 @@ vec3 toLinear(vec3 v)
 layout(set = 2, binding = 0) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 1) uniform sampler2D roughnessMetallicBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 invViewMatrix;
     mat4 invProjectionMatrix;

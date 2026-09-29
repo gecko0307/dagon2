@@ -31,7 +31,7 @@ layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 layout(set = 2, binding = 1) uniform sampler2D normalTexture;
 layout(set = 2, binding = 2) uniform samplerCube irradianceTexture;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 invViewMatrix;
     vec4 baseColor;

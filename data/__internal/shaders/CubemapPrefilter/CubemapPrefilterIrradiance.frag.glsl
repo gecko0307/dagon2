@@ -47,7 +47,7 @@ vec3 tangentToWorld(const vec3 v, const vec3 N, const vec3 S, const vec3 T)
 }
 
 layout(set = 2, binding = 0) uniform samplerCube inputCubemap;
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
     uvec4 iparams;

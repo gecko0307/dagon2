@@ -95,11 +95,13 @@ struct AgXLookPreset
     }
 }
 
+@Std140Guaranteed
 struct TonemappingShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct TonemappingShaderFragmentUniformBuffer
 {
     uint[4] flags;

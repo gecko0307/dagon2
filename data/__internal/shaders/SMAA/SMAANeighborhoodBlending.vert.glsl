@@ -14,7 +14,7 @@ layout(location = 1) in vec2 va_texcoords;
 layout(location = 0) out vec2 texCoords;
 layout(location = 1) out vec4 offset[2];
 
-layout(set = 1, binding = 0) uniform UniformBuffer
+layout(std140, set = 1, binding = 0) uniform UniformBuffer
 {
     vec4 resolution; // [1.0 / viewWidth, 1.0 / viewHeight, viewWidth, viewHeight]
 } ubo;

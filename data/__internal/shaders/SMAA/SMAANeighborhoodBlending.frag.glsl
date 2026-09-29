@@ -11,7 +11,7 @@
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D blendingWeightsBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution; // [1.0 / viewWidth, 1.0 / viewHeight, viewWidth, viewHeight]
 } ubo;

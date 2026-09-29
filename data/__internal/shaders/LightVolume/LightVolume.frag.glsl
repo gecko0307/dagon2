@@ -65,7 +65,7 @@ layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;

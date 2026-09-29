@@ -29,7 +29,7 @@ layout(location = 2) in vec4 offset[3];
 
 layout(location = 0) out vec4 outWeights;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution; // [1.0 / viewWidth, 1.0 / viewHeight, viewWidth, viewHeight]
 } ubo;

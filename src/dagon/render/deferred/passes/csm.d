@@ -51,12 +51,14 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.gparams;
 
+@Std140Guaranteed
 struct CSMShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
     Matrix4x4f projectionMatrix;
 }
 
+@Std140Guaranteed
 struct CSMShaderFragmentUniformBuffer
 {
     Color4f baseColor;

@@ -7,7 +7,7 @@ layout(location = 2) in vec3 va_normal;
 layout(location = 0) out vec3 eyePosition;
 layout(location = 1) out vec2 texCoords;
 
-layout(set = 1, binding = 0) uniform UniformBuffer
+layout(std140, set = 1, binding = 0) uniform UniformBuffer
 {
     mat4 modelViewMatrix;
     mat4 normalMatrix;

@@ -4,7 +4,7 @@ layout(location = 0) in vec2 va_Pos;
 layout(location = 1) in vec2 va_TexCoord;
 layout(location = 2) in vec4 va_Color;
 
-layout(set = 1, binding = 0) uniform UBO
+layout(std140, set = 1, binding = 0) uniform UBO
 {
     vec4 position;
     vec4 scaling;

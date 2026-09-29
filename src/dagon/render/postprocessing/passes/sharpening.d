@@ -46,11 +46,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct SharpeningShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct SharpeningShaderFragmentUniformBuffer
 {
     Vector4f viewSize;

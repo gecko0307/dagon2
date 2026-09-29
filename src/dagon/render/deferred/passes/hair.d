@@ -50,6 +50,7 @@ import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.gparams;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct HairShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
@@ -58,6 +59,7 @@ struct HairShaderVertexUniformBuffer
     Matrix4x4f prevModelViewMatrix;
 }
 
+@Std140Guaranteed
 struct HairShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;

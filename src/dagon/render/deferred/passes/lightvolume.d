@@ -48,6 +48,7 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct LightVolumeShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
@@ -55,6 +56,7 @@ struct LightVolumeShaderVertexUniformBuffer
     Matrix4x4f projectionMatrix;
 }
 
+@Std140Guaranteed
 struct LightVolumeShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

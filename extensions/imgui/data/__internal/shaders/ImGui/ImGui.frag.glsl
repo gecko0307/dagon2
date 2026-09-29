@@ -3,10 +3,10 @@ layout(location = 0) out vec4 fColor;
 
 layout(set = 2, binding = 0) uniform sampler2D sTexture;
 
-layout(location = 0) in struct
+layout(std140, location = 0) in struct
 {
     vec4 color;
-    vec2 uv;
+    vec4 uv;
 } In;
 
 void main()

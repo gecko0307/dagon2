@@ -4,7 +4,7 @@ layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
 layout(set = 2, binding = 1) uniform sampler2D reflectionBuffer;
 layout(set = 2, binding = 2) uniform sampler2D diffuseBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
     ivec4 iparams;

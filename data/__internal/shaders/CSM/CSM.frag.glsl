@@ -4,7 +4,7 @@ layout(location = 0) in vec2 texCoords;
 
 layout(set = 2, binding = 0) uniform sampler2D baseColorTexture;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 baseColor;
     vec4 materialOptions;

@@ -31,7 +31,7 @@ float hash(vec2 uv)
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D velocityBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
     vec4 fparams1; // time, offsetRandomCoef, minDistance, maxDistance

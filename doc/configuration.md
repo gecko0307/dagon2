@@ -144,8 +144,8 @@ Application settings:
 * `updatesPerSecond` - number of logic updates per second (UPS). This can be set to `auto` or `0` to synchronize updates with the display refresh rate. Default is `60`
 * `maxTimersCount` - maximum number of simultaneous timers. Default is `1024`. `0` is treated as a default number
 * `hideConsole` - `0` or `1`, show or hide the console window. It is convenient to leave it when debugging the game and hide it for end users. Default is `0`
-* `supersampling` - 
-* `stereoRendering` - `0` or `1`, reserved option
+* `supersampling` - supersampling factor. `1` means original resolution, `2` means double resolution
+* `stereoRendering` - `0` or `1`. Reserved option
 
 Locale settings:
 
@@ -207,19 +207,19 @@ Recognized by the `Game` class, applied to the `Game.renderer`.
 * `ssao.halfResolution` - `0` or `1`
 
 * `sslr.enabled` - `0` or `1`, disable or enable screen-space reflections. Default is `1` in high/ultra quality profile, and `0` in low quality profile
-* `sslr.samplingFunction` - numeric constant. Default value is `GGX_VNDF`. Supported values are:
+* `sslr.samplingFunction` - numeric constant. Sampling function that affects surface normals distribution. Default value is `GGX_VNDF`. Supported values are:
   * `PerfectMirror` = `0` - reflective surfaces behaves like perfect mirrors (no blurry reflections)
   * `GGX` = `1` - basic GGX importance sampling, enables blurry reflections. Causes undersampling for low roughness values
   * `GGX_VNDF` = `2` - results in a lot more precise importance sampling for low roughness values
-* `sslr.samples` -
-* `sslr.refineSamples` -
-* `sslr.maxRayDistance` -
-* `sslr.hitThickness` -
-* `sslr.velocitySensitivity` -
-* `sslr.historyWeight` -
-* `sslr.motionWeight` -
-* `sslr.blur` - `0` or `1`
-* `sslr.blurRadius` -
+* `sslr.samples` - the maximum number of steps the ray-tracer takes along the reflection ray direction to find a surface intersection. Higher values increase accuracy, allowing rays to catch smaller details. Lower values improve performance but can cause missing reflections or banding artifacts
+* `sslr.refineSamples` - the number of refinement steps taken after a rough intersection is found. It performs a binary search between the last "miss" and the first "hit" cell. This process eliminates jagged edges along surface boundaries with minimal performance cost
+* `sslr.maxRayDistance` - the maximum world-space distance a reflection ray can travel before giving up. Objects further away than this value will not be reflected
+* `sslr.hitThickness` - the assumed thickness of objects in the depth buffer during an intersection. Prevents rays from passing entirely through thin objects
+* `sslr.velocitySensitivity` - a multiplier applied to the speed of a reflection pixel. Controls the influence of the screen-space velocity to the reflection coherence. Lower values make the denoiser more tolerant to movements, but increase trailing. Higher values cause the denoiser to instantly drop the history at the slightest movement, preventing trailing/ghosting artifacts but increasing stochastic noise
+* `sslr.historyWeight` - the blend weight given to the current frame's reflection when a pixel is completely static (velocity == 0). Lower value means that the static reflection will be as noise-free as possible
+* `sslr.motionWeight` - the blend weight given to the current frame's reflection when a pixel's movement exceeds the velocity threshold. Higher value discards the history buffer during fast motion, sacrificing noise cleanup, but completely eliminating trailing/ghosting artifacts.
+* `sslr.blur` - `0` or `1`, disable or enable reflection blur. Default is `0`
+* `sslr.blurRadius` - reflection blur radius
 * `sslr.halfResolution` - `0` or `1`
 
 * `motionBlur.enabled` - `0` or `1`, disable or enable motion blur filter. Default is `1` in high/ultra quality profile, and `0` in low quality profile

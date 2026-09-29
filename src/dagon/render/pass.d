@@ -248,7 +248,8 @@ abstract class RenderPass: Owner
      *   binding = The binding slot index.
      *   uniformStruct = Pointer to the uniform struct.
      */
-    void bindUniformBuffer(T)(PipelineStage stage, uint binding, T* uniformStruct) if (isStd140Compliant!T)
+    void bindUniformBuffer(T)(PipelineStage stage, uint binding, T* uniformStruct)
+        if (isStd140Compliant!T)
     {
         if (stage == PipelineStage.Vertex)
             SDL_PushGPUVertexUniformData(renderer.commandBuffer, binding, uniformStruct, cast(uint)T.sizeof);
@@ -265,7 +266,8 @@ abstract class RenderPass: Owner
      *   binding = The binding slot index.
      *   uniformStructs = Array of structures.
      */
-    void bindUniformBuffer(T)(PipelineStage stage, uint binding, T[] uniformStructs) if (isStd140Compliant!T)
+    void bindUniformBuffer(T)(PipelineStage stage, uint binding, T[] uniformStructs)
+        if (isStd140Compliant!T)
     {
         if (stage == PipelineStage.Vertex)
             SDL_PushGPUVertexUniformData(renderer.commandBuffer, binding, uniformStructs.ptr, cast(uint)(T.sizeof * uniformStructs.length));

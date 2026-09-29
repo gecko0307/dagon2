@@ -49,6 +49,7 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct NPRShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
@@ -57,6 +58,7 @@ struct NPRShaderVertexUniformBuffer
     Matrix4x4f prevModelViewMatrix;
 }
 
+@Std140Guaranteed
 struct NPRShaderFragmentUniformBuffer
 {
     Vector4f resolution;

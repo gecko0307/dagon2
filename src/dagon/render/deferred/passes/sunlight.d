@@ -45,11 +45,13 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct SunLightShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct SunLightShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

@@ -48,11 +48,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct MotionBlurShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct MotionBlurShaderFragmentUniformBuffer
 {
     Vector4f resolution;

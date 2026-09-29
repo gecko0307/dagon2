@@ -12,7 +12,7 @@ vec3 sRGB(vec3 v)
 
 layout(set = 2, binding = 0) uniform sampler2D radianceBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     uvec4 flags;
 } ubo;

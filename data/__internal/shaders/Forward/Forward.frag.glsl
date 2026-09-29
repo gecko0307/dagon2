@@ -5,7 +5,7 @@ vec3 toLinear(vec3 v)
     return pow(v, vec3(2.2));
 }
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 invViewMatrix;
     vec4 baseColor;

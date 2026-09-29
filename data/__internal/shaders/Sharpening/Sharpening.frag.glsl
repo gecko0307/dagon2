@@ -7,7 +7,7 @@ float luminance(vec3 c)
 
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 viewSize;
     vec4 params;

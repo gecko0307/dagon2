@@ -132,7 +132,7 @@ layout(set = 2, binding = 7) uniform sampler2D brdfLUT;
 
 #define FPARAM_TIME_DELTA 1
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;

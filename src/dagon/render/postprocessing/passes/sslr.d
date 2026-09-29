@@ -61,11 +61,13 @@ enum SSLRSamplingFunction: uint
     GGX_VNDF = 2
 }
 
+@Std140Guaranteed
 struct SSLRShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct SSLRShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

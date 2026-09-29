@@ -47,6 +47,7 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.deferred.passes.gparams;
 
+@Std140Guaranteed
 struct GeometryShaderVertexUniformBuffer
 {
     Matrix4x4f modelViewMatrix;
@@ -56,6 +57,7 @@ struct GeometryShaderVertexUniformBuffer
     Matrix4x4f uvTransformation;
 }
 
+@Std140Guaranteed
 struct GeometryShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

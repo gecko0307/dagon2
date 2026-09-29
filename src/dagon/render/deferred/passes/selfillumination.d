@@ -44,11 +44,13 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct SelfIlluminationShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct SelfIlluminationShaderFragmentUniformBuffer
 {
     // TODO

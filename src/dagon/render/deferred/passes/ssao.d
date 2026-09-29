@@ -47,10 +47,12 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct SSAOShaderVertexUniformBuffer
 {
 }
 
+@Std140Guaranteed
 struct SSAOShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

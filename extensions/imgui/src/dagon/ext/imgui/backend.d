@@ -44,6 +44,7 @@ import dagon.render.renderer;
 
 import bindbc.imgui;
 
+@Std140Guaranteed
 struct ImGuiShaderVertexUniformBuffer
 {
     Vector4f position;

@@ -223,7 +223,7 @@ vec3 fxaa_311(sampler2D screenTexture, vec2 uv, vec2 inverseScreenSize)
 layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D depthBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 viewSize;
     uvec4 iparams;

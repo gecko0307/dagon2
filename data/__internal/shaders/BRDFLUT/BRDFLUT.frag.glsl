@@ -83,7 +83,7 @@ vec2 integrateBRDF(float roughness, float NoV)
     return 4.0 * vec2(A, B) / float(numSamples);
 }
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
 } ubo;

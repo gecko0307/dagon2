@@ -46,11 +46,14 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct PresentShaderVertexUniformBuffer
 {
     // TODO
+
 }
 
+@Std140Guaranteed
 struct PresentShaderFragmentUniformBuffer
 {
     uint[4] flags;

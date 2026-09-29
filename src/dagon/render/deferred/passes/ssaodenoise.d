@@ -45,10 +45,12 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct SSAODenoiseShaderVertexUniformBuffer
 {
 }
 
+@Std140Guaranteed
 struct SSAODenoiseShaderFragmentUniformBuffer
 {
     Vector4f resolution;

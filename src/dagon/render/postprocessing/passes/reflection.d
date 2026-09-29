@@ -48,11 +48,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct ReflectionShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct ReflectionShaderFragmentUniformBuffer
 {
     Vector4f resolution;

@@ -45,11 +45,13 @@ import dagon.render.pass;
 import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 
+@Std140Guaranteed
 struct FogShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct FogShaderFragmentUniformBuffer
 {
     Matrix4x4f invViewMatrix;

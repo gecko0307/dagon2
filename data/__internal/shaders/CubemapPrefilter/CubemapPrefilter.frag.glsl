@@ -51,7 +51,7 @@ vec2 hammersley(uint i, uint N)
 }
 
 layout(set = 2, binding = 0) uniform samplerCube inputCubemap;
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     vec4 resolution;
     vec4 fparams;

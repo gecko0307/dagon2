@@ -55,6 +55,7 @@ import dagon.core.sdl3;
 import dagon.core.gpu;
 import dagon.core.spvc;
 import dagon.graphics.shader.glsl;
+public import dagon.graphics.shader.std140;
 
 /// Programmable pipeline stages enumeration.
 enum PipelineStage
@@ -161,37 +162,6 @@ class ShaderStorageTexture: ShaderUniform
     {
         super(name, set, binding, owner);
     }
-}
-
-/**
- * Checks if all fields of a struct are aligned to the specified number of bytes.
- *
- * Params:
- *   T = Struct type to check.
- *   numBytes = Alignment in bytes.
- *
- * Returns:
- *   true if all fields are aligned, false otherwise.
- */
-bool isFieldsOffsetAligned(T, alias numBytes)()
-{
-    static if (is(T == struct))
-    {
-        static foreach(f; T.tupleof)
-        {
-            static if (f.offsetof % numBytes != 0)
-                return false;
-        }
-        
-        return true;
-    }
-    else return false;
-}
-
-/// Compile-time condition for checking std140 alignment compliance for a struct.
-template isStd140Compliant(T)
-{
-    enum isStd140Compliant = (T.sizeof % 16 == 0) && isFieldsOffsetAligned!(T, 16);
 }
 
 /**

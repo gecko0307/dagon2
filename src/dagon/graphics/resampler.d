@@ -40,6 +40,7 @@ import dagon.graphics.state;
 import dagon.graphics.texture;
 import dagon.graphics.shader;
 
+@Std140Guaranteed
 struct ResampleShaderUniformBuffer
 {
     float[4] srcSize;

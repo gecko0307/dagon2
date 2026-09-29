@@ -46,11 +46,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct FXAAShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct FXAAShaderFragmentUniformBuffer
 {
     Vector4f viewSize;

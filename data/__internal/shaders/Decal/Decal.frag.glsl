@@ -52,7 +52,7 @@ layout(set = 2, binding = 4) uniform sampler2D emissionTexture;
 layout(set = 2, binding = 5) uniform sampler2D depthBuffer;
 layout(set = 2, binding = 6) uniform sampler2D velocityBuffer;
 
-layout(set = 3, binding = 0) uniform UniformBuffer
+layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
     mat4 viewMatrix;
     mat4 invViewMatrix;

@@ -48,11 +48,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct LensDistortionShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct LensDistortionShaderFragmentUniformBuffer
 {
     Vector4f resolution;

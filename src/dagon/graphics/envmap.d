@@ -93,10 +93,12 @@ Matrix4x4f cubeFaceMatrix(CubeFace cf)
     }
 }
 
+@Std140Guaranteed
 struct CubemapGeneratorShaderVertexUniformBuffer
 {
 }
 
+@Std140Guaranteed
 struct CubemapGeneratorShaderFragmentUniformBuffer
 {
     Matrix4x4f pixelToWorldMatrix;
@@ -277,10 +279,12 @@ class CubemapGeneratorPass: RenderPass
     }
 }
 
+@Std140Guaranteed
 struct CubemapPrefilterShaderVertexUniformBuffer
 {
 }
 
+@Std140Guaranteed
 struct CubemapPrefilterShaderFragmentUniformBuffer
 {
     Vector4f resolution;
@@ -470,10 +474,12 @@ class CubemapPrefilterPass: RenderPass
     }
 }
 
+@Std140Guaranteed
 struct CubemapIrradiancePrefilterShaderVertexUniformBuffer
 {
 }
 
+@Std140Guaranteed
 struct CubemapIrradiancePrefilterShaderFragmentUniformBuffer
 {
     Vector4f resolution;

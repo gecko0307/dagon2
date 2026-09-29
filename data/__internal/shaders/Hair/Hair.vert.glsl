@@ -14,7 +14,7 @@ layout(location = 5) out vec3 modelPosition;
 layout(location = 6) out vec4 currPosition;
 layout(location = 7) out vec4 prevPosition;
 
-layout(set = 1, binding = 0) uniform UniformBuffer
+layout(std140, set = 1, binding = 0) uniform UniformBuffer
 {
     mat4 modelViewMatrix;
     mat4 normalMatrix;

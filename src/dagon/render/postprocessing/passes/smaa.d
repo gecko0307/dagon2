@@ -49,11 +49,13 @@ import dagon.render.view;
 import dagon.render.deferred.gbuffer;
 import dagon.render.postprocessing.context;
 
+@Std140Guaranteed
 struct SMAAEdgeDetectionShaderVertexUniformBuffer
 {
     Vector4f invResolution;
 }
 
+@Std140Guaranteed
 struct SMAAEdgeDetectionShaderFragmentUniformBuffer
 {
     //
@@ -103,11 +105,13 @@ class SMAAEdgeDetectionShader: Shader
     }
 }
 
+@Std140Guaranteed
 struct SMAABlendingWeightsShaderVertexUniformBuffer
 {
     Vector4f resolution;
 }
 
+@Std140Guaranteed
 struct SMAABlendingWeightsShaderFragmentUniformBuffer
 {
     Vector4f resolution;
@@ -172,6 +176,7 @@ class SMAABlendingWeightsShader: Shader
     }
 }
 
+@Std140Guaranteed
 struct SMAANeighborhoodBlendingShaderUniformBuffer
 {
     Vector4f resolution;

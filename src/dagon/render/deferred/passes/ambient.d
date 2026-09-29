@@ -54,11 +54,13 @@ enum AmbientTextureFlags: uint
     HasOcclusionBuffer = 1 << 3
 }
 
+@Std140Guaranteed
 struct AmbientShaderVertexUniformBuffer
 {
     // TODO
 }
 
+@Std140Guaranteed
 struct AmbientShaderFragmentUniformBuffer
 {
     Matrix4x4f viewMatrix;

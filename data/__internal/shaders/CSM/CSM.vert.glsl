@@ -4,7 +4,7 @@ layout(location = 0) in vec3 va_position;
 layout(location = 1) in vec2 va_texcoords;
 layout(location = 2) in vec3 va_normal;
 
-layout(set = 1, binding = 0) uniform UniformBuffer
+layout(std140, set = 1, binding = 0) uniform UniformBuffer
 {
     mat4 modelViewMatrix;
     mat4 projectionMatrix;
