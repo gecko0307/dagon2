@@ -96,7 +96,21 @@ Realistic minimum system requirements (for Full HD rendering at 60 fps):
 
 Usage
 -----
-TODO
+To build Dagon with DUB, either add it as a dependency to your application (`dub add dagon2`), or generate a project template (`dub init --type=dagon2`).
+
+We strongly recommend using [LDC](https://github.com/ldc-developers/ldc) and compiling in release mode to achieve maximum CPU performance:
+
+```
+dub build --compiler=ldc2 --build=release-nobounds
+```
+
+To use Dagon repository directly instead of a release (for example, to modify the engine), you can clone it with Git and specify the local path to the `dagon2` dependency in your `dub.json` or `dub.selections.json`:
+
+```json
+"dagon2": { "path": "path/to/your/dagon2/copy" }
+```
+
+Do not delete `data/__internal` folder! It is used to store engine's internal data such as shaders and textures.
 
 Runtime Dependencies
 --------------------
