@@ -13,6 +13,7 @@ input-files:
   - doc/materials.md
   - doc/resources.md
   - doc/textures.md
+  - doc/models.md
   - doc/event-system.md
   - doc/input-manager.md
   - doc/configuration.md

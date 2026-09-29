@@ -83,7 +83,17 @@ gpu.textureCache.path: "${appDataPath}/data/texture_cache";
 
 ## 3D Models
 
-TODO
+Models in standard interchange formats (OBJ, FBX, glTF and others) are loaded via `ModelAsset`:
+
+```d
+ModelAsset aScene = assetManager.loadAsset!ModelAsset("assets/scene.glTF");
+```
+
+Models in DAF format are loaded via `DagonAsset`:
+
+```d
+DagonAsset aScene = assetManager.loadAsset!DagonAsset("assets/scene.daf");
+```
 
 ## Asynchronous Loading
 
