@@ -111,7 +111,16 @@ Each entity can have:
 - Controller (an object that drives entity state updates)
 - Child entities.
 
-TODO: scene creation example
+Scene creation example:
+
+```d
+Scene scene = New!Scene(gpu, this);
+
+auto camera = scene.addCamera();
+scene.activeCamera = camera;
+
+auto someEntity = scene.addEntity();
+```
 
 ## The Game Loop
 
