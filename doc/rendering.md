@@ -77,6 +77,10 @@ Based on the paper *A Multiple-Scattering Microfacet Model for Real-Time Image-B
 
 When light hits a rough surface (roughness close to `1.0`), rays reflect off the microfacets and hit adjacent "micro-pits." In reality, they should bounce again and exit. However, standard Cook-Torrance model predicts that these blocked rays disappear. Because of this, rough metallic or dielectric objects appear too dark. The Fdez-Agüera's method returns this lost energy back to the shader with minimal computational overhead, preserving the law of conservation of energy.
 
+## Deferred Decals
+
+TODO
+
 ## Stochastic Screen-Space Reflections
 
 Screen-space reflections are a technique for achieving approximated dynamic reflections in real time. The technique operates per pixel by raymarching through the depth buffer along the reflection direction and sampling the HDR buffer when the ray intersects reconstructed geometry. Given sufficient depth and screen-space precision, the basic technique can produce mirror-like reflections on smooth surfaces.

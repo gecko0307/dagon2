@@ -67,10 +67,14 @@ enum EntityLayer
     Foreground = 2
 }
 
+///
 enum EntityType
 {
+    ///
     Default = 0,
+    ///
     Decal = 1,
+    ///
     NPRObject = 2
 }
 

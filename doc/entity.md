@@ -65,4 +65,35 @@ The reverse operation, commonly called unprojection, reconstructs a 3D ray from 
 
 ## Entity Properties
 
-TODO
+- `string name` - symbolic name of an entity, mainly for serialization and script access.
+- `Array!Entity children` - dynamic array of child entities. This property should be normally used only for reading, to add children use `addChild` or `setParent` methods.
+- `Array!EntityComponent components` - dynamic array of attached components. This property should be normally used only for reading, to add a component use `addComponent` method.
+- `Entity parent` - parent entity. If `null`, entity is root.
+- `EntityController controller` - optional controller that drives entity transformation.
+- `Matrix4x4f transformation` - local transformation matrix from position/rotation/scale.
+- `Matrix4x4f invTransformation` - inverse of local transformation.
+- `Matrix4x4f modelMatrix` - local-to-world matrix (local combined with parent chain transformation).
+- `Matrix4x4f invModelMatrix` - inverse of `modelMatrix`.
+- `Matrix4x4f prevModelMatrix` - previous frame `modelMatrix`. This can be used to compute delta transformation for different tasks such as screen-space effects.
+- `Vector3f position` - local position.
+- `Quaternionf rotation` - local orientation.
+- `Vector3f scaling` - local scale. It is named `scaling` to avoid conflict with dlib's `scale` function.
+- `Drawable drawable` - optional drawable object for rendering. This is usually an indexed triangle mesh.
+- `Material material` - optional material for rendering. This material can be overridden in the drawable, if it is a multi-material mesh.
+- `EntityLayer layer` - render layer (see below). Default is `EntityLayer.Scene`.
+- `float opacity` - base visibility alpha. This is multiplied with material's opacity. Default is `1.0f`. Note that the deferred pipeline doesn't support semi-transparency (opacity is used for alpha clipping). To render semi-transparent entities via the forward pipeline, change material's `blendMode` to `BlendMode.Transparent`.
+- `float motionBlurMask` - entity's contribution to the screen-space motion blur. If set to 0, it will not be blurred. Usually this should be set to 0 for objects that are attached to the camera (for example, a weapon in a first-person shooter). Default is `1.0f`.
+- `bool visible` - visibility flag. Invisible objects are not rendered. Note that invisible parent can have visible children, and vice-versa. Default is `true`.
+- `bool shadeless` - shadeless flag. Lighting passes ignore pixels of shadeless objects. Their appearance is directly determined by material's `baseColor` and `baseColorTexture`. This is useful for UI elements in the scene: gizmos, hints, speech bubbles, etc. Default is `false`.
+- `bool castShadow` - cast shadows flag. If set to `false`, the entity won't cast any shadows. Default is `true`.
+- `bool receiveDecals` - receive deferred decals. See Decals section for details. Default is `true`.
+- `bool dynamic` - if true, the entity is treated as moving/animated, and its transforms are recomputed each frame. Default is `false` (because the vast majority of 3D scenery in games is static).
+- `EntityType type` - type of the entity. Possible values are the following:
+  - `EntityType.Default` (default) - ordinary entity
+  - `EntityType.Decal` - entity is treated as a deferred decal. See Decals section for details
+  - `EntityType.NPRObject` - 
+- `TransformMode transformMode` - transformation mode. Determines how the engine updates entity's `transformation` matrix. Possible values are the following:
+  - `TransformMode.TRS` (default) - `transformation` is computed from `position`, `rotation` and `scaling`
+  - `TransformMode.Matrix` - `transformation` is used-defined; `position`, `rotation` and `scaling` are ignored.
+- `bool transformationValid` - indicates `transformation` is up to date and does not need recompute. This is an internal state usually set by the controller.
+- `bool modelMatricesValid` - indicates `modelMatrix` and `invModelMatrix` are up to date and do not need recompute. This is an internal state usually set by the controller.
