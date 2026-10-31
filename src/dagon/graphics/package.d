@@ -45,6 +45,7 @@ public
     import dagon.graphics.brdflut;
     import dagon.graphics.camera;
     import dagon.graphics.csm;
+    import dagon.graphics.dpsm;
     import dagon.graphics.drawable;
     import dagon.graphics.entity;
     import dagon.graphics.envmap;

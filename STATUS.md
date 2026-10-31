@@ -42,7 +42,6 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 - [x] dagon2:exformats
 - [x] dagon2:imgui
 - [ ] dagon2:network
-- [ ] dagon2:newton
 - [x] dagon2:physfs
 - [x] dagon2:security
 - [x] dagon2:server

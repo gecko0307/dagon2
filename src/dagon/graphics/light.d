@@ -54,6 +54,7 @@ import dagon.core.time;
 import dagon.graphics.entity;
 import dagon.graphics.shadowmap;
 import dagon.graphics.csm;
+import dagon.graphics.dpsm;
 
 /**
  * Supported light types.
@@ -164,9 +165,9 @@ class Light: Entity
             // TODO
             else if (type == LightType.Spot)
                 _shadowMap = New!PerspectiveShadowMap(this, this);
-            else
-                _shadowMap = New!DualParaboloidShadowMap(this, this);
             */
+            else
+                _shadowMap = New!DualParaboloidShadowMap(gpu, this, this);
         }
         
         return _shadowMap;

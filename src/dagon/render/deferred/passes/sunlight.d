@@ -119,6 +119,11 @@ class SunLightShader: Shader
         fsUBO.lightColor = sun.color;
         fsUBO.lightColor.a = sun.energy;
         
+        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
+        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
+        
         CascadedShadowMap shadowMap = cast(CascadedShadowMap)sun.shadowMap;
         if (shadowMap)
         {
@@ -127,6 +132,7 @@ class SunLightShader: Shader
             fsUBO.shadowMatrix1 = shadowMap.area[0].shadowMatrix;
             fsUBO.shadowMatrix2 = shadowMap.area[1].shadowMatrix;
             fsUBO.shadowMatrix3 = shadowMap.area[2].shadowMatrix;
+            pass.bindTexture(PipelineStage.Fragment, 4, shadowMap.depthTexture, shadowMap.depthSampler);
         }
         else
         {
@@ -135,13 +141,8 @@ class SunLightShader: Shader
             fsUBO.shadowMatrix1 = Matrix4x4f.identity;
             fsUBO.shadowMatrix2 = Matrix4x4f.identity;
             fsUBO.shadowMatrix3 = Matrix4x4f.identity;
+            pass.bindDefaultTexture(PipelineStage.Fragment, 4);
         }
-        
-        pass.bindInputBuffer(PipelineStage.Fragment, 0, &state.colorBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
-        pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
-        pass.bindTexture(PipelineStage.Fragment, 4, shadowMap.depthTexture, shadowMap.depthSampler);
         
         //pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

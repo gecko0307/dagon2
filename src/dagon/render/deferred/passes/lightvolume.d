@@ -43,6 +43,7 @@ import dagon.graphics.mesh;
 import dagon.graphics.shapes;
 import dagon.graphics.light;
 import dagon.graphics.shader;
+import dagon.graphics.dpsm;
 import dagon.render.renderer;
 import dagon.render.pass;
 import dagon.render.view;
@@ -63,8 +64,10 @@ struct LightVolumeShaderFragmentUniformBuffer
     Matrix4x4f invViewMatrix;
     Matrix4x4f invModelMatrix;
     Matrix4x4f invProjectionMatrix;
+    Matrix4x4f shadowMatrix;
     Vector4f resolution;
     Vector4f lightPosition;
+    Vector4f lightPositionWorld;
     Color4f lightColor;
     Vector4f lightParams;
     uint[4] iparams;
@@ -102,8 +105,10 @@ class LightVolumeShader: Shader
         fsUBO.invViewMatrix = Matrix4x4f.identity;
         fsUBO.invModelMatrix = Matrix4x4f.identity;
         fsUBO.invProjectionMatrix = Matrix4x4f.identity;
+        fsUBO.shadowMatrix = Matrix4x4f.identity;
         fsUBO.resolution = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.lightPosition = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+        fsUBO.lightPositionWorld = Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
         fsUBO.lightColor = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         fsUBO.lightParams = Vector4f(1.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -122,11 +127,15 @@ class LightVolumeShader: Shader
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
         fsUBO.invModelMatrix = entity.invModelMatrix;
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
+        //fsUBO.shadowMatrix = 
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
-        Vector4f lightPositionHmg = Vector4f(light.positionWorld);
-        lightPositionHmg.w = 1.0f;
-        fsUBO.lightPosition = lightPositionHmg * pass.view.viewMatrix;
+        fsUBO.lightPositionWorld = Vector4f(light.positionWorld, 1.0f);
+        //lightPositionHmg.w = 1.0f;
+        //lightPositionHmg * pass.view.viewMatrix;
+        //Vector4f lightPositionHmg = Vector4f(light.positionWorld);
+        //lightPositionHmg.w = 1.0f;
+        fsUBO.lightPosition = fsUBO.lightPositionWorld * pass.view.viewMatrix;
         fsUBO.lightColor = light.color;
         fsUBO.lightParams = Vector4f(light.volumeRadius, light.radius, light.energy, 0.0f);
         fsUBO.iparams[0] = light.type;
@@ -135,6 +144,19 @@ class LightVolumeShader: Shader
         pass.bindInputBuffer(PipelineStage.Fragment, 1, &state.normalBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 2, &state.roughnessMetallicBuffer);
         pass.bindInputBuffer(PipelineStage.Fragment, 3, &state.depthBuffer);
+        
+        DualParaboloidShadowMap dpsm = cast(DualParaboloidShadowMap)light.shadowMap;
+        if (dpsm)
+        {
+            pass.bindTexture(PipelineStage.Fragment, 4, dpsm.depthTexture, dpsm.depthSampler);
+            fsUBO.iparams[1] = 1;
+        }
+        else
+        {
+            // TODO: PSM support
+            pass.bindDefaultTexture(PipelineStage.Fragment, 4);
+            fsUBO.iparams[1] = 0;
+        }
         
         pass.bindUniformBuffer(PipelineStage.Vertex, 0, &vsUBO);
         pass.bindUniformBuffer(PipelineStage.Fragment, 0, &fsUBO);

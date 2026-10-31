@@ -64,6 +64,7 @@ layout(set = 2, binding = 0) uniform sampler2D colorBuffer;
 layout(set = 2, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 2, binding = 2) uniform sampler2D roughnessMetallicBuffer;
 layout(set = 2, binding = 3) uniform sampler2D depthBuffer;
+layout(set = 2, binding = 4) uniform sampler2DArrayShadow dpsmShadowTextureArray;
 
 layout(std140, set = 3, binding = 0) uniform UniformBuffer
 {
@@ -71,8 +72,10 @@ layout(std140, set = 3, binding = 0) uniform UniformBuffer
     mat4 invViewMatrix;
     mat4 invModelMatrix;
     mat4 invProjectionMatrix;
+    mat4 shadowMatrix;
     vec4 resolution;
     vec4 lightPosition;
+    vec4 lightPositionWorld;
     vec4 lightColor;
     vec4 lightParams;
     uvec4 iparams;
@@ -144,6 +147,33 @@ vec3 lightRadianceAreaSphere(
     return radiance;
 }
 
+// TODO: make uniform
+const float dualParaboloidShadowbias = 0.01;
+
+float shadowMapDualParaboloid(vec3 worldPos)
+{
+    vec3 lightSpacePos = worldPos - ubo.lightPositionWorld.xyz;
+    float distanceToLight = length(lightSpacePos);
+    vec3 dir = normalize(lightSpacePos);
+    vec2 uv = dir.xy / (1.0 + abs(dir.z));
+    uv = uv * 0.5 + 0.5;
+    float layer = 1.0 - float(dir.z >= 0.0);
+    float z = distanceToLight / max(0.00001, ubo.lightParams.x) - dualParaboloidShadowbias;
+    float shadow = texture(dpsmShadowTextureArray, vec4(uv, layer, z));
+    return shadow;
+}
+
+/*
+float shadowMapPerspective(in vec3 worldPos)
+{
+    vec4 clipPos = ubo.shadowMatrix * vec4(worldPos, 1.0);
+    vec3 ndc = clipPos.xyz / clipPos.w;
+    vec3 texCoord = ndc * 0.5 + 0.5;
+    float shadow = texture(shadowTexture, texCoord);
+    return shadow;
+}
+*/
+
 void main()
 {
     vec2 gbufTexCoord = gl_FragCoord.xy / ubo.resolution.xy;
@@ -153,19 +183,12 @@ void main()
     ndc.y = 1.0 - ndc.y;
     vec3 eyePos = unproject(ubo.invProjectionMatrix, ndc);
     
-    //vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
+    vec3 worldPos = (ubo.invViewMatrix * vec4(eyePos, 1.0)).xyz;
     
     vec3 wN = normalize(texture(normalBuffer, gbufTexCoord).rgb * 2.0 - 1.0);
     
     vec3 N = mat3(ubo.viewMatrix) * wN;
     vec3 E = normalize(-eyePos);
-    //vec3 R = reflect(E, N);
-    //float NE = clamp(dot(N, E), 0.0, 1.0);
-    
-    //vec3 worldCamPos = (ubo.invViewMatrix[3]).xyz;
-    //vec3 wE = normalize(worldPos - worldCamPos);
-    //vec3 wN = normalize((ubo.invViewMatrix * vec4(N, 0.0)).xyz);
-    //vec3 wR = reflect(wE, wN);
     
     vec4 roughnessMetallic = texture(roughnessMetallicBuffer, gbufTexCoord);
     float f0_scalar = roughnessMetallic.r;
@@ -176,8 +199,11 @@ void main()
     vec3 baseColor = toLinear(color.rgb);
     float sss = color.a;
     
-    // TODO
-    //float shadow = shadowMap(worldPos);
+    float shadow = 1.0;
+    if (ubo.iparams.y == 1)
+        shadow = shadowMapDualParaboloid(worldPos);
+    //else if (ubo.iparams.y == 2)
+    //    shadow = shadowMapPerspective(worldPos);
     
     vec3 radiance;
     if (ubo.iparams.x == LIGHT_TYPE_AREA_SPHERE)
@@ -186,5 +212,5 @@ void main()
     else
         radiance = vec3(0.0, 0.0, 0.0);
     
-    outColor = vec4(radiance * shadingMask, 1.0);
+    outColor = vec4(radiance * shadow * shadingMask, 1.0);
 }
