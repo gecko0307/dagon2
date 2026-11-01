@@ -17,7 +17,7 @@ Screenshots
 
 Features
 --------
-> Note: Dagon 2 is still in active development. Not all features and extensions of Dagon 1.0 are ported yet.
+> Note: Dagon 2 is in active development. Not all features and extensions of Dagon 1.0 are ported yet.
 
 New features and major changes from Dagon 0.x/1.x:
 

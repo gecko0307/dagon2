@@ -156,10 +156,11 @@ abstract class Renderer: EventListener, Updateable
         renderPass.view = view;
     }
     
-    ///
-    void addFrameTask(FrameTask task)
+    /// Adds an entry to the end of the frame tasks list.
+    FrameTask addFrameTask(FrameTask task)
     {
         frameTasks.append(task);
+        return task;
     }
     
     /**
@@ -257,6 +258,7 @@ abstract class Renderer: EventListener, Updateable
         }
     }
     
+    ///
     void resize()
     {
         uint drawableWidth = gpu.application.drawableWidth;
@@ -269,16 +271,19 @@ abstract class Renderer: EventListener, Updateable
         }
     }
     
+    ///
     override void onResize(int width, int height)
     {
         buffersInvalidated = true;
     }
     
+    ///
     override void onMinimize()
     {
         minimized = true;
     }
     
+    ///
     override void onRestore()
     {
         minimized = false;
