@@ -8,7 +8,7 @@ The first milestone for Dagon 2.0 is implementing a direct SDL GPU port of the d
 
 - [x] CSM pass
 - [ ] PSM pass
-- [ ] DPSM pass
+- [x] DPSM pass
 - [x] G-Buffer filling pass
 - [ ] Terrain pass
 - [x] Deferred decals pass

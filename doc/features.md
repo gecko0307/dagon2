@@ -15,6 +15,7 @@
 * HDR rendering with AgX tone mapping
 * HDRI environment maps. Equirectangular HDRI to cubemap conversion. GPU-based cubemap prefiltering with importance sampling. Loading prebaked cubemaps from DDS or KTX files
 * Directional lights with cascaded shadow mapping
+* Dual-paraboloid shadow mapping for point lights
 * Normal mapping, parallax mapping
 * Deferred decals with normal mapping and PBR material properties
 * Cinematic post-processing

@@ -52,7 +52,19 @@ class TestWorld: World
     {
         scene = New!Scene(gpu, this);
         scene.sun.pitch(-45.0f);
-        scene.sun.energy = 10.0f;
+        scene.sun.energy = 0.0f; //10.0f
+        scene.ambientEnergy = 0.5f;
+        
+        auto light = scene.addLight(LightType.AreaSphere);
+        light.position = Vector3f(0.0f, 4.0f, 2.0f);
+        light.pitch(-45.0f);
+        light.spotOuterCutoff = 30.0f;
+        light.spotInnerCutoff = 10.0f;
+        light.volumeRadius = 10.0f;
+        light.radius = 0.2f;
+        light.energy = 30.0f;
+        light.shadowEnabled = true;
+        //light.shadowMap.resize(512); // Quality/performance tradeoff
         
         auto camera = scene.addCamera();
         auto freeview = New!FreeviewController(eventManager, camera);
