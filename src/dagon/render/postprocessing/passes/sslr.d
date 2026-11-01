@@ -127,9 +127,9 @@ class SSLRShader: Shader
     /**
      * The blend weight given to the current frame's reflection when a pixel
      * is completely static (velocity == 0).
-     * Lower value means that the static reflection will be as noise-free as possible.
+     * Lower values reduce noise but make history converge more slowly.
      */
-    float historyWeight = 0.02f;
+    float historyWeight = 0.04f;
     
     /**
      * The blend weight given to the current frame's reflection when a pixel's

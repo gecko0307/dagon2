@@ -360,10 +360,19 @@ void main()
     // Temporal accumulation
     vec2 uvVelocity = texture(velocityBuffer, texCoords).xy;
     vec2 prevTexCoords = texCoords - uvVelocity;
-    vec4 prevReflection = texture(prevReflectionBuffer, prevTexCoords);
+    bool historyInBounds = all(greaterThanEqual(prevTexCoords, vec2(0.0))) &&
+        all(lessThanEqual(prevTexCoords, vec2(1.0)));
     float velocityLength = length(uvVelocity);
     const float velocityFactor = clamp(velocityLength * velocitySensitivity, 0.0, 1.0);
     float alpha = mix(historyWeight, motionWeight, velocityFactor);
+    vec4 prevReflection;
+    if (historyInBounds)
+        prevReflection = texture(prevReflectionBuffer, prevTexCoords);
+    else
+    {
+        prevReflection = reflection;
+        alpha = 1.0;
+    }
 
     vec4 accumulatedReflection = mix(prevReflection, reflection, alpha * shadingMask);
     
