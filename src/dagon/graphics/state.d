@@ -46,6 +46,7 @@ import dagon.graphics.entity;
 import dagon.graphics.material;
 import dagon.graphics.texture;
 import dagon.graphics.scene;
+import dagon.graphics.light;
 
 struct InputBuffer
 {
@@ -99,6 +100,9 @@ struct GraphicsState
     
     ///
     Material material;
+    
+    ///
+    Light light;
     
     ///
     Texture brdfLUT;

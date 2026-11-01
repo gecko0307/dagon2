@@ -105,7 +105,7 @@ class DualParaboloidShadowMap: ShadowMap
     }
     
     /**
-     * Resizes the shadow maps and framebuffers.
+     * Resizes the shadow maps.
      *
      * Params:
      *   res = New resolution for each paraboloid side.

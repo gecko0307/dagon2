@@ -157,6 +157,7 @@ float shadowMapDualParaboloid(vec3 worldPos)
     vec3 dir = normalize(lightSpacePos);
     vec2 uv = dir.xy / (1.0 + abs(dir.z));
     uv = uv * 0.5 + 0.5;
+    uv.y = 1.0 - uv.y;
     float layer = 1.0 - float(dir.z >= 0.0);
     float z = distanceToLight / max(0.00001, ubo.lightParams.x) - dualParaboloidShadowbias;
     float shadow = texture(dpsmShadowTextureArray, vec4(uv, layer, z));

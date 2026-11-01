@@ -69,8 +69,8 @@ struct LightVolumeShaderFragmentUniformBuffer
     Vector4f lightPosition;
     Vector4f lightPositionWorld;
     Color4f lightColor;
-    Vector4f lightParams;
-    uint[4] iparams;
+    Vector4f lightParams; // volumeRadius, areaRadius, energy
+    uint[4] iparams; // light type, shadow type
 }
 
 class LightVolumeShader: Shader
@@ -116,8 +116,7 @@ class LightVolumeShader: Shader
     override void bindParameters(GraphicsState* state)
     {
         auto pass = state.pass;
-        auto entity = state.entity;
-        auto light = cast(Light)entity;
+        auto light = cast(Light)state.entity;
         
         vsUBO.modelViewMatrix = pass.view.viewMatrix * light.volumeTransformation;
         vsUBO.normalMatrix = vsUBO.modelViewMatrix.inverse.transposed;
@@ -125,16 +124,12 @@ class LightVolumeShader: Shader
         
         fsUBO.viewMatrix = pass.view.viewMatrix;
         fsUBO.invViewMatrix = pass.view.invViewMatrix;
-        fsUBO.invModelMatrix = entity.invModelMatrix;
+        fsUBO.invModelMatrix = light.invModelMatrix;
         fsUBO.invProjectionMatrix = pass.view.invProjectionMatrix;
         //fsUBO.shadowMatrix = 
         fsUBO.resolution.x = pass.view.width;
         fsUBO.resolution.y = pass.view.height;
         fsUBO.lightPositionWorld = Vector4f(light.positionWorld, 1.0f);
-        //lightPositionHmg.w = 1.0f;
-        //lightPositionHmg * pass.view.viewMatrix;
-        //Vector4f lightPositionHmg = Vector4f(light.positionWorld);
-        //lightPositionHmg.w = 1.0f;
         fsUBO.lightPosition = fsUBO.lightPositionWorld * pass.view.viewMatrix;
         fsUBO.lightColor = light.color;
         fsUBO.lightParams = Vector4f(light.volumeRadius, light.radius, light.energy, 0.0f);
