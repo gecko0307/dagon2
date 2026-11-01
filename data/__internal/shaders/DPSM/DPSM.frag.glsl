@@ -45,8 +45,6 @@ void main()
     if (ubo.lightParams.y * clipZ < -0.01)
         discard;
     
-    // TODO: alpha clipping
-    /*
     vec4 baseColor = ubo.baseColor;
     if ((ubo.flags[FLAGS_TEXTURE] & TEXFLAG_HAS_BASECOLOR_TEXTURE) != 0)
         baseColor *= texture(baseColorTexture, texCoords);
@@ -54,7 +52,6 @@ void main()
     float alpha = baseColor.a * ubo.materialOptions[OPT_ALPHA];
     if (alpha < ubo.materialOptions[OPT_ALPHA_CLIP_THRESHOLD])
         discard;
-    */
     
     outColor = vec4(1.0, 1.0, 1.0, 1.0);
     
