@@ -31,6 +31,7 @@ import bindbc.openxr.types;
 
 __gshared
 {
+    PFN_xrGetInstanceProcAddr xrGetInstanceProcAddr;
     PFN_xrEnumerateApiLayerProperties xrEnumerateApiLayerProperties;
     PFN_xrEnumerateInstanceExtensionProperties xrEnumerateInstanceExtensionProperties;
     PFN_xrCreateInstance xrCreateInstance;
