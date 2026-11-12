@@ -44,7 +44,7 @@ private
     OpenXRSupport loadedVersion;
 }
 
-void unloadOpenVR()
+void unloadOpenXR()
 {
     if (lib != invalidHandle)
     {
